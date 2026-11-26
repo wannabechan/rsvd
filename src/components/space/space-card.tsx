@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { SpaceItem } from "@/data/spaces";
 
 const LIKE_ICON_SIZE_CLASS = "h-[1.05rem] w-[1.05rem]";
@@ -9,12 +10,13 @@ type SpaceCardProps = {
 };
 
 export function SpaceCard({ space }: SpaceCardProps) {
+  const detailHref = `/space/${space.id}`;
   const displayName = truncateText(space.name, SPACE_NAME_MAX_CHARS);
   const reviewPreview = truncateText(space.latestCommentPreview, REVIEW_PREVIEW_MAX_CHARS);
 
   return (
     <article className="min-w-0 space-y-2">
-      <div className="pb-1">
+      <Link href={detailHref} className="block pb-1" aria-label={`${space.name} 상세 보기`}>
         {space.thumbnailImage ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -27,7 +29,7 @@ export function SpaceCard({ space }: SpaceCardProps) {
         ) : (
           <div aria-hidden="true" className="aspect-[4/5] w-full rounded-2xl bg-rsvd-tint" />
         )}
-      </div>
+      </Link>
 
       <div className="flex items-center justify-between gap-2">
         <h2
@@ -36,8 +38,8 @@ export function SpaceCard({ space }: SpaceCardProps) {
         >
           {displayName}
         </h2>
-        <button
-          type="button"
+        <Link
+          href={detailHref}
           aria-label={`${space.name} 메신저 예약`}
           className="inline-flex h-[2.625rem] w-[2.625rem] shrink-0 translate-x-[3px] items-center justify-center rounded-full transition hover:bg-rsvd-tint"
         >
@@ -49,7 +51,7 @@ export function SpaceCard({ space }: SpaceCardProps) {
             height={800}
             className="h-[1.875rem] w-[1.875rem]"
           />
-        </button>
+        </Link>
       </div>
 
       <p className="truncate text-[0.84rem] font-bold text-rsvd-text">{space.address}</p>

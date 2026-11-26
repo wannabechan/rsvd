@@ -5,7 +5,7 @@ export function FloatingAddButton() {
         <button
           type="button"
           aria-label="추가"
-          className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-rsvd-border text-rsvd-text-muted shadow-sm transition hover:bg-rsvd-tint"
+          className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-rsvd-border text-rsvd-on-brand shadow-sm transition hover:bg-rsvd-tint"
         >
           <PlusIcon />
         </button>
