@@ -64,3 +64,9 @@ body {
   outline: 2px solid var(--rsvd-focus);
   outline-offset: 3px;
 }
+
+.reservation-chat-input:focus,
+.reservation-chat-input:focus-visible {
+  outline: none;
+  outline-offset: 0;
+}

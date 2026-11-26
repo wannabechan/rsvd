@@ -153,7 +153,7 @@ export function ReservationChatPanel({ space }: ReservationChatPanelProps) {
                 }
               }}
               placeholder="메시지를 입력하세요"
-              className="max-h-28 min-h-11 flex-1 resize-none rounded-2xl border border-rsvd-border bg-rsvd-surface px-3.5 py-2.5 text-sm leading-snug text-rsvd-text placeholder:text-rsvd-text-muted outline-none focus-visible:outline-none"
+              className="reservation-chat-input max-h-28 min-h-11 flex-1 resize-none rounded-2xl border border-rsvd-border bg-rsvd-surface px-3.5 py-2.5 text-sm leading-snug text-rsvd-text placeholder:text-rsvd-text-muted"
             />
             <button
               type="submit"
