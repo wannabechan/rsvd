@@ -31,7 +31,7 @@ export function SiteHeader() {
           ) : (
             <button
               type="button"
-              className="inline-flex h-10 items-center justify-center px-0 text-sm font-normal text-rsvd-text"
+              className="inline-flex h-10 translate-y-[2px] items-center justify-center px-0 text-sm font-normal text-rsvd-text"
             >
               로그인
             </button>

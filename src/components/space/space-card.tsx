@@ -2,7 +2,6 @@ import Link from "next/link";
 import type { SpaceItem } from "@/data/spaces";
 
 const LIKE_ICON_SIZE_CLASS = "h-[1.05rem] w-[1.05rem]";
-const SPACE_NAME_MAX_CHARS = 12;
 const MAX_LIKER_AVATARS = 7;
 
 type SpaceCardProps = {
@@ -11,7 +10,6 @@ type SpaceCardProps = {
 
 export function SpaceCard({ space }: SpaceCardProps) {
   const detailHref = `/space/${space.id}`;
-  const displayName = truncateText(space.name, SPACE_NAME_MAX_CHARS);
   const thumbnail = space.images[0] ?? "";
   const recentLikers = space.recentLikers.slice(0, MAX_LIKER_AVATARS);
 
@@ -32,12 +30,12 @@ export function SpaceCard({ space }: SpaceCardProps) {
         )}
       </Link>
 
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex min-w-0 items-center gap-2">
         <h2
-          className="min-w-0 text-[1.1221875rem] font-medium text-rsvd-text"
-          title={space.name !== displayName ? space.name : undefined}
+          className="min-w-0 flex-1 truncate text-[1.1221875rem] font-medium text-rsvd-text"
+          title={space.name}
         >
-          {displayName}
+          {space.name}
         </h2>
         <Link
           href={detailHref}
@@ -75,7 +73,9 @@ export function SpaceCard({ space }: SpaceCardProps) {
           <span aria-hidden="true" className="min-w-0" />
         )}
         <div className="inline-flex shrink-0 -translate-y-[2px] items-center gap-0.5 text-rsvd-text-muted">
-          <span className={`inline-flex items-center justify-center ${LIKE_ICON_SIZE_CLASS}`}>
+          <span
+            className={`inline-flex translate-y-[1px] items-center justify-center ${LIKE_ICON_SIZE_CLASS}`}
+          >
             <HeartIcon />
           </span>
           <span className="translate-y-[2px] text-[0.72rem]">
@@ -85,17 +85,6 @@ export function SpaceCard({ space }: SpaceCardProps) {
       </div>
     </article>
   );
-}
-
-function truncateText(value: string | null | undefined, maxChars: number) {
-  const text = value?.trim() ?? "";
-  if (!text) {
-    return null;
-  }
-  if (text.length <= maxChars) {
-    return text;
-  }
-  return `${text.slice(0, maxChars)}…`;
 }
 
 function HeartIcon() {

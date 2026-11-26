@@ -24,7 +24,9 @@ export function SpaceDetail({ space }: SpaceDetailProps) {
         </h1>
         <div className="flex shrink-0 items-center gap-1">
           <div className="inline-flex -translate-y-[4px] items-center gap-1 text-rsvd-text-muted">
-            <span className={`inline-flex items-center justify-center ${DETAIL_LIKE_ICON_CLASS}`}>
+            <span
+              className={`inline-flex translate-y-[2px] items-center justify-center ${DETAIL_LIKE_ICON_CLASS}`}
+            >
               <HeartIcon />
             </span>
             <span className="translate-y-[4px] text-[1.05rem] font-medium">
@@ -34,7 +36,7 @@ export function SpaceDetail({ space }: SpaceDetailProps) {
           <button
             type="button"
             aria-label={`${space.name} 메신저 예약`}
-            className="inline-flex h-[2.625rem] w-[2.625rem] shrink-0 translate-x-[3px] items-center justify-center rounded-full transition hover:bg-rsvd-tint"
+            className="inline-flex h-[2.8875rem] w-[2.8875rem] shrink-0 translate-x-[3px] items-center justify-center rounded-full transition hover:bg-rsvd-tint"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
@@ -42,7 +44,7 @@ export function SpaceDetail({ space }: SpaceDetailProps) {
               alt=""
               width={800}
               height={800}
-              className="h-[1.875rem] w-[1.875rem]"
+              className="h-[2.0625rem] w-[2.0625rem]"
             />
           </button>
         </div>
