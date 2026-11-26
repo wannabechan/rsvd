@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { HeaderLogo } from "@/components/layout/header-logo";
 
 const HEADER_ICON_CLASS = "h-[1.65rem] w-[1.65rem]";
 
@@ -8,16 +8,7 @@ export function SiteHeader() {
   return (
     <header className="relative z-50 shrink-0">
       <div className="flex w-full items-center justify-between border-b border-rsvd-border bg-rsvd-surface px-4 py-4">
-        <Link href="/space" className="inline-flex shrink-0">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/img/rsvd_logo_main.png"
-            alt="rsvd"
-            width={1800}
-            height={800}
-            className="h-[1.68rem] w-auto"
-          />
-        </Link>
+        <HeaderLogo />
 
         <nav className="ml-auto flex items-center">
           {isLoggedIn ? (

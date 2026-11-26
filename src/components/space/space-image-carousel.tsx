@@ -63,32 +63,34 @@ export function SpaceImageCarousel({
         ))}
       </div>
 
-      <Link
-        href="/space"
-        aria-label="공간 리스트로 돌아가기"
-        className="absolute top-3 left-3 inline-flex h-[2.125rem] w-[2.125rem] items-center justify-center text-[2.125rem] font-thin leading-none text-rsvd-on-brand drop-shadow"
-      >
-        ←
-      </Link>
+      <div className="pointer-events-none absolute inset-x-0 top-3 flex h-10 items-center justify-between px-3">
+        <Link
+          href="/space"
+          aria-label="공간 리스트로 돌아가기"
+          className="pointer-events-auto inline-flex h-10 w-10 items-center justify-center text-[2.125rem] font-thin leading-none text-rsvd-on-brand drop-shadow"
+        >
+          ←
+        </Link>
 
-      {phoneHref ? (
-        <a
-          href={phoneHref}
-          aria-label={`${spaceName}에 전화하기`}
-          className="absolute top-3 right-3 inline-flex items-center justify-center text-rsvd-on-brand drop-shadow"
-        >
-          <PhoneIcon />
-        </a>
-      ) : (
-        <button
-          type="button"
-          disabled
-          aria-label="연락처 없음"
-          className="absolute top-3 right-3 inline-flex items-center justify-center text-rsvd-on-brand/50"
-        >
-          <PhoneIcon />
-        </button>
-      )}
+        {phoneHref ? (
+          <a
+            href={phoneHref}
+            aria-label={`${spaceName}에 전화하기`}
+            className="pointer-events-auto inline-flex h-10 w-10 items-center justify-center text-rsvd-on-brand drop-shadow"
+          >
+            <PhoneIcon />
+          </a>
+        ) : (
+          <button
+            type="button"
+            disabled
+            aria-label="연락처 없음"
+            className="pointer-events-auto inline-flex h-10 w-10 items-center justify-center text-rsvd-on-brand/50"
+          >
+            <PhoneIcon />
+          </button>
+        )}
+      </div>
 
       {slides.length > 1 ? (
         <div className="pointer-events-none absolute inset-x-0 bottom-3 flex items-center justify-center gap-1.5">
