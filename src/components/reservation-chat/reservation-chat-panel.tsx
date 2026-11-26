@@ -1,15 +1,17 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { ReservationDateCalendar } from "@/components/reservation-chat/reservation-date-calendar";
 import type { SpaceItem } from "@/data/spaces";
 
-type ChatRole = "restaurant" | "guest";
+type ChatRole = "system" | "restaurant" | "guest";
 
 type ChatMessage = {
   id: string;
   role: ChatRole;
   text: string;
   createdAt: Date;
+  showDatePicker?: boolean;
 };
 
 type ReservationChatPanelProps = {
@@ -20,12 +22,14 @@ export function ReservationChatPanel({ space }: ReservationChatPanelProps) {
   const [messages, setMessages] = useState<ChatMessage[]>(() => [
     {
       id: "welcome",
-      role: "restaurant",
-      text: `안녕하세요. ${space.name}입니다. 원하시는 날짜·시간과 인원을 알려주시면 예약을 도와드릴게요.`,
+      role: "system",
+      text: `안녕하세요. ${space.name} 예약을 진행합니다. 먼저 예약 희망일을 선택하세요.`,
       createdAt: new Date(),
+      showDatePicker: true,
     },
   ]);
   const [draft, setDraft] = useState("");
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -34,7 +38,7 @@ export function ReservationChatPanel({ space }: ReservationChatPanelProps) {
       return;
     }
     node.scrollTop = node.scrollHeight;
-  }, [messages]);
+  }, [messages, selectedDate]);
 
   function sendMessage() {
     const text = draft.trim();
@@ -62,7 +66,13 @@ export function ReservationChatPanel({ space }: ReservationChatPanelProps) {
         aria-label={`${space.name} 예약챗`}
       >
         {messages.map((message) => (
-          <ChatBubble key={message.id} message={message} spaceName={space.name} />
+          <ChatBubble
+            key={message.id}
+            message={message}
+            spaceName={space.name}
+            selectedDate={selectedDate}
+            onSelectDate={setSelectedDate}
+          />
         ))}
       </div>
 
@@ -88,7 +98,7 @@ export function ReservationChatPanel({ space }: ReservationChatPanelProps) {
                 sendMessage();
               }
             }}
-            placeholder="날짜, 시간, 인원을 알려주세요"
+            placeholder="메시지를 입력하세요"
             className="max-h-28 min-h-11 flex-1 resize-none rounded-2xl border border-rsvd-border bg-rsvd-surface px-3.5 py-2.5 text-sm leading-snug text-rsvd-text placeholder:text-rsvd-text-muted"
           />
           <button
@@ -107,17 +117,23 @@ export function ReservationChatPanel({ space }: ReservationChatPanelProps) {
 function ChatBubble({
   message,
   spaceName,
+  selectedDate,
+  onSelectDate,
 }: {
   message: ChatMessage;
   spaceName: string;
+  selectedDate: string | null;
+  onSelectDate: (dateKey: string) => void;
 }) {
   const isGuest = message.role === "guest";
+  const speakerLabel =
+    message.role === "system" ? "rsvd." : message.role === "restaurant" ? spaceName : null;
   const timeLabel = formatMessageTime(message.createdAt);
 
   return (
     <div className={`flex flex-col ${isGuest ? "items-end" : "items-start"}`}>
-      {!isGuest ? (
-        <p className="mb-1 px-1 text-xs font-medium text-rsvd-text-muted">{spaceName}</p>
+      {speakerLabel ? (
+        <p className="mb-1 px-1 text-xs font-medium text-rsvd-text-muted">{speakerLabel}</p>
       ) : null}
       <div
         className={`max-w-[82%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed text-[var(--rsvd-chat-text)] ${
@@ -129,6 +145,14 @@ function ChatBubble({
         {message.text}
       </div>
       <p className="mt-1 px-1 text-[0.7rem] text-rsvd-text-muted">{timeLabel}</p>
+      {message.showDatePicker ? (
+        <div className="mt-2 w-full max-w-[20rem]">
+          <ReservationDateCalendar
+            selectedDate={selectedDate}
+            onSelectDate={onSelectDate}
+          />
+        </div>
+      ) : null}
     </div>
   );
 }
