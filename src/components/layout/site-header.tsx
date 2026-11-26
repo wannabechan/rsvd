@@ -48,7 +48,7 @@ export function SiteHeader() {
               alt=""
               width={800}
               height={800}
-              className="h-[1.65rem] w-[1.65rem]"
+              className="h-[2.145rem] w-[2.145rem]"
             />
           </button>
         </nav>
