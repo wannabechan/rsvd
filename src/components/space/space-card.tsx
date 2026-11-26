@@ -1,12 +1,15 @@
 import type { SpaceItem } from "@/data/spaces";
 
-const LIKE_ICON_SIZE_CLASS = "h-3.5 w-3.5";
+const LIKE_ICON_SIZE_CLASS = "h-[1.05rem] w-[1.05rem]";
+const REVIEW_PREVIEW_MAX_CHARS = 15;
 
 type SpaceCardProps = {
   space: SpaceItem;
 };
 
 export function SpaceCard({ space }: SpaceCardProps) {
+  const reviewPreview = truncateReview(space.latestCommentPreview);
+
   return (
     <article className="min-w-0 space-y-2">
       <div className="pb-1">
@@ -25,7 +28,9 @@ export function SpaceCard({ space }: SpaceCardProps) {
       </div>
 
       <div className="flex items-center justify-between gap-2">
-        <h2 className="min-w-0 truncate text-[1.3125rem] font-medium text-rsvd-text">{space.name}</h2>
+        <h2 className="min-w-0 truncate text-[1.18125rem] font-medium text-rsvd-text">
+          {space.name}
+        </h2>
         <button
           type="button"
           aria-label={`${space.name} 메신저 예약`}
@@ -44,28 +49,39 @@ export function SpaceCard({ space }: SpaceCardProps) {
 
       <p className="truncate text-[0.84rem] font-bold text-rsvd-text">{space.address}</p>
 
-      <p className="line-clamp-2 text-[0.65rem] text-rsvd-text-muted">{space.tagline}</p>
-
-      <div className="flex min-w-0 items-center justify-end gap-1 pt-1">
-        {space.latestCommentPreview ? (
-          <div className="flex min-w-0 max-w-[5.5rem] items-center gap-1 text-[0.6rem] text-rsvd-text-muted">
-            <span className="inline-flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full bg-rsvd-brand text-[0.45rem] font-semibold text-rsvd-on-brand">
+      <div className="flex min-w-0 items-center justify-between gap-2 pt-1">
+        {reviewPreview ? (
+          <div className="flex min-w-0 items-center gap-1 text-[0.72rem] text-rsvd-text-muted">
+            <span className="inline-flex h-[1.05rem] w-[1.05rem] shrink-0 items-center justify-center rounded-full bg-rsvd-brand text-[0.54rem] font-semibold text-rsvd-on-brand">
               R
             </span>
-            <span className="min-w-0 truncate">{space.latestCommentPreview}</span>
+            <span className="min-w-0 truncate">{reviewPreview}</span>
           </div>
-        ) : null}
+        ) : (
+          <span aria-hidden="true" className="min-w-0" />
+        )}
         <div className="inline-flex shrink-0 items-center gap-0.5 text-rsvd-text-muted">
           <span className={`inline-flex items-center justify-center ${LIKE_ICON_SIZE_CLASS}`}>
             <HeartIcon />
           </span>
           {space.totalLikeCount > 0 ? (
-            <span className="text-[0.6rem]">{space.totalLikeCount}</span>
+            <span className="text-[0.72rem]">{space.totalLikeCount}</span>
           ) : null}
         </div>
       </div>
     </article>
   );
+}
+
+function truncateReview(preview: string | null) {
+  const text = preview?.trim() ?? "";
+  if (!text) {
+    return null;
+  }
+  if (text.length <= REVIEW_PREVIEW_MAX_CHARS) {
+    return text;
+  }
+  return `${text.slice(0, REVIEW_PREVIEW_MAX_CHARS)}…`;
 }
 
 function HeartIcon() {
