@@ -23,6 +23,9 @@ export function HeaderLogo() {
       return;
     }
 
+    // After leaving chat, restart dissolve from the main logo.
+    setShowSymbol(false);
+
     const timer = window.setInterval(() => {
       setShowSymbol((current) => !current);
     }, SWAP_INTERVAL_MS);

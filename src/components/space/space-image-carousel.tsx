@@ -67,7 +67,7 @@ export function SpaceImageCarousel({
         <Link
           href="/space"
           aria-label="공간 리스트로 돌아가기"
-          className="pointer-events-auto inline-flex h-10 w-10 items-center justify-center text-[2.125rem] font-thin leading-none text-rsvd-on-brand drop-shadow"
+          className="pointer-events-auto inline-flex h-10 w-10 items-center justify-center text-[2.125rem] font-thin leading-none text-rsvd-on-brand opacity-85 drop-shadow"
         >
           ←
         </Link>
@@ -76,7 +76,7 @@ export function SpaceImageCarousel({
           <a
             href={phoneHref}
             aria-label={`${spaceName}에 전화하기`}
-            className="pointer-events-auto inline-flex h-10 w-10 items-center justify-center text-rsvd-on-brand drop-shadow"
+            className="pointer-events-auto inline-flex h-10 w-10 items-center justify-center text-rsvd-on-brand opacity-85 drop-shadow"
           >
             <PhoneIcon />
           </a>
