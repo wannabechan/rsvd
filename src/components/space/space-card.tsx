@@ -35,13 +35,21 @@ export function SpaceCard({ space }: SpaceCardProps) {
         )}
       </div>
 
-      <div className="flex flex-col gap-2">
+      <div className="flex items-center justify-between gap-2">
         <h2 className="min-w-0 truncate text-sm font-medium text-rsvd-text">{space.name}</h2>
         <button
           type="button"
-          className="inline-flex w-full items-center justify-center rounded-[16px] border border-rsvd-brand bg-rsvd-surface px-2 py-1.5 text-[0.7rem] font-medium text-rsvd-brand transition hover:bg-rsvd-tint"
+          aria-label={`${space.name} 메신저 예약`}
+          className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition hover:bg-rsvd-tint"
         >
-          Reservation
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/img/rsvd_logo_symbol.png"
+            alt=""
+            width={800}
+            height={800}
+            className="h-5 w-5"
+          />
         </button>
       </div>
 

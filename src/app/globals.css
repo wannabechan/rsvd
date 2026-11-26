@@ -54,16 +54,6 @@
   --font-sans: "Pretendard Variable", Pretendard, sans-serif;
 }
 
-@keyframes nav-menu-drop {
-  from {
-    transform: translate3d(0, -100%, 0);
-  }
-
-  to {
-    transform: translate3d(0, 0, 0);
-  }
-}
-
 body {
   background: var(--rsvd-surface);
   color: var(--rsvd-text);
