@@ -66,7 +66,7 @@ export function SpaceImageCarousel({
       <Link
         href="/space"
         aria-label="공간 리스트로 돌아가기"
-        className="absolute top-3 left-3 inline-flex h-10 w-10 items-center justify-center text-[2.5rem] font-thin leading-none text-rsvd-on-brand drop-shadow"
+        className="absolute top-3 left-3 inline-flex h-[2.125rem] w-[2.125rem] items-center justify-center text-[2.125rem] font-thin leading-none text-rsvd-on-brand drop-shadow"
       >
         ←
       </Link>
