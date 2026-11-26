@@ -19,18 +19,12 @@ type ReservationChatPanelProps = {
 };
 
 export function ReservationChatPanel({ space }: ReservationChatPanelProps) {
-  const [messages, setMessages] = useState<ChatMessage[]>(() => [
-    {
-      id: "welcome",
-      role: "system",
-      text: `안녕하세요. ${space.name} 예약을 진행합니다. 먼저 예약 희망일을 선택하세요.`,
-      createdAt: new Date(),
-      showDatePicker: true,
-    },
-  ]);
+  // Sample/test: no prior thread yet. Real data would hydrate previous messages here.
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [draft, setDraft] = useState("");
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
+  const hasReservationPrompt = messages.some((message) => message.showDatePicker);
 
   useEffect(() => {
     const node = listRef.current;
@@ -39,6 +33,23 @@ export function ReservationChatPanel({ space }: ReservationChatPanelProps) {
     }
     node.scrollTop = node.scrollHeight;
   }, [messages, selectedDate]);
+
+  function startReservation() {
+    if (hasReservationPrompt) {
+      return;
+    }
+
+    setMessages((current) => [
+      ...current,
+      {
+        id: `reservation-${Date.now()}`,
+        role: "system",
+        text: `안녕하세요. ${space.name} 예약을 진행합니다. 먼저 예약 희망일을 선택하세요.`,
+        createdAt: new Date(),
+        showDatePicker: true,
+      },
+    ]);
+  }
 
   function sendMessage() {
     const text = draft.trim();
@@ -65,51 +76,71 @@ export function ReservationChatPanel({ space }: ReservationChatPanelProps) {
         className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 py-4"
         aria-label={`${space.name} 예약챗`}
       >
-        {messages.map((message) => (
-          <ChatBubble
-            key={message.id}
-            message={message}
-            spaceName={space.name}
-            selectedDate={selectedDate}
-            onSelectDate={setSelectedDate}
-          />
-        ))}
+        {messages.length === 0 ? (
+          <p className="py-8 text-center text-sm text-rsvd-text-muted">
+            이전 대화가 없습니다.
+          </p>
+        ) : (
+          messages.map((message) => (
+            <ChatBubble
+              key={message.id}
+              message={message}
+              spaceName={space.name}
+              selectedDate={selectedDate}
+              onSelectDate={setSelectedDate}
+            />
+          ))
+        )}
       </div>
 
-      <form
-        className="shrink-0 border-t border-rsvd-border bg-rsvd-surface px-3 py-3"
-        onSubmit={(event) => {
-          event.preventDefault();
-          sendMessage();
-        }}
-      >
-        <label className="sr-only" htmlFor="reservation-chat-input">
-          예약 메시지 입력
-        </label>
-        <div className="flex items-end gap-2">
-          <textarea
-            id="reservation-chat-input"
-            rows={1}
-            value={draft}
-            onChange={(event) => setDraft(event.target.value)}
-            onKeyDown={(event) => {
-              if (event.key === "Enter" && !event.shiftKey) {
-                event.preventDefault();
-                sendMessage();
-              }
-            }}
-            placeholder="메시지를 입력하세요"
-            className="max-h-28 min-h-11 flex-1 resize-none rounded-2xl border border-rsvd-border bg-rsvd-surface px-3.5 py-2.5 text-sm leading-snug text-rsvd-text placeholder:text-rsvd-text-muted"
-          />
-          <button
-            type="submit"
-            disabled={!draft.trim()}
-            className="inline-flex h-11 shrink-0 items-center justify-center rounded-full bg-rsvd-brand px-4 text-sm font-medium text-rsvd-on-brand transition hover:bg-rsvd-brand-strong disabled:bg-rsvd-disabled-bg disabled:text-rsvd-disabled-text"
-          >
-            보내기
-          </button>
-        </div>
-      </form>
+      <div className="shrink-0 border-t border-rsvd-border bg-rsvd-surface px-3 pt-3">
+        {!hasReservationPrompt ? (
+          <div className="mb-3 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={startReservation}
+              className="inline-flex h-9 items-center justify-center rounded-full border border-rsvd-brand bg-rsvd-surface px-3.5 text-sm font-medium text-rsvd-brand transition hover:bg-rsvd-tint"
+            >
+              예약하기
+            </button>
+          </div>
+        ) : null}
+
+        <form
+          className="pb-3"
+          onSubmit={(event) => {
+            event.preventDefault();
+            sendMessage();
+          }}
+        >
+          <label className="sr-only" htmlFor="reservation-chat-input">
+            예약 메시지 입력
+          </label>
+          <div className="flex items-end gap-2">
+            <textarea
+              id="reservation-chat-input"
+              rows={1}
+              value={draft}
+              onChange={(event) => setDraft(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" && !event.shiftKey) {
+                  event.preventDefault();
+                  sendMessage();
+                }
+              }}
+              placeholder="메시지를 입력하세요"
+              className="max-h-28 min-h-11 flex-1 resize-none rounded-2xl border border-rsvd-border bg-rsvd-surface px-3.5 py-2.5 text-sm leading-snug text-rsvd-text placeholder:text-rsvd-text-muted outline-none focus-visible:border-rsvd-brand focus-visible:outline-none"
+            />
+            <button
+              type="submit"
+              disabled={!draft.trim()}
+              className="inline-flex h-11 shrink-0 items-center justify-center rounded-full bg-rsvd-brand px-4 text-sm font-medium text-rsvd-on-brand transition hover:bg-rsvd-brand-strong disabled:bg-rsvd-disabled-bg disabled:text-rsvd-disabled-text"
+            >
+              보내기
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }
