@@ -38,7 +38,7 @@ export function SpaceCard({ space }: SpaceCardProps) {
           {space.name}
         </h2>
         <Link
-          href={detailHref}
+          href={`${detailHref}?chat=1`}
           aria-label={`${space.name} 메신저 예약`}
           className="inline-flex h-[2.625rem] w-[2.625rem] shrink-0 translate-x-[3px] items-center justify-center rounded-full transition hover:bg-rsvd-tint"
         >

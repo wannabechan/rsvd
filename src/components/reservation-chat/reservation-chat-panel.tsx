@@ -67,7 +67,7 @@ export function ReservationChatPanel({ space }: ReservationChatPanelProps) {
       {
         id: `reservation-cancel-${Date.now()}`,
         role: "system",
-        text: `${space.name} 예약 진행이 중단되었습니다. 다음에 다시 진행해 주세요.`,
+        text: `${space.name} 예약 진행이 중단되었습니다.`,
         createdAt: new Date(),
       },
     ]);
@@ -153,7 +153,7 @@ export function ReservationChatPanel({ space }: ReservationChatPanelProps) {
                 }
               }}
               placeholder="메시지를 입력하세요"
-              className="max-h-28 min-h-11 flex-1 resize-none rounded-2xl border border-rsvd-border bg-rsvd-surface px-3.5 py-2.5 text-sm leading-snug text-rsvd-text placeholder:text-rsvd-text-muted outline-none focus-visible:border-rsvd-brand focus-visible:outline-none"
+              className="max-h-28 min-h-11 flex-1 resize-none rounded-2xl border border-rsvd-border bg-rsvd-surface px-3.5 py-2.5 text-sm leading-snug text-rsvd-text placeholder:text-rsvd-text-muted outline-none focus-visible:outline-none"
             />
             <button
               type="submit"
@@ -225,7 +225,7 @@ function SendArrowIcon() {
     <svg
       aria-hidden="true"
       viewBox="0 0 24 24"
-      className="h-5 w-5"
+      className="h-5 w-5 -translate-x-[2px]"
       fill="none"
       stroke="currentColor"
       strokeWidth="1.8"

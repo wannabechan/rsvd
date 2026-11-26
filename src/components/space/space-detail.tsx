@@ -1,5 +1,7 @@
 "use client";
 
+import { useLayoutEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useReservationChat } from "@/components/reservation-chat/reservation-chat-context";
 import { ReservationChatPanel } from "@/components/reservation-chat/reservation-chat-panel";
 import { SpaceImageCarousel } from "@/components/space/space-image-carousel";
@@ -10,13 +12,24 @@ const MAX_DETAIL_RESERVER_AVATARS = 7;
 
 type SpaceDetailProps = {
   space: SpaceItem;
+  openChat?: boolean;
 };
 
-export function SpaceDetail({ space }: SpaceDetailProps) {
+export function SpaceDetail({ space, openChat = false }: SpaceDetailProps) {
+  const router = useRouter();
   const { activeChat, startChat } = useReservationChat();
   const phoneHref = normalizePhoneHref(space.contact);
   const recentReservers = space.recentReservers.slice(0, MAX_DETAIL_RESERVER_AVATARS);
-  const isChatOpen = activeChat?.spaceId === space.id;
+  const isChatOpen = openChat || activeChat?.spaceId === space.id;
+
+  useLayoutEffect(() => {
+    if (!openChat) {
+      return;
+    }
+
+    startChat({ spaceId: space.id, spaceName: space.name });
+    router.replace(`/space/${space.id}`, { scroll: false });
+  }, [openChat, router, space.id, space.name, startChat]);
 
   if (isChatOpen) {
     return <ReservationChatPanel space={space} />;

@@ -8,15 +8,18 @@ export function generateStaticParams() {
 
 export default async function SpaceDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ chat?: string }>;
 }) {
   const { id } = await params;
+  const { chat } = await searchParams;
   const space = getSpaceById(id);
 
   if (!space) {
     notFound();
   }
 
-  return <SpaceDetail space={space} />;
+  return <SpaceDetail space={space} openChat={chat === "1"} />;
 }
