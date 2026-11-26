@@ -1,0 +1,35 @@
+---
+description: RSVD color system — use palette tokens for all UI color
+alwaysApply: true
+---
+
+# RSVD Color System
+
+Source of truth: [docs/RSVD_COLOR_SYSTEM.md](docs/RSVD_COLOR_SYSTEM.md)
+
+## Always
+
+- Use CSS variables (`--rsvd-*`) or Tailwind tokens mapped to them. Never hardcode new HEX values.
+- Light theme only. Warm ivory (`--rsvd-bg`) + white surfaces; deep green for primary actions/selection.
+- Peach (`--rsvd-accent`) only for small badges/welcome accents — never primary buttons.
+- On tint/accent backgrounds use charcoal or brand text, never white body text.
+- Focus: `outline: 2px solid var(--rsvd-focus); outline-offset: 3px`.
+- Status (success/danger/selected) needs text/icon, not color alone.
+- Do not invent new colors; extend `docs/RSVD_COLOR_SYSTEM.md` first if a new role is needed.
+
+## Core tokens
+
+| Token | HEX | Role |
+| --- | --- | --- |
+| `--rsvd-brand` | `#24594B` | Logo, primary button, selection |
+| `--rsvd-brand-strong` | `#193F35` | Primary hover/active |
+| `--rsvd-bg` | `#F7F6F2` | Page / chat background |
+| `--rsvd-surface` | `#FFFFFF` | Cards, inputs, popups |
+| `--rsvd-text` | `#242A27` | Titles, body |
+| `--rsvd-text-muted` | `#64716A` | Secondary copy |
+| `--rsvd-border` | `#DFE5DF` | Default borders |
+| `--rsvd-tint` | `#E3EEE6` | Selected / self chat |
+| `--rsvd-accent` | `#F1D2BF` | Loyalty badge accents |
+| `--rsvd-success` | `#28724F` | Confirmed |
+| `--rsvd-danger` | `#B4433D` | Error / cancel |
+| `--rsvd-on-brand` | `#FFFFFF` | Text on brand |

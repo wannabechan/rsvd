@@ -31,36 +31,36 @@ export function SpaceCard({ space }: SpaceCardProps) {
             className="aspect-[4/5] w-full object-cover"
           />
         ) : (
-          <div aria-hidden="true" className="aspect-[4/5] w-full bg-zinc-100" />
+          <div aria-hidden="true" className="aspect-[4/5] w-full bg-rsvd-tint" />
         )}
       </div>
 
       <div className="flex items-center justify-between gap-3">
-        <h2 className="min-w-0 text-lg font-medium text-zinc-900">{space.name}</h2>
+        <h2 className="min-w-0 text-lg font-medium text-rsvd-text">{space.name}</h2>
         <button
           type="button"
-          className="inline-flex w-[13.2ch] shrink-0 items-center justify-center rounded-[20px] border border-black bg-white py-2.5 text-sm font-medium text-zinc-900 transition hover:bg-zinc-50"
+          className="inline-flex w-[13.2ch] shrink-0 items-center justify-center rounded-[20px] border border-rsvd-brand bg-rsvd-surface py-2.5 text-sm font-medium text-rsvd-brand transition hover:bg-rsvd-tint"
         >
           Reservation
         </button>
       </div>
 
-      <p className="text-sm font-bold text-black">{space.address}</p>
+      <p className="text-sm font-bold text-rsvd-text">{space.address}</p>
 
       <div className="flex flex-col gap-[7px]">
-        <p className="text-[0.74375rem] text-zinc-700">{space.tagline}</p>
+        <p className="text-[0.74375rem] text-rsvd-text-muted">{space.tagline}</p>
         <div className="pb-[3px]">
           <button
             type="button"
             aria-expanded={showDescription}
             onClick={handleToggleDescription}
-            className="text-left text-[0.74375rem] text-zinc-700 underline transition hover:text-zinc-900"
+            className="text-left text-[0.74375rem] text-rsvd-text-muted underline transition hover:text-rsvd-text"
           >
             {showDescription ? "less info." : "more info."}
           </button>
         </div>
         {showDescription ? (
-          <p className="pt-[5px] text-[0.74375rem] leading-relaxed text-zinc-700 whitespace-pre-line">
+          <p className="pt-[5px] text-[0.74375rem] leading-relaxed text-rsvd-text-muted whitespace-pre-line">
             {space.description}
           </p>
         ) : null}
@@ -72,7 +72,7 @@ export function SpaceCard({ space }: SpaceCardProps) {
             type="button"
             disabled
             aria-label="메뉴판 링크 없음"
-            className={`inline-flex items-center justify-center text-zinc-300 ${ACTION_ICON_SIZE_CLASS}`}
+            className={`inline-flex items-center justify-center text-rsvd-border ${ACTION_ICON_SIZE_CLASS}`}
           >
             <MenuBookIcon />
           </button>
@@ -80,7 +80,7 @@ export function SpaceCard({ space }: SpaceCardProps) {
             <a
               href={phoneHref}
               aria-label="전화 걸기"
-              className={`-ml-[7px] inline-flex items-center justify-center text-zinc-400 transition hover:text-zinc-500 ${ACTION_ICON_SIZE_CLASS}`}
+              className={`-ml-[7px] inline-flex items-center justify-center text-rsvd-text-muted transition hover:text-rsvd-text ${ACTION_ICON_SIZE_CLASS}`}
             >
               <PhoneIcon />
             </a>
@@ -89,7 +89,7 @@ export function SpaceCard({ space }: SpaceCardProps) {
               type="button"
               disabled
               aria-label="연락처 없음"
-              className={`-ml-[7px] inline-flex items-center justify-center text-zinc-300 ${ACTION_ICON_SIZE_CLASS}`}
+              className={`-ml-[7px] inline-flex items-center justify-center text-rsvd-border ${ACTION_ICON_SIZE_CLASS}`}
             >
               <PhoneIcon />
             </button>
@@ -98,8 +98,8 @@ export function SpaceCard({ space }: SpaceCardProps) {
 
         <div className="flex min-w-0 items-center justify-end gap-2">
           {space.latestCommentPreview ? (
-            <div className="flex min-w-0 max-w-[12rem] items-center gap-1.5 text-[0.74375rem] text-zinc-700">
-              <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[#22c55e] text-[0.55rem] font-semibold text-white">
+            <div className="flex min-w-0 max-w-[12rem] items-center gap-1.5 text-[0.74375rem] text-rsvd-text-muted">
+              <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-rsvd-brand text-[0.55rem] font-semibold text-rsvd-on-brand">
                 R
               </span>
               <span className="min-w-0 translate-x-[2px] truncate text-right">
@@ -107,7 +107,7 @@ export function SpaceCard({ space }: SpaceCardProps) {
               </span>
             </div>
           ) : null}
-          <div className="inline-flex shrink-0 items-center gap-1 text-zinc-700">
+          <div className="inline-flex shrink-0 items-center gap-1 text-rsvd-text-muted">
             <span
               className={`inline-flex translate-x-[2px] items-center justify-center ${LIKE_ICON_SIZE_CLASS}`}
             >
@@ -169,7 +169,7 @@ function HeartIcon() {
     <svg
       aria-hidden="true"
       viewBox="0 0 24 24"
-      className={`block shrink-0 fill-red-500 text-red-500 ${LIKE_ICON_SIZE_CLASS}`}
+      className={`block shrink-0 fill-rsvd-danger text-rsvd-danger ${LIKE_ICON_SIZE_CLASS}`}
       stroke="currentColor"
       strokeWidth={1.5}
       strokeLinecap="round"

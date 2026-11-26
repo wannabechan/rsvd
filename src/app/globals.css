@@ -1,13 +1,56 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: light;
+
+  /* Base palette */
+  --rsvd-brand: #24594b;
+  --rsvd-brand-strong: #193f35;
+  --rsvd-bg: #f7f6f2;
+  --rsvd-surface: #ffffff;
+  --rsvd-text: #242a27;
+  --rsvd-text-muted: #64716a;
+  --rsvd-border: #dfe5df;
+  --rsvd-tint: #e3eee6;
+  --rsvd-accent: #f1d2bf;
+  --rsvd-success: #28724f;
+  --rsvd-danger: #b4433d;
+  --rsvd-on-brand: #ffffff;
+
+  /* Semantic aliases */
+  --rsvd-action-bg: var(--rsvd-brand);
+  --rsvd-action-hover-bg: var(--rsvd-brand-strong);
+  --rsvd-action-text: var(--rsvd-on-brand);
+  --rsvd-selected-bg: var(--rsvd-tint);
+  --rsvd-selected-text: var(--rsvd-brand);
+  --rsvd-chat-self-bg: var(--rsvd-tint);
+  --rsvd-chat-restaurant-bg: var(--rsvd-surface);
+  --rsvd-chat-text: var(--rsvd-text);
+  --rsvd-badge-bg: var(--rsvd-accent);
+  --rsvd-badge-text: var(--rsvd-text);
+  --rsvd-focus: var(--rsvd-brand);
+  --rsvd-disabled-bg: var(--rsvd-border);
+  --rsvd-disabled-text: var(--rsvd-text-muted);
+
+  --background: var(--rsvd-bg);
+  --foreground: var(--rsvd-text);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-background: var(--rsvd-bg);
+  --color-foreground: var(--rsvd-text);
+  --color-rsvd-brand: var(--rsvd-brand);
+  --color-rsvd-brand-strong: var(--rsvd-brand-strong);
+  --color-rsvd-bg: var(--rsvd-bg);
+  --color-rsvd-surface: var(--rsvd-surface);
+  --color-rsvd-text: var(--rsvd-text);
+  --color-rsvd-text-muted: var(--rsvd-text-muted);
+  --color-rsvd-border: var(--rsvd-border);
+  --color-rsvd-tint: var(--rsvd-tint);
+  --color-rsvd-accent: var(--rsvd-accent);
+  --color-rsvd-success: var(--rsvd-success);
+  --color-rsvd-danger: var(--rsvd-danger);
+  --color-rsvd-on-brand: var(--rsvd-on-brand);
   --font-sans: "Pretendard Variable", Pretendard, sans-serif;
 }
 
@@ -22,7 +65,12 @@
 }
 
 body {
-  background: #f4f4f5;
-  color: var(--foreground);
+  background: var(--rsvd-bg);
+  color: var(--rsvd-text);
   font-family: var(--font-sans);
+}
+
+:focus-visible {
+  outline: 2px solid var(--rsvd-focus);
+  outline-offset: 3px;
 }
