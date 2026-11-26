@@ -78,7 +78,9 @@ export function SpaceCard({ space }: SpaceCardProps) {
           <span className={`inline-flex items-center justify-center ${LIKE_ICON_SIZE_CLASS}`}>
             <HeartIcon />
           </span>
-          <span className="text-[0.72rem]">{Math.max(space.totalLikeCount, 1)}</span>
+          <span className="translate-y-[2px] text-[0.72rem]">
+            {Math.max(space.totalLikeCount, 1)}
+          </span>
         </div>
       </div>
     </article>

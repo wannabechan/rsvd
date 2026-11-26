@@ -27,7 +27,7 @@ export function SpaceDetail({ space }: SpaceDetailProps) {
             <span className={`inline-flex items-center justify-center ${DETAIL_LIKE_ICON_CLASS}`}>
               <HeartIcon />
             </span>
-            <span className="text-[1.05rem] font-medium">
+            <span className="translate-y-[4px] text-[1.05rem] font-medium">
               {Math.max(space.totalLikeCount, 1)}
             </span>
           </div>
@@ -51,7 +51,7 @@ export function SpaceDetail({ space }: SpaceDetailProps) {
       <p className="mt-2 text-[0.84rem] font-bold break-words text-rsvd-text">{space.address}</p>
 
       <section className="mt-5 space-y-3" aria-label="매장 공지사항">
-        <div className="space-y-3 text-sm leading-relaxed text-rsvd-text-muted">
+        <div className="space-y-3 text-sm leading-[1.4625] text-rsvd-text-muted">
           {space.notice.map((paragraph, index) => (
             <p key={`${space.id}-notice-${index}`}>{paragraph}</p>
           ))}

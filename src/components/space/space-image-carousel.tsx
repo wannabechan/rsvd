@@ -105,7 +105,7 @@ function PhoneIcon() {
       className="h-10 w-10"
       fill="none"
       stroke="currentColor"
-      strokeWidth="1.5"
+      strokeWidth="1"
       strokeLinecap="round"
       strokeLinejoin="round"
     >
