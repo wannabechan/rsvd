@@ -1,4 +1,8 @@
+"use client";
+
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useReservationChat } from "@/components/reservation-chat/reservation-chat-context";
 import type { SpaceItem } from "@/data/spaces";
 
 const LIKE_ICON_SIZE_CLASS = "h-[1.05rem] w-[1.05rem]";
@@ -9,9 +13,16 @@ type SpaceCardProps = {
 };
 
 export function SpaceCard({ space }: SpaceCardProps) {
+  const router = useRouter();
+  const { startChat } = useReservationChat();
   const detailHref = `/space/${space.id}`;
   const thumbnail = space.images[0] ?? "";
   const recentReservers = space.recentReservers.slice(0, MAX_RESERVER_AVATARS);
+
+  function openReservationChat() {
+    startChat({ spaceId: space.id, spaceName: space.name });
+    router.push(detailHref);
+  }
 
   return (
     <article className="min-w-0 space-y-2">
@@ -37,9 +48,10 @@ export function SpaceCard({ space }: SpaceCardProps) {
         >
           {space.name}
         </h2>
-        <Link
-          href={`${detailHref}?chat=1`}
+        <button
+          type="button"
           aria-label={`${space.name} 메신저 예약`}
+          onClick={openReservationChat}
           className="inline-flex h-[2.625rem] w-[2.625rem] shrink-0 translate-x-[3px] items-center justify-center rounded-full transition hover:bg-rsvd-tint"
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -50,7 +62,7 @@ export function SpaceCard({ space }: SpaceCardProps) {
             height={800}
             className="h-[1.875rem] w-[1.875rem]"
           />
-        </Link>
+        </button>
       </div>
 
       <p className="truncate text-[0.84rem] font-bold text-rsvd-text">{space.address}</p>

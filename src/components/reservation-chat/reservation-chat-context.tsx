@@ -6,6 +6,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -29,12 +30,15 @@ const ReservationChatContext = createContext<ReservationChatContextValue | null>
 export function ReservationChatProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const [activeChat, setActiveChat] = useState<ActiveReservationChat | null>(null);
+  const pendingSpaceIdRef = useRef<string | null>(null);
 
   const startChat = useCallback((chat: ActiveReservationChat) => {
+    pendingSpaceIdRef.current = chat.spaceId;
     setActiveChat(chat);
   }, []);
 
   const endChat = useCallback(() => {
+    pendingSpaceIdRef.current = null;
     setActiveChat(null);
   }, []);
 
@@ -43,9 +47,19 @@ export function ReservationChatProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    if (pathname !== `/space/${activeChat.spaceId}`) {
-      setActiveChat(null);
+    const targetPath = `/space/${activeChat.spaceId}`;
+
+    if (pathname === targetPath) {
+      pendingSpaceIdRef.current = null;
+      return;
     }
+
+    // Keep chat while navigating from the list into the target space page.
+    if (pendingSpaceIdRef.current === activeChat.spaceId) {
+      return;
+    }
+
+    setActiveChat(null);
   }, [activeChat, pathname]);
 
   const value = useMemo(
