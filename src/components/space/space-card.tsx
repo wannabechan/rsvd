@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { SpaceItem } from "@/data/spaces";
 
 const LIKE_ICON_SIZE_CLASS = "h-[1.05rem] w-[1.05rem]";
-const SPACE_NAME_MAX_CHARS = 15;
+const SPACE_NAME_MAX_CHARS = 13;
 const MAX_LIKER_AVATARS = 7;
 
 type SpaceCardProps = {
@@ -74,13 +74,11 @@ export function SpaceCard({ space }: SpaceCardProps) {
         ) : (
           <span aria-hidden="true" className="min-w-0" />
         )}
-        <div className="inline-flex shrink-0 items-center gap-0.5 text-rsvd-text-muted">
+        <div className="inline-flex shrink-0 -translate-y-[2px] items-center gap-0.5 text-rsvd-text-muted">
           <span className={`inline-flex items-center justify-center ${LIKE_ICON_SIZE_CLASS}`}>
             <HeartIcon />
           </span>
-          {space.totalLikeCount > 0 ? (
-            <span className="text-[0.72rem]">{space.totalLikeCount}</span>
-          ) : null}
+          <span className="text-[0.72rem]">{Math.max(space.totalLikeCount, 1)}</span>
         </div>
       </div>
     </article>

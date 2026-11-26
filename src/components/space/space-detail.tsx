@@ -1,5 +1,5 @@
 import { SpaceImageCarousel } from "@/components/space/space-image-carousel";
-import type { SpaceItem, SpaceNoticeBlock } from "@/data/spaces";
+import type { SpaceItem } from "@/data/spaces";
 
 const DETAIL_LIKE_ICON_CLASS = "h-[1.875rem] w-[1.875rem]";
 
@@ -23,13 +23,13 @@ export function SpaceDetail({ space }: SpaceDetailProps) {
           {space.name}
         </h1>
         <div className="flex shrink-0 items-center gap-1">
-          <div className="inline-flex items-center gap-1 text-rsvd-text-muted">
+          <div className="inline-flex -translate-y-[4px] items-center gap-1 text-rsvd-text-muted">
             <span className={`inline-flex items-center justify-center ${DETAIL_LIKE_ICON_CLASS}`}>
               <HeartIcon />
             </span>
-            {space.totalLikeCount > 0 ? (
-              <span className="text-[1.05rem] font-medium">{space.totalLikeCount}</span>
-            ) : null}
+            <span className="text-[1.05rem] font-medium">
+              {Math.max(space.totalLikeCount, 1)}
+            </span>
           </div>
           <button
             type="button"
@@ -51,28 +51,13 @@ export function SpaceDetail({ space }: SpaceDetailProps) {
       <p className="mt-2 text-[0.84rem] font-bold break-words text-rsvd-text">{space.address}</p>
 
       <section className="mt-5 space-y-3" aria-label="매장 공지사항">
-        <h2 className="text-sm font-medium text-rsvd-text">공지사항</h2>
         <div className="space-y-3 text-sm leading-relaxed text-rsvd-text-muted">
-          {space.notice.map((block, index) => (
-            <NoticeBlock key={`${space.id}-notice-${index}`} block={block} />
+          {space.notice.map((paragraph, index) => (
+            <p key={`${space.id}-notice-${index}`}>{paragraph}</p>
           ))}
         </div>
       </section>
     </article>
-  );
-}
-
-function NoticeBlock({ block }: { block: SpaceNoticeBlock }) {
-  if (block.type === "paragraph") {
-    return <p>{block.text}</p>;
-  }
-
-  return (
-    <ul className="list-disc space-y-1.5 pl-5">
-      {block.items.map((item) => (
-        <li key={item}>{item}</li>
-      ))}
-    </ul>
   );
 }
 
