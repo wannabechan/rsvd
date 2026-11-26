@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 const SWAP_INTERVAL_MS = 5000;
 const DISSOLVE_MS = 700;
 const LOGO_HEIGHT = "1.68rem";
-const SYMBOL_SCALE = 1.3;
+const SYMBOL_SCALE = 1.235;
 const SYMBOL_HEIGHT = `calc(${LOGO_HEIGHT} * ${SYMBOL_SCALE})`;
 const LOGO_SLOT_WIDTH = `calc(${LOGO_HEIGHT} * 1800 / 800)`;
 
@@ -54,7 +54,7 @@ export function HeaderLogo() {
         aria-hidden="true"
       />
       <span
-        className={`pointer-events-none absolute top-1/2 -translate-y-1/2 whitespace-nowrap text-sm font-normal leading-none text-rsvd-text-muted transition-opacity ease-in-out ${
+        className={`pointer-events-none absolute top-1/2 -translate-y-[calc(50%-2px)] whitespace-nowrap text-sm font-normal leading-none text-rsvd-text-muted transition-opacity ease-in-out ${
           showSymbol ? "opacity-100" : "opacity-0"
         }`}
         style={{
