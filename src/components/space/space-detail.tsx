@@ -1,4 +1,7 @@
+import { SpaceImageCarousel } from "@/components/space/space-image-carousel";
 import type { SpaceItem, SpaceNoticeBlock } from "@/data/spaces";
+
+const DETAIL_LIKE_ICON_CLASS = "h-[1.875rem] w-[1.875rem]";
 
 type SpaceDetailProps = {
   space: SpaceItem;
@@ -9,56 +12,40 @@ export function SpaceDetail({ space }: SpaceDetailProps) {
 
   return (
     <article className="px-4 pb-10 pt-4">
-      <div className="relative overflow-hidden rounded-2xl">
-        {space.thumbnailImage ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={space.thumbnailImage}
-            alt={space.name}
-            className="aspect-[4/5] w-full object-cover"
-          />
-        ) : (
-          <div aria-hidden="true" className="aspect-[4/5] w-full bg-rsvd-tint" />
-        )}
+      <SpaceImageCarousel
+        images={space.images}
+        spaceName={space.name}
+        phoneHref={phoneHref}
+      />
 
-        {phoneHref ? (
-          <a
-            href={phoneHref}
-            aria-label={`${space.name}에 전화하기`}
-            className="absolute top-3 right-3 inline-flex h-11 w-11 items-center justify-center rounded-full bg-rsvd-surface/90 text-rsvd-text shadow-sm backdrop-blur-sm transition hover:bg-rsvd-surface"
-          >
-            <PhoneIcon />
-          </a>
-        ) : (
-          <button
-            type="button"
-            disabled
-            aria-label="연락처 없음"
-            className="absolute top-3 right-3 inline-flex h-11 w-11 items-center justify-center rounded-full bg-rsvd-surface/90 text-rsvd-border shadow-sm backdrop-blur-sm"
-          >
-            <PhoneIcon />
-          </button>
-        )}
-      </div>
-
-      <div className="mt-4 flex items-start justify-between gap-3">
+      <div className="mt-4 flex items-center justify-between gap-3">
         <h1 className="min-w-0 text-[1.18125rem] font-medium break-words text-rsvd-text">
           {space.name}
         </h1>
-        <button
-          type="button"
-          aria-label={`${space.name} 메신저 예약`}
-          className="inline-flex h-[2.625rem] w-[2.625rem] shrink-0 translate-x-[3px] items-center justify-center rounded-full transition hover:bg-rsvd-tint"
-        >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/img/rsvd_logo_symbol.png"
-            alt=""
-            width={800}
-            height={800}
-            className="h-[1.875rem] w-[1.875rem]"
-          />
-        </button>
+        <div className="flex shrink-0 items-center gap-1">
+          <div className="inline-flex items-center gap-1 text-rsvd-text-muted">
+            <span className={`inline-flex items-center justify-center ${DETAIL_LIKE_ICON_CLASS}`}>
+              <HeartIcon />
+            </span>
+            {space.totalLikeCount > 0 ? (
+              <span className="text-[1.05rem] font-medium">{space.totalLikeCount}</span>
+            ) : null}
+          </div>
+          <button
+            type="button"
+            aria-label={`${space.name} 메신저 예약`}
+            className="inline-flex h-[2.625rem] w-[2.625rem] shrink-0 translate-x-[3px] items-center justify-center rounded-full transition hover:bg-rsvd-tint"
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/img/rsvd_logo_symbol.png"
+              alt=""
+              width={800}
+              height={800}
+              className="h-[1.875rem] w-[1.875rem]"
+            />
+          </button>
+        </div>
       </div>
 
       <p className="mt-2 text-[0.84rem] font-bold break-words text-rsvd-text">{space.address}</p>
@@ -94,19 +81,18 @@ function normalizePhoneHref(contact: string) {
   return digits ? `tel:${digits}` : "";
 }
 
-function PhoneIcon() {
+function HeartIcon() {
   return (
     <svg
       aria-hidden="true"
       viewBox="0 0 24 24"
-      className="h-5 w-5"
-      fill="none"
+      className={`block shrink-0 fill-rsvd-danger text-rsvd-danger ${DETAIL_LIKE_ICON_CLASS}`}
       stroke="currentColor"
-      strokeWidth="1.5"
+      strokeWidth={1.5}
       strokeLinecap="round"
       strokeLinejoin="round"
     >
-      <path d="M8.2 4.5h3.6l1.6 3.8-2.1 1.3a8.5 8.5 0 0 0 3.9 3.9l1.3-2.1 3.8 1.6v3.6c0 .7-.6 1.3-1.3 1.3A11.8 11.8 0 0 1 6.9 5.8c0-.7.6-1.3 1.3-1.3z" />
+      <path d="M12 20.5s-6.9-4.35-6.9-9.45c0-2.55 2.1-4.55 4.65-4.55 1.45 0 2.75.7 3.55 1.8.8-1.1 2.1-1.8 3.55-1.8 2.55 0 4.65 2 4.65 4.55 0 5.1-6.9 9.45-6.9 9.45z" />
     </svg>
   );
 }

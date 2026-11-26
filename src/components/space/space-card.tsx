@@ -2,8 +2,8 @@ import Link from "next/link";
 import type { SpaceItem } from "@/data/spaces";
 
 const LIKE_ICON_SIZE_CLASS = "h-[1.05rem] w-[1.05rem]";
-const REVIEW_PREVIEW_MAX_CHARS = 15;
 const SPACE_NAME_MAX_CHARS = 15;
+const MAX_LIKER_AVATARS = 7;
 
 type SpaceCardProps = {
   space: SpaceItem;
@@ -12,15 +12,16 @@ type SpaceCardProps = {
 export function SpaceCard({ space }: SpaceCardProps) {
   const detailHref = `/space/${space.id}`;
   const displayName = truncateText(space.name, SPACE_NAME_MAX_CHARS);
-  const reviewPreview = truncateText(space.latestCommentPreview, REVIEW_PREVIEW_MAX_CHARS);
+  const thumbnail = space.images[0] ?? "";
+  const recentLikers = space.recentLikers.slice(0, MAX_LIKER_AVATARS);
 
   return (
     <article className="min-w-0 space-y-2">
       <Link href={detailHref} className="block pb-1" aria-label={`${space.name} 상세 보기`}>
-        {space.thumbnailImage ? (
+        {thumbnail ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={space.thumbnailImage}
+            src={thumbnail}
             alt={space.name}
             loading="lazy"
             decoding="async"
@@ -57,12 +58,18 @@ export function SpaceCard({ space }: SpaceCardProps) {
       <p className="truncate text-[0.84rem] font-bold text-rsvd-text">{space.address}</p>
 
       <div className="flex min-w-0 items-center justify-between gap-2 pt-1">
-        {reviewPreview ? (
-          <div className="flex min-w-0 items-center gap-1 text-[0.72rem] text-rsvd-text-muted">
-            <span className="inline-flex h-[1.05rem] w-[1.05rem] shrink-0 items-center justify-center rounded-full bg-rsvd-brand text-[0.54rem] font-semibold text-rsvd-on-brand">
-              R
-            </span>
-            <span className="min-w-0 truncate">{reviewPreview}</span>
+        {recentLikers.length > 0 ? (
+          <div className="flex min-w-0 items-center" aria-label="최근 라이크한 사용자">
+            {recentLikers.map((liker, index) => (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                key={liker.id}
+                src={liker.imageUrl}
+                alt=""
+                className="h-[1.05rem] w-[1.05rem] rounded-full object-cover ring-1 ring-rsvd-surface"
+                style={{ marginLeft: index === 0 ? 0 : -4 }}
+              />
+            ))}
           </div>
         ) : (
           <span aria-hidden="true" className="min-w-0" />

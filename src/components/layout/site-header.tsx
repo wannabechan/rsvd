@@ -19,7 +19,7 @@ export function SiteHeader() {
           />
         </Link>
 
-        <nav className="ml-auto flex items-center gap-1">
+        <nav className="ml-auto flex items-center">
           {isLoggedIn ? (
             <button
               type="button"
@@ -31,26 +31,11 @@ export function SiteHeader() {
           ) : (
             <button
               type="button"
-              className="inline-flex h-10 items-center justify-center px-2 text-sm font-normal text-rsvd-text"
+              className="inline-flex h-10 items-center justify-center px-0 text-sm font-normal text-rsvd-text"
             >
               로그인
             </button>
           )}
-
-          <button
-            type="button"
-            aria-label="메신저"
-            className="inline-flex h-10 w-10 items-center justify-center rounded-full transition hover:bg-rsvd-tint"
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/img/rsvd_logo_symbol.png"
-              alt=""
-              width={800}
-              height={800}
-              className="h-[2.145rem] w-[2.145rem]"
-            />
-          </button>
         </nav>
       </div>
     </header>
