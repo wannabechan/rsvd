@@ -34,7 +34,7 @@ export function SpaceCard({ space }: SpaceCardProps) {
         <button
           type="button"
           aria-label={`${space.name} 메신저 예약`}
-          className="inline-flex h-[2.625rem] w-[2.625rem] shrink-0 items-center justify-center rounded-full transition hover:bg-rsvd-tint"
+          className="inline-flex h-[2.625rem] w-[2.625rem] shrink-0 translate-x-[3px] items-center justify-center rounded-full transition hover:bg-rsvd-tint"
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
