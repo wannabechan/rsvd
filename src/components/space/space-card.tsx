@@ -2,13 +2,15 @@ import type { SpaceItem } from "@/data/spaces";
 
 const LIKE_ICON_SIZE_CLASS = "h-[1.05rem] w-[1.05rem]";
 const REVIEW_PREVIEW_MAX_CHARS = 15;
+const SPACE_NAME_MAX_CHARS = 15;
 
 type SpaceCardProps = {
   space: SpaceItem;
 };
 
 export function SpaceCard({ space }: SpaceCardProps) {
-  const reviewPreview = truncateReview(space.latestCommentPreview);
+  const displayName = truncateText(space.name, SPACE_NAME_MAX_CHARS);
+  const reviewPreview = truncateText(space.latestCommentPreview, REVIEW_PREVIEW_MAX_CHARS);
 
   return (
     <article className="min-w-0 space-y-2">
@@ -20,16 +22,19 @@ export function SpaceCard({ space }: SpaceCardProps) {
             alt={space.name}
             loading="lazy"
             decoding="async"
-            className="aspect-[4/5] w-full object-cover"
+            className="aspect-[4/5] w-full rounded-2xl object-cover"
           />
         ) : (
-          <div aria-hidden="true" className="aspect-[4/5] w-full bg-rsvd-tint" />
+          <div aria-hidden="true" className="aspect-[4/5] w-full rounded-2xl bg-rsvd-tint" />
         )}
       </div>
 
       <div className="flex items-center justify-between gap-2">
-        <h2 className="min-w-0 truncate text-[1.18125rem] font-medium text-rsvd-text">
-          {space.name}
+        <h2
+          className="min-w-0 text-[1.18125rem] font-medium text-rsvd-text"
+          title={space.name !== displayName ? space.name : undefined}
+        >
+          {displayName}
         </h2>
         <button
           type="button"
@@ -73,15 +78,15 @@ export function SpaceCard({ space }: SpaceCardProps) {
   );
 }
 
-function truncateReview(preview: string | null) {
-  const text = preview?.trim() ?? "";
+function truncateText(value: string | null | undefined, maxChars: number) {
+  const text = value?.trim() ?? "";
   if (!text) {
     return null;
   }
-  if (text.length <= REVIEW_PREVIEW_MAX_CHARS) {
+  if (text.length <= maxChars) {
     return text;
   }
-  return `${text.slice(0, REVIEW_PREVIEW_MAX_CHARS)}…`;
+  return `${text.slice(0, maxChars)}…`;
 }
 
 function HeartIcon() {
