@@ -26,4 +26,17 @@ export const SAMPLE_SPACES: SpaceItem[] = [
     totalLikeCount: 5,
     latestCommentPreview: "손님들과 함께 성장해온 el p...",
   },
+  {
+    id: "atelier-nori",
+    name: "Atelier Nori",
+    address: "서울 용산구 이태원로54길 18",
+    tagline: "한남동의 작은 코스 다이닝.",
+    description: "제철 재료로 구성하는 프렌치 코스 레스토랑입니다.",
+    thumbnailImage:
+      "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=1200&q=80",
+    contact: "027654321",
+    onlineLink: "",
+    totalLikeCount: 2,
+    latestCommentPreview: "조용하고 따뜻한 저녁이었어요",
+  },
 ];

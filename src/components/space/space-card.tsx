@@ -3,8 +3,8 @@
 import { useCallback, useState } from "react";
 import type { SpaceItem } from "@/data/spaces";
 
-const ACTION_ICON_SIZE_CLASS = "h-[1.625rem] w-[1.625rem]";
-const LIKE_ICON_SIZE_CLASS = "h-[20px] w-[20px]";
+const ACTION_ICON_SIZE_CLASS = "h-4 w-4";
+const LIKE_ICON_SIZE_CLASS = "h-3.5 w-3.5";
 
 type SpaceCardProps = {
   space: SpaceItem;
@@ -19,8 +19,8 @@ export function SpaceCard({ space }: SpaceCardProps) {
   }, []);
 
   return (
-    <article className="space-y-3">
-      <div className="pb-[7px]">
+    <article className="min-w-0 space-y-2">
+      <div className="pb-1">
         {space.thumbnailImage ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -35,39 +35,37 @@ export function SpaceCard({ space }: SpaceCardProps) {
         )}
       </div>
 
-      <div className="flex items-center justify-between gap-3">
-        <h2 className="min-w-0 text-lg font-medium text-rsvd-text">{space.name}</h2>
+      <div className="flex flex-col gap-2">
+        <h2 className="min-w-0 truncate text-sm font-medium text-rsvd-text">{space.name}</h2>
         <button
           type="button"
-          className="inline-flex w-[13.2ch] shrink-0 items-center justify-center rounded-[20px] border border-rsvd-brand bg-rsvd-surface py-2.5 text-sm font-medium text-rsvd-brand transition hover:bg-rsvd-tint"
+          className="inline-flex w-full items-center justify-center rounded-[16px] border border-rsvd-brand bg-rsvd-surface px-2 py-1.5 text-[0.7rem] font-medium text-rsvd-brand transition hover:bg-rsvd-tint"
         >
           Reservation
         </button>
       </div>
 
-      <p className="text-sm font-bold text-rsvd-text">{space.address}</p>
+      <p className="truncate text-[0.7rem] font-bold text-rsvd-text">{space.address}</p>
 
-      <div className="flex flex-col gap-[7px]">
-        <p className="text-[0.74375rem] text-rsvd-text-muted">{space.tagline}</p>
-        <div className="pb-[3px]">
-          <button
-            type="button"
-            aria-expanded={showDescription}
-            onClick={handleToggleDescription}
-            className="text-left text-[0.74375rem] text-rsvd-text-muted underline transition hover:text-rsvd-text"
-          >
-            {showDescription ? "less info." : "more info."}
-          </button>
-        </div>
+      <div className="flex flex-col gap-1">
+        <p className="line-clamp-2 text-[0.65rem] text-rsvd-text-muted">{space.tagline}</p>
+        <button
+          type="button"
+          aria-expanded={showDescription}
+          onClick={handleToggleDescription}
+          className="text-left text-[0.65rem] text-rsvd-text-muted underline transition hover:text-rsvd-text"
+        >
+          {showDescription ? "less info." : "more info."}
+        </button>
         {showDescription ? (
-          <p className="pt-[5px] text-[0.74375rem] leading-relaxed text-rsvd-text-muted whitespace-pre-line">
+          <p className="text-[0.65rem] leading-relaxed text-rsvd-text-muted whitespace-pre-line">
             {space.description}
           </p>
         ) : null}
       </div>
 
-      <div className="flex items-center justify-between gap-3 pt-[7px]">
-        <div className="flex shrink-0 items-center gap-3">
+      <div className="flex items-center justify-between gap-1.5 pt-1">
+        <div className="flex shrink-0 items-center gap-2">
           <button
             type="button"
             disabled
@@ -80,7 +78,7 @@ export function SpaceCard({ space }: SpaceCardProps) {
             <a
               href={phoneHref}
               aria-label="전화 걸기"
-              className={`-ml-[7px] inline-flex items-center justify-center text-rsvd-text-muted transition hover:text-rsvd-text ${ACTION_ICON_SIZE_CLASS}`}
+              className={`inline-flex items-center justify-center text-rsvd-text-muted transition hover:text-rsvd-text ${ACTION_ICON_SIZE_CLASS}`}
             >
               <PhoneIcon />
             </a>
@@ -89,32 +87,28 @@ export function SpaceCard({ space }: SpaceCardProps) {
               type="button"
               disabled
               aria-label="연락처 없음"
-              className={`-ml-[7px] inline-flex items-center justify-center text-rsvd-border ${ACTION_ICON_SIZE_CLASS}`}
+              className={`inline-flex items-center justify-center text-rsvd-border ${ACTION_ICON_SIZE_CLASS}`}
             >
               <PhoneIcon />
             </button>
           )}
         </div>
 
-        <div className="flex min-w-0 items-center justify-end gap-2">
+        <div className="flex min-w-0 items-center justify-end gap-1">
           {space.latestCommentPreview ? (
-            <div className="flex min-w-0 max-w-[12rem] items-center gap-1.5 text-[0.74375rem] text-rsvd-text-muted">
-              <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-rsvd-brand text-[0.55rem] font-semibold text-rsvd-on-brand">
+            <div className="flex min-w-0 max-w-[5.5rem] items-center gap-1 text-[0.6rem] text-rsvd-text-muted">
+              <span className="inline-flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full bg-rsvd-brand text-[0.45rem] font-semibold text-rsvd-on-brand">
                 R
               </span>
-              <span className="min-w-0 translate-x-[2px] truncate text-right">
-                {space.latestCommentPreview}
-              </span>
+              <span className="min-w-0 truncate">{space.latestCommentPreview}</span>
             </div>
           ) : null}
-          <div className="inline-flex shrink-0 items-center gap-1 text-rsvd-text-muted">
-            <span
-              className={`inline-flex translate-x-[2px] items-center justify-center ${LIKE_ICON_SIZE_CLASS}`}
-            >
+          <div className="inline-flex shrink-0 items-center gap-0.5 text-rsvd-text-muted">
+            <span className={`inline-flex items-center justify-center ${LIKE_ICON_SIZE_CLASS}`}>
               <HeartIcon />
             </span>
             {space.totalLikeCount > 0 ? (
-              <span className="text-[0.74375rem]">{space.totalLikeCount}</span>
+              <span className="text-[0.6rem]">{space.totalLikeCount}</span>
             ) : null}
           </div>
         </div>

@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
 const MENU_PANEL_HEIGHT = "calc(100dvh - 4.5rem)";
@@ -12,7 +11,6 @@ const NAV_FOOTER_LINK_CLASS =
   "text-sm font-normal text-rsvd-text transition hover:text-rsvd-text-muted";
 
 export function SiteHeader() {
-  const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
   const isLoggedIn = false;
 
@@ -27,11 +25,6 @@ export function SiteHeader() {
     };
   }, [menuOpen]);
 
-  const handleProfileClick = () => {
-    closeMenu();
-    router.push(isLoggedIn ? "/profile" : "/login?callbackUrl=/profile");
-  };
-
   return (
     <header className="relative z-50 shrink-0">
       <div className="flex w-full items-center justify-between border-b border-rsvd-border bg-rsvd-surface px-4 py-4">
@@ -42,18 +35,41 @@ export function SiteHeader() {
             alt="rsvd"
             width={1800}
             height={800}
-            className="h-[1.4rem] w-auto"
+            className="h-[1.68rem] w-auto"
           />
         </Link>
 
         <nav className="flex items-center gap-1">
+          {isLoggedIn ? (
+            <button
+              type="button"
+              aria-label="프로필"
+              className="inline-flex h-10 w-10 translate-x-[7px] items-center justify-center rounded-full text-rsvd-text transition hover:bg-rsvd-tint"
+            >
+              <ProfileIcon />
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="inline-flex h-10 translate-x-[7px] items-center justify-center px-2 text-sm font-normal text-rsvd-text"
+            >
+              로그인
+            </button>
+          )}
+
           <button
             type="button"
-            aria-label={isLoggedIn ? "프로필로 이동" : "로그인으로 이동"}
-            onClick={handleProfileClick}
-            className="inline-flex h-10 w-10 translate-x-[7px] items-center justify-center rounded-full text-rsvd-text transition hover:bg-rsvd-tint"
+            aria-label="메신저"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full transition hover:bg-rsvd-tint"
           >
-            <ProfileIcon />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/img/rsvd_logo_symbol.png"
+              alt=""
+              width={800}
+              height={800}
+              className="h-[1.65rem] w-[1.65rem]"
+            />
           </button>
 
           <button
