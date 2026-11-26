@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { SpaceItem } from "@/data/spaces";
 
 const LIKE_ICON_SIZE_CLASS = "h-[1.05rem] w-[1.05rem]";
-const SPACE_NAME_MAX_CHARS = 13;
+const SPACE_NAME_MAX_CHARS = 12;
 const MAX_LIKER_AVATARS = 7;
 
 type SpaceCardProps = {
@@ -34,7 +34,7 @@ export function SpaceCard({ space }: SpaceCardProps) {
 
       <div className="flex items-center justify-between gap-2">
         <h2
-          className="min-w-0 text-[1.18125rem] font-medium text-rsvd-text"
+          className="min-w-0 text-[1.1221875rem] font-medium text-rsvd-text"
           title={space.name !== displayName ? space.name : undefined}
         >
           {displayName}
