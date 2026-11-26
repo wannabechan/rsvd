@@ -23,8 +23,8 @@ export function ReservationChatPanel({ space }: ReservationChatPanelProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [draft, setDraft] = useState("");
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [isReservationActive, setIsReservationActive] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
-  const hasReservationPrompt = messages.some((message) => message.showDatePicker);
 
   useEffect(() => {
     const node = listRef.current;
@@ -35,10 +35,12 @@ export function ReservationChatPanel({ space }: ReservationChatPanelProps) {
   }, [messages, selectedDate]);
 
   function startReservation() {
-    if (hasReservationPrompt) {
+    if (isReservationActive) {
       return;
     }
 
+    setIsReservationActive(true);
+    setSelectedDate(null);
     setMessages((current) => [
       ...current,
       {
@@ -47,6 +49,26 @@ export function ReservationChatPanel({ space }: ReservationChatPanelProps) {
         text: `안녕하세요. ${space.name} 예약을 진행합니다. 먼저 예약 희망일을 선택하세요.`,
         createdAt: new Date(),
         showDatePicker: true,
+      },
+    ]);
+  }
+
+  function cancelReservation() {
+    if (!isReservationActive) {
+      return;
+    }
+
+    setIsReservationActive(false);
+    setSelectedDate(null);
+    setMessages((current) => [
+      ...current.map((message) =>
+        message.showDatePicker ? { ...message, showDatePicker: false } : message,
+      ),
+      {
+        id: `reservation-cancel-${Date.now()}`,
+        role: "system",
+        text: `${space.name} 예약 진행이 중단되었습니다. 다음에 다시 진행해 주세요.`,
+        createdAt: new Date(),
       },
     ]);
   }
@@ -94,17 +116,19 @@ export function ReservationChatPanel({ space }: ReservationChatPanelProps) {
       </div>
 
       <div className="shrink-0 border-t border-rsvd-border bg-rsvd-surface px-3 pt-3">
-        {!hasReservationPrompt ? (
-          <div className="mb-3 flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={startReservation}
-              className="inline-flex h-9 items-center justify-center rounded-full border border-rsvd-brand bg-rsvd-surface px-3.5 text-sm font-medium text-rsvd-brand transition hover:bg-rsvd-tint"
-            >
-              예약하기
-            </button>
-          </div>
-        ) : null}
+        <div className="mb-3 flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={isReservationActive ? cancelReservation : startReservation}
+            className={`inline-flex h-9 items-center justify-center rounded-full border px-3.5 text-sm font-medium transition ${
+              isReservationActive
+                ? "border-rsvd-danger bg-rsvd-surface text-rsvd-danger hover:bg-rsvd-bg"
+                : "border-rsvd-brand bg-rsvd-surface text-rsvd-brand hover:bg-rsvd-tint"
+            }`}
+          >
+            {isReservationActive ? "예약중단" : "예약하기"}
+          </button>
+        </div>
 
         <form
           className="pb-3"
@@ -134,9 +158,10 @@ export function ReservationChatPanel({ space }: ReservationChatPanelProps) {
             <button
               type="submit"
               disabled={!draft.trim()}
-              className="inline-flex h-11 shrink-0 items-center justify-center rounded-full bg-rsvd-brand px-4 text-sm font-medium text-rsvd-on-brand transition hover:bg-rsvd-brand-strong disabled:bg-rsvd-disabled-bg disabled:text-rsvd-disabled-text"
+              aria-label="보내기"
+              className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-rsvd-brand text-rsvd-on-brand transition hover:bg-rsvd-brand-strong disabled:bg-rsvd-disabled-bg disabled:text-rsvd-disabled-text"
             >
-              보내기
+              <SendArrowIcon />
             </button>
           </div>
         </form>
@@ -193,4 +218,22 @@ function formatMessageTime(date: Date) {
     hour: "numeric",
     minute: "2-digit",
   }).format(date);
+}
+
+function SendArrowIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      className="h-5 w-5"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M20 6v6a4 4 0 0 1-4 4H6" />
+      <path d="M10 12l-4 4 4 4" />
+    </svg>
+  );
 }
