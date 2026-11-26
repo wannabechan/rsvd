@@ -26,10 +26,19 @@ const AVATARS = [
   "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=160&q=80",
   "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=160&q=80",
   "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=160&q=80",
+  "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=160&q=80",
+  "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=160&q=80",
+  "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&w=160&q=80",
+  "https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?auto=format&fit=crop&w=160&q=80",
+  "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&w=160&q=80",
+  "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=160&q=80",
+  "https://images.unsplash.com/photo-1463453091185-61582044d556?auto=format&fit=crop&w=160&q=80",
 ];
 
+const MAX_DETAIL_LIKERS = 15;
+
 function likers(count: number, offset = 0): SpaceLiker[] {
-  return Array.from({ length: Math.min(count, 7) }, (_, index) => ({
+  return Array.from({ length: Math.min(count, MAX_DETAIL_LIKERS) }, (_, index) => ({
     id: `liker-${offset}-${index}`,
     imageUrl: AVATARS[(offset + index) % AVATARS.length],
   }));
@@ -51,7 +60,7 @@ export const SAMPLE_SPACES: SpaceItem[] = [
     contact: "0212345678",
     onlineLink: "",
     totalLikeCount: 128,
-    recentLikers: likers(7, 0),
+    recentLikers: likers(15, 0),
     notice: [
       "엘 플라토를 찾아 주셔서 감사합니다. 이번 주에는 제철 재료로 구성한 스페인 디너 코스를 운영하며, 주말 디너는 예약 손님을 우선으로 안내합니다.",
       "알레르기가 있으시면 예약 메시지에 미리 남겨 주시고, 주차는 건물 인근 공영주차장을 이용해 주세요. 6인 이상 단체 예약은 메신저로 문의해 주시면 좌석과 코스를 맞춰 드리겠습니다.",
@@ -71,7 +80,7 @@ export const SAMPLE_SPACES: SpaceItem[] = [
     contact: "027654321",
     onlineLink: "",
     totalLikeCount: 42,
-    recentLikers: likers(3, 2),
+    recentLikers: likers(8, 2),
     notice: [
       "아틀리에 노리는 한 테이블씩 천천히 진행하는 코스 다이닝입니다. 런치 라스트 오더는 오후 1시 30분이며, 디너 예약은 2인 기준으로 안내합니다.",
       "와인 페어링이 필요하시면 메신저로 미리 요청해 주세요. 예약 당일 오전 확인 메시지를 보내드리니 답장을 남겨 주시면 감사하겠습니다.",
@@ -91,7 +100,7 @@ export const SAMPLE_SPACES: SpaceItem[] = [
     contact: "023334444",
     onlineLink: "",
     totalLikeCount: 19,
-    recentLikers: likers(5, 1),
+    recentLikers: likers(11, 1),
     notice: [
       "하나 테이블은 점심·저녁 모두 예약제로 운영합니다. 점심 코스는 11:30부터 입장이 가능하고, 아이 동반은 평일 런치에만 안내하고 있습니다.",
       "자리 이동이 어려우니 약속 시간에 맞춰 방문해 주시고, 당일 취소가 필요하면 메신저로 꼭 남겨 주세요.",
@@ -111,7 +120,7 @@ export const SAMPLE_SPACES: SpaceItem[] = [
     contact: "024445555",
     onlineLink: "",
     totalLikeCount: 7,
-    recentLikers: likers(2, 4),
+    recentLikers: likers(4, 4),
     notice: [
       "올리브 룸은 날씨에 따라 테라스 좌석을 열고, 피자 화덕은 저녁 5시부터 가동합니다. 반려견은 테라스에서만 동반할 수 있습니다.",
       "생일 케이크는 하루 전 주문해 주시고, 주말 웨이팅이 걱정되면 메신저로 미리 문의해 주세요.",
@@ -151,7 +160,7 @@ export const SAMPLE_SPACES: SpaceItem[] = [
     contact: "026667777",
     onlineLink: "",
     totalLikeCount: 86,
-    recentLikers: likers(6, 3),
+    recentLikers: likers(13, 3),
     notice: [
       "문 하버는 일몰 시간대 창가 좌석 예약이 빠르게 마감됩니다. 오이스터 해피아워는 평일 5–7시에 진행되며, 드레스 코드는 스마트 캐주얼입니다.",
       "창가 지정이 필요하면 예약 시 요청해 주시고, 비 소식에는 실내 좌석으로 안내드립니다.",
@@ -171,7 +180,7 @@ export const SAMPLE_SPACES: SpaceItem[] = [
     contact: "027778888",
     onlineLink: "",
     totalLikeCount: 31,
-    recentLikers: likers(4, 5),
+    recentLikers: likers(9, 5),
     notice: [
       "밤부 키친은 점심 특선과 저녁 코스를 따로 운영합니다. 만두는 하루 한정으로 준비되며, 매운맛 단계는 주문 시 알려 주세요.",
       "포장은 마감 30분 전까지만 가능하고, 생일 이벤트는 메신저로 하루 전 신청해 주세요.",
