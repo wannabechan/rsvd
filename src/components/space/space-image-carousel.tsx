@@ -66,9 +66,9 @@ export function SpaceImageCarousel({
       <Link
         href="/space"
         aria-label="공간 리스트로 돌아가기"
-        className="absolute top-3 left-3 inline-flex items-center justify-center text-rsvd-on-brand drop-shadow"
+        className="absolute top-3 left-3 inline-flex h-10 w-10 items-center justify-center text-[2.5rem] font-thin leading-none text-rsvd-on-brand drop-shadow"
       >
-        <BackArrowIcon />
+        ←
       </Link>
 
       {phoneHref ? (
@@ -103,23 +103,6 @@ export function SpaceImageCarousel({
         </div>
       ) : null}
     </div>
-  );
-}
-
-function BackArrowIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 24 24"
-      className="h-10 w-10"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M15 5 8 12l7 7" />
-    </svg>
   );
 }
 
