@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { SpaceItem } from "@/data/spaces";
 
 const LIKE_ICON_SIZE_CLASS = "h-[1.05rem] w-[1.05rem]";
-const MAX_LIKER_AVATARS = 7;
+const MAX_RESERVER_AVATARS = 7;
 
 type SpaceCardProps = {
   space: SpaceItem;
@@ -11,7 +11,7 @@ type SpaceCardProps = {
 export function SpaceCard({ space }: SpaceCardProps) {
   const detailHref = `/space/${space.id}`;
   const thumbnail = space.images[0] ?? "";
-  const recentLikers = space.recentLikers.slice(0, MAX_LIKER_AVATARS);
+  const recentReservers = space.recentReservers.slice(0, MAX_RESERVER_AVATARS);
 
   return (
     <article className="min-w-0 space-y-2">
@@ -56,13 +56,13 @@ export function SpaceCard({ space }: SpaceCardProps) {
       <p className="truncate text-[0.84rem] font-bold text-rsvd-text">{space.address}</p>
 
       <div className="flex min-w-0 items-center justify-between gap-2 pt-1">
-        {recentLikers.length > 0 ? (
-          <div className="flex min-w-0 items-center" aria-label="최근 라이크한 사용자">
-            {recentLikers.map((liker, index) => (
+        {recentReservers.length > 0 ? (
+          <div className="flex min-w-0 items-center" aria-label="최근 예약한 사용자">
+            {recentReservers.map((reserver, index) => (
               // eslint-disable-next-line @next/next/no-img-element
               <img
-                key={liker.id}
-                src={liker.imageUrl}
+                key={reserver.id}
+                src={reserver.imageUrl}
                 alt=""
                 className="h-[1.05rem] w-[1.05rem] rounded-full object-cover ring-1 ring-rsvd-surface"
                 style={{ marginLeft: index === 0 ? 0 : -4 }}

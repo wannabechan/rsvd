@@ -47,7 +47,7 @@ export function HeaderLogo() {
         alt=""
         width={800}
         height={800}
-        className={`absolute top-1/2 left-0 w-auto -translate-y-1/2 transition-opacity ease-in-out ${
+        className={`absolute top-1/2 left-0 w-auto -translate-y-[calc(50%-2px)] transition-opacity ease-in-out ${
           showSymbol ? "opacity-100" : "opacity-0"
         }`}
         style={{ height: SYMBOL_HEIGHT, transitionDuration: `${DISSOLVE_MS}ms` }}

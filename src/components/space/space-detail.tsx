@@ -2,7 +2,7 @@ import { SpaceImageCarousel } from "@/components/space/space-image-carousel";
 import type { SpaceItem } from "@/data/spaces";
 
 const DETAIL_LIKE_ICON_CLASS = "h-[1.875rem] w-[1.875rem]";
-const MAX_DETAIL_LIKER_AVATARS = 15;
+const MAX_DETAIL_RESERVER_AVATARS = 7;
 
 type SpaceDetailProps = {
   space: SpaceItem;
@@ -10,7 +10,7 @@ type SpaceDetailProps = {
 
 export function SpaceDetail({ space }: SpaceDetailProps) {
   const phoneHref = normalizePhoneHref(space.contact);
-  const recentLikers = space.recentLikers.slice(0, MAX_DETAIL_LIKER_AVATARS);
+  const recentReservers = space.recentReservers.slice(0, MAX_DETAIL_RESERVER_AVATARS);
 
   return (
     <article className="px-4 pb-10 pt-4">
@@ -62,16 +62,16 @@ export function SpaceDetail({ space }: SpaceDetailProps) {
         </div>
       </section>
 
-      {recentLikers.length > 0 ? (
+      {recentReservers.length > 0 ? (
         <div
           className="mt-5 flex flex-wrap items-center gap-1.5"
-          aria-label="라이크한 사용자"
+          aria-label="최근 예약한 사용자"
         >
-          {recentLikers.map((liker) => (
+          {recentReservers.map((reserver) => (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              key={liker.id}
-              src={liker.imageUrl}
+              key={reserver.id}
+              src={reserver.imageUrl}
               alt=""
               className="h-7 w-7 rounded-full object-cover ring-1 ring-rsvd-border"
             />
