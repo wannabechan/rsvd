@@ -1,3 +1,7 @@
+"use client";
+
+import { useReservationChat } from "@/components/reservation-chat/reservation-chat-context";
+import { ReservationChatPanel } from "@/components/reservation-chat/reservation-chat-panel";
 import { SpaceImageCarousel } from "@/components/space/space-image-carousel";
 import type { SpaceItem } from "@/data/spaces";
 
@@ -9,8 +13,14 @@ type SpaceDetailProps = {
 };
 
 export function SpaceDetail({ space }: SpaceDetailProps) {
+  const { activeChat, startChat } = useReservationChat();
   const phoneHref = normalizePhoneHref(space.contact);
   const recentReservers = space.recentReservers.slice(0, MAX_DETAIL_RESERVER_AVATARS);
+  const isChatOpen = activeChat?.spaceId === space.id;
+
+  if (isChatOpen) {
+    return <ReservationChatPanel space={space} />;
+  }
 
   return (
     <article className="px-4 pb-10 pt-4">
@@ -39,6 +49,9 @@ export function SpaceDetail({ space }: SpaceDetailProps) {
             type="button"
             aria-label={`${space.name} 메신저 예약`}
             className="inline-flex h-[2.8875rem] w-[2.8875rem] shrink-0 translate-x-[3px] items-center justify-center rounded-full transition hover:bg-rsvd-tint"
+            onClick={() => {
+              startChat({ spaceId: space.id, spaceName: space.name });
+            }}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
