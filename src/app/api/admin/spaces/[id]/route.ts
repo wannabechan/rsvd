@@ -106,19 +106,33 @@ export async function PUT(request: Request, context: RouteContext) {
       );
     }
 
-    const space = await updateCatalogSpace(id, fields);
-    if (!space) {
-      return NextResponse.json(
-        { ok: false, error: "공간을 찾을 수 없습니다." },
-        { status: 404 },
-      );
+    try {
+      const space = await updateCatalogSpace(id, fields);
+      if (!space) {
+        return NextResponse.json(
+          { ok: false, error: "공간을 찾을 수 없습니다." },
+          { status: 404 },
+        );
+      }
+
+      revalidatePath(routes.adminSpaces);
+      revalidatePath(routes.spaceList);
+      revalidatePath(routes.spaceDetail(id));
+
+      return NextResponse.json({ ok: true, space });
+    } catch (error) {
+      if (error instanceof Error && error.message === "has-reservations") {
+        return NextResponse.json(
+          {
+            ok: false,
+            reason: "has-reservations",
+            error: "잔여 예약이 남아있습니다.",
+          },
+          { status: 409 },
+        );
+      }
+      throw error;
     }
-
-    revalidatePath(routes.adminSpaces);
-    revalidatePath(routes.spaceList);
-    revalidatePath(routes.spaceDetail(id));
-
-    return NextResponse.json({ ok: true, space });
   } catch (error) {
     console.error("admin space PUT failed", error);
     return NextResponse.json(

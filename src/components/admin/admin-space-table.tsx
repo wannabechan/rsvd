@@ -22,19 +22,74 @@ type AdminSpaceTableProps = {
   initialSpaces: AdminSpace[];
 };
 
+type ActiveDialog =
+  | { kind: "confirm"; space: AdminSpace; nextActive: boolean }
+  | { kind: "blocked"; space: AdminSpace }
+  | null;
+
 export function AdminSpaceTable({ initialSpaces }: AdminSpaceTableProps) {
   const [spaces, setSpaces] = useState(initialSpaces);
+  const [dialog, setDialog] = useState<ActiveDialog>(null);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     setSpaces(initialSpaces);
   }, [initialSpaces]);
 
-  function toggleActive(id: string) {
-    setSpaces((current) =>
-      current.map((space) =>
-        space.id === id ? { ...space, active: !space.active } : space,
-      ),
-    );
+  function requestToggle(space: AdminSpace) {
+    setError(null);
+    const nextActive = !space.active;
+    if (
+      space.active &&
+      !nextActive &&
+      adminSpaceReservationCount(space) > 0
+    ) {
+      setDialog({ kind: "blocked", space });
+      return;
+    }
+    setDialog({ kind: "confirm", space, nextActive });
+  }
+
+  async function confirmToggle() {
+    if (!dialog || dialog.kind !== "confirm") {
+      return;
+    }
+    const { space, nextActive } = dialog;
+    setSaving(true);
+    setError(null);
+    try {
+      const response = await fetch(`/api/admin/spaces/${space.id}/active`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({ active: nextActive }),
+      });
+      const data = (await response.json()) as {
+        ok: boolean;
+        reason?: string;
+        error?: string;
+        space?: AdminSpace;
+      };
+      if (response.status === 409 || data.reason === "has-reservations") {
+        setDialog({ kind: "blocked", space });
+        setSaving(false);
+        return;
+      }
+      if (!response.ok || !data.ok || !data.space) {
+        setError(data.error ?? "활성 상태 저장에 실패했습니다.");
+        setSaving(false);
+        return;
+      }
+      setSpaces((current) =>
+        current.map((item) => (item.id === data.space!.id ? data.space! : item)),
+      );
+      setDialog(null);
+      setSaving(false);
+    } catch {
+      setError("네트워크 오류가 발생했습니다.");
+      setSaving(false);
+    }
   }
 
   return (
@@ -48,6 +103,12 @@ export function AdminSpaceTable({ initialSpaces }: AdminSpaceTableProps) {
           <IconPlus />
         </Link>
       </div>
+
+      {error ? (
+        <p className="mb-3 text-sm text-rsvd-danger" role="alert">
+          {error}
+        </p>
+      ) : null}
 
       <div className="overflow-x-auto rounded-2xl border border-rsvd-border bg-rsvd-surface">
         <table className="min-w-full text-left text-sm">
@@ -104,7 +165,8 @@ export function AdminSpaceTable({ initialSpaces }: AdminSpaceTableProps) {
                       role="switch"
                       aria-checked={space.active}
                       aria-label={`${space.name} 활성 여부`}
-                      onClick={() => toggleActive(space.id)}
+                      disabled={saving}
+                      onClick={() => requestToggle(space)}
                       className={`relative h-6 w-11 rounded-full transition ${
                         space.active ? "bg-rsvd-brand" : "bg-rsvd-border"
                       }`}
@@ -147,6 +209,73 @@ export function AdminSpaceTable({ initialSpaces }: AdminSpaceTableProps) {
           </tbody>
         </table>
       </div>
+
+      {dialog?.kind === "confirm" ? (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-rsvd-text/40 px-6"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="space-active-confirm-title"
+        >
+          <div className="w-full max-w-sm rounded-3xl border border-rsvd-border bg-rsvd-surface p-5 shadow-sm">
+            <p
+              id="space-active-confirm-title"
+              className="text-center text-sm font-medium text-rsvd-text"
+            >
+              {dialog.nextActive
+                ? "활성화 하시겠습니까?"
+                : "비활성화 하시겠습니까?"}
+            </p>
+            <div className="mt-5 grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                disabled={saving}
+                onClick={() => setDialog(null)}
+                className="inline-flex h-11 items-center justify-center rounded-full border border-rsvd-border bg-rsvd-surface text-sm font-medium text-rsvd-text transition hover:bg-rsvd-bg disabled:bg-rsvd-disabled-bg disabled:text-rsvd-disabled-text"
+              >
+                취소
+              </button>
+              <button
+                type="button"
+                disabled={saving}
+                onClick={() => {
+                  void confirmToggle();
+                }}
+                className="inline-flex h-11 items-center justify-center rounded-full bg-rsvd-brand text-sm font-medium text-rsvd-on-brand transition hover:bg-rsvd-brand-strong disabled:bg-rsvd-disabled-bg disabled:text-rsvd-disabled-text"
+              >
+                {saving ? "…" : "확인"}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {dialog?.kind === "blocked" ? (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-rsvd-text/40 px-6"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="space-active-blocked-title"
+        >
+          <div className="w-full max-w-sm rounded-3xl border border-rsvd-border bg-rsvd-surface p-5 shadow-sm">
+            <p
+              id="space-active-blocked-title"
+              className="text-center text-sm font-medium text-rsvd-text"
+            >
+              잔여 예약이 남아있습니다.
+            </p>
+            <div className="mt-5 flex justify-center">
+              <button
+                type="button"
+                onClick={() => setDialog(null)}
+                className="inline-flex h-11 min-w-[7rem] items-center justify-center rounded-full bg-rsvd-brand px-4 text-sm font-medium text-rsvd-on-brand transition hover:bg-rsvd-brand-strong"
+              >
+                닫기
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

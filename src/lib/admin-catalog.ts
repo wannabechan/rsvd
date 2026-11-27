@@ -7,6 +7,7 @@ import { buildSeedAdminSpaces } from "@/data/admin-spaces";
 import { buildSeedSampleUsers } from "@/data/admin-users";
 import { sampleAvatarForUserId } from "@/data/spaces";
 import {
+  adminSpaceReservationCount,
   createEmptyWeekSchedule,
   SPACE_MENU_IMAGES_MAX,
   SPACE_OTHER_IMAGES_MAX,
@@ -317,6 +318,10 @@ function normalizeImageFields(
   };
 }
 
+export type UpdateSpaceActiveResult =
+  | { ok: true; space: AdminSpace }
+  | { ok: false; reason: "not-found" | "has-reservations" };
+
 export async function updateCatalogSpace(
   id: string,
   fields: AdminSpaceEditableFields,
@@ -334,6 +339,14 @@ export async function updateCatalogSpace(
   }
 
   const current = syncAdminSpaceStats(spaces[index]);
+  if (
+    current.active &&
+    fields.active === false &&
+    adminSpaceReservationCount(current) > 0
+  ) {
+    throw new Error("has-reservations");
+  }
+
   const next = syncAdminSpaceStats({
     ...current,
     ...normalizeImageFields(fields),
@@ -343,6 +356,41 @@ export async function updateCatalogSpace(
   updated[index] = next;
   await redis.set(SPACES_KEY, updated);
   return next;
+}
+
+export async function updateCatalogSpaceActive(
+  id: string,
+  active: boolean,
+): Promise<UpdateSpaceActiveResult> {
+  await ensureAdminCatalogSeeded();
+  if (!isRedisConfigured()) {
+    throw new Error("Catalog store is not configured.");
+  }
+
+  const redis = getRedis();
+  const spaces = (await redis.get<AdminSpace[]>(SPACES_KEY)) ?? [];
+  const index = spaces.findIndex((space) => space.id === id);
+  if (index < 0) {
+    return { ok: false, reason: "not-found" };
+  }
+
+  const current = syncAdminSpaceStats(spaces[index]);
+  if (
+    current.active &&
+    !active &&
+    adminSpaceReservationCount(current) > 0
+  ) {
+    return { ok: false, reason: "has-reservations" };
+  }
+
+  const next = syncAdminSpaceStats({
+    ...current,
+    active,
+  });
+  const updated = [...spaces];
+  updated[index] = next;
+  await redis.set(SPACES_KEY, updated);
+  return { ok: true, space: next };
 }
 
 export async function createCatalogSpace(
@@ -454,8 +502,9 @@ export function adminSpaceToPublicItem(space: AdminSpace): SpaceItem {
 
 export async function listPublicSpaces(): Promise<SpaceItem[]> {
   const spaces = await listCatalogSpaces();
+  // Auth-agnostic: inactive stores stay hidden for guests and logged-in users.
   return spaces
-    .filter((space) => space.active)
+    .filter((space) => space.active === true)
     .map(adminSpaceToPublicItem);
 }
 
@@ -463,7 +512,7 @@ export async function getPublicSpaceById(
   id: string,
 ): Promise<SpaceItem | null> {
   const space = await getCatalogSpaceById(id);
-  if (!space || !space.active) {
+  if (!space || space.active !== true) {
     return null;
   }
   return adminSpaceToPublicItem(space);

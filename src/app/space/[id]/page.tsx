@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { connection } from "next/server";
 import { Suspense } from "react";
 import { SpaceDetail } from "@/components/space/space-detail";
 import { getPublicSpaceById } from "@/lib/admin-catalog";
@@ -26,6 +27,7 @@ async function SpaceDetailContent({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  await connection();
   const { id } = await params;
   const space = await getPublicSpaceById(id);
 
