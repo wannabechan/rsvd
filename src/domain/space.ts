@@ -24,6 +24,7 @@ export type SpaceItem = {
   address: string;
   tagline: string;
   description: string;
+  /** Gallery URLs in display order: hero → menu → other. List thumbnail uses [0]. */
   images: string[];
   contact: string;
   onlineLink: string;

@@ -54,11 +54,11 @@ export function SpaceImageCarousel({
               <img
                 src={imageUrl}
                 alt={`${spaceName} 이미지 ${index + 1}`}
-                className="aspect-[4/5] w-full object-cover"
+                className="aspect-[3/4] w-full object-cover"
                 draggable={false}
               />
             ) : (
-              <div aria-hidden="true" className="aspect-[4/5] w-full bg-rsvd-tint" />
+              <div aria-hidden="true" className="aspect-[3/4] w-full bg-rsvd-tint" />
             )}
           </div>
         ))}

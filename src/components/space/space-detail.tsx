@@ -85,12 +85,10 @@ export function SpaceDetail({ space }: SpaceDetailProps) {
 
       <p className="mt-2 text-[0.84rem] font-bold break-words text-rsvd-text">{space.address}</p>
 
-      <section className="mt-5 space-y-3" aria-label="매장 공지사항">
-        <div className="space-y-3 text-sm leading-[1.4625] text-rsvd-text-muted">
-          {space.notice.map((paragraph, index) => (
-            <p key={`${space.id}-notice-${index}`}>{paragraph}</p>
-          ))}
-        </div>
+      <section className="mt-5" aria-label="매장 공지사항">
+        <p className="whitespace-pre-wrap text-sm leading-[1.4625] text-rsvd-text-muted">
+          {space.notice.join("\n")}
+        </p>
       </section>
 
       {recentReservers.length > 0 ? (

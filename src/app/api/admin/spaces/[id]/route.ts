@@ -21,6 +21,17 @@ function asStringArray(value: unknown): string[] {
     .filter(Boolean);
 }
 
+/** Preserve newlines and blank lines from textarea / line arrays. */
+function asNoticeLines(value: unknown): string[] {
+  if (typeof value === "string") {
+    return value.split("\n");
+  }
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  return value.filter((item): item is string => typeof item === "string");
+}
+
 function asNonNegInt(value: unknown, fallback: number): number {
   const n = typeof value === "number" ? value : Number(value);
   if (!Number.isFinite(n) || n < 0) {
@@ -62,14 +73,23 @@ export async function PUT(request: Request, context: RouteContext) {
       );
     }
 
+    const heroImage =
+      typeof body.heroImage === "string" ? body.heroImage.trim() : "";
+    if (!heroImage) {
+      return NextResponse.json(
+        { ok: false, error: "대표 이미지를 업로드해 주세요." },
+        { status: 400 },
+      );
+    }
+
     const fields: AdminSpaceEditableFields = {
       name,
       address,
       contact: typeof body.contact === "string" ? body.contact.trim() : "",
       adminEmail:
         typeof body.adminEmail === "string" ? body.adminEmail.trim() : "",
-      notices: asStringArray(body.notices),
-      heroImage: typeof body.heroImage === "string" ? body.heroImage.trim() : "",
+      notices: asNoticeLines(body.notices),
+      heroImage,
       menuImages: asStringArray(body.menuImages),
       otherImages: asStringArray(body.otherImages),
       bookingBufferDays: asNonNegInt(body.bookingBufferDays, 0),

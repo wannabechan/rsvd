@@ -20,6 +20,7 @@ export function SpaceCard({ space }: SpaceCardProps) {
   const { isLoggedIn, isReady } = useAuth();
   const { startChat } = useReservationChat();
   const detailHref = routes.spaceDetail(space.id);
+  // Public images are ordered hero → menu → other; list uses hero only.
   const thumbnail = space.images[0] ?? "";
   const recentReservers = space.recentReservers.slice(0, MAX_RESERVER_AVATARS);
 
@@ -51,10 +52,10 @@ export function SpaceCard({ space }: SpaceCardProps) {
             alt={space.name}
             loading="lazy"
             decoding="async"
-            className="aspect-[4/5] w-full rounded-2xl object-cover"
+            className="aspect-[3/4] w-full rounded-2xl object-cover"
           />
         ) : (
-          <div aria-hidden="true" className="aspect-[4/5] w-full rounded-2xl bg-rsvd-tint" />
+          <div aria-hidden="true" className="aspect-[3/4] w-full rounded-2xl bg-rsvd-tint" />
         )}
       </Link>
 

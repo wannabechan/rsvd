@@ -85,7 +85,7 @@ export function AdminSpaceImageField({
         {urls.map((url, index) => (
           <div
             key={`${url}-${index}`}
-            className="relative h-28 w-[5.25rem] overflow-hidden rounded-xl border border-rsvd-border bg-rsvd-bg"
+            className="relative aspect-[3/4] w-[5.25rem] overflow-hidden rounded-xl border border-rsvd-border bg-rsvd-bg"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
@@ -108,7 +108,7 @@ export function AdminSpaceImageField({
             type="button"
             disabled={busy}
             onClick={() => inputRef.current?.click()}
-            className="inline-flex h-28 w-[5.25rem] flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-rsvd-border bg-rsvd-bg text-rsvd-text-muted transition hover:border-rsvd-brand hover:text-rsvd-brand disabled:opacity-60"
+            className="inline-flex aspect-[3/4] w-[5.25rem] flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-rsvd-border bg-rsvd-bg text-rsvd-text-muted transition hover:border-rsvd-brand hover:text-rsvd-brand disabled:opacity-60"
           >
             <IconPlus className="h-4 w-4" />
             <span className="text-[11px]">{busy ? "…" : "업로드"}</span>

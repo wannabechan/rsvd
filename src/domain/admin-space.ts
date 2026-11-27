@@ -64,6 +64,7 @@ export type AdminSpace = {
   id: string;
   name: string;
   adminEmail: string;
+  /** Notice body as lines (including empty lines for blank-line spacing). */
   notices: string[];
   address: string;
   contact: string;
@@ -200,6 +201,15 @@ export function createEmptyWeekSchedule(): Record<WeekdayKey, WeekdaySchedule> {
 export const SPACE_HERO_IMAGE_MAX = 1;
 export const SPACE_MENU_IMAGES_MAX = 5;
 export const SPACE_OTHER_IMAGES_MAX = 20;
+
+/** Round-trip notice textarea ↔ stored lines (keeps blank lines). */
+export function noticesToEditableText(notices: string[]): string {
+  return notices.join("\n");
+}
+
+export function editableTextToNotices(text: string): string[] {
+  return text.split("\n");
+}
 
 export function createBlankAdminSpace(): AdminSpace {
   return {

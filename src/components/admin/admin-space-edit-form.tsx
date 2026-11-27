@@ -7,6 +7,7 @@ import { AdminSpaceImageField } from "@/components/admin/admin-space-image-field
 import {
   adminSpaceRegularCount,
   adminSpaceReservationCount,
+  noticesToEditableText,
   SPACE_HERO_IMAGE_MAX,
   SPACE_MENU_IMAGES_MAX,
   SPACE_OTHER_IMAGES_MAX,
@@ -19,20 +20,15 @@ type AdminSpaceEditFormProps = {
   space: AdminSpace;
 };
 
-function linesToList(value: string): string[] {
-  return value
-    .split("\n")
-    .map((line) => line.trim())
-    .filter(Boolean);
-}
-
 export function AdminSpaceEditForm({ mode, space }: AdminSpaceEditFormProps) {
   const router = useRouter();
   const [name, setName] = useState(space.name);
   const [address, setAddress] = useState(space.address);
   const [contact, setContact] = useState(space.contact);
   const [adminEmail, setAdminEmail] = useState(space.adminEmail);
-  const [noticesText, setNoticesText] = useState(space.notices.join("\n"));
+  const [noticesText, setNoticesText] = useState(
+    noticesToEditableText(space.notices),
+  );
   const [heroImages, setHeroImages] = useState(
     space.heroImage ? [space.heroImage] : [],
   );
@@ -52,6 +48,10 @@ export function AdminSpaceEditForm({ mode, space }: AdminSpaceEditFormProps) {
 
   async function handleSave() {
     setError(null);
+    if (!heroImages[0]) {
+      setError("대표 이미지를 업로드해 주세요.");
+      return;
+    }
     setSaving(true);
     try {
       const payload = {
@@ -59,8 +59,8 @@ export function AdminSpaceEditForm({ mode, space }: AdminSpaceEditFormProps) {
         address,
         contact,
         adminEmail,
-        notices: linesToList(noticesText),
-        heroImage: heroImages[0] ?? "",
+        notices: noticesText,
+        heroImage: heroImages[0],
         menuImages,
         otherImages,
         bookingBufferDays: Number(bookingBufferDays),
@@ -155,17 +155,17 @@ export function AdminSpaceEditForm({ mode, space }: AdminSpaceEditFormProps) {
           </Field>
         </div>
 
-        <Field label="공지 (줄바꿈으로 구분)">
+        <Field label="공지사항">
           <textarea
             value={noticesText}
             onChange={(event) => setNoticesText(event.target.value)}
-            rows={4}
-            className="auth-input w-full rounded-xl border border-rsvd-border bg-rsvd-surface px-3.5 py-2.5 text-sm text-rsvd-text"
+            rows={6}
+            className="auth-input w-full whitespace-pre-wrap rounded-xl border border-rsvd-border bg-rsvd-surface px-3.5 py-2.5 text-sm text-rsvd-text"
           />
         </Field>
 
         <AdminSpaceImageField
-          label="대표 이미지"
+          label="대표 이미지 (필수)"
           urls={heroImages}
           maxCount={SPACE_HERO_IMAGE_MAX}
           onChange={setHeroImages}
@@ -269,7 +269,9 @@ export function AdminSpaceEditForm({ mode, space }: AdminSpaceEditFormProps) {
           </Link>
           <button
             type="button"
-            disabled={saving || !name.trim() || !address.trim()}
+            disabled={
+              saving || !name.trim() || !address.trim() || heroImages.length === 0
+            }
             onClick={() => {
               void handleSave();
             }}

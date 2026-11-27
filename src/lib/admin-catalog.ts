@@ -424,11 +424,14 @@ export async function saveCatalogUsers(users: AdminUser[]): Promise<void> {
 }
 
 export function adminSpaceToPublicItem(space: AdminSpace): SpaceItem {
+  // List thumbnail = hero; detail carousel = hero → menu → other.
   const images = [
     space.heroImage,
     ...space.menuImages,
     ...space.otherImages,
-  ].filter(Boolean);
+  ]
+    .map((url) => url.trim())
+    .filter(Boolean);
   const regularMembers = normalizeRegularMembers(space);
   const recentReservers = spaceRegularsToAvatarStack(regularMembers);
 
@@ -436,8 +439,8 @@ export function adminSpaceToPublicItem(space: AdminSpace): SpaceItem {
     id: space.id,
     name: space.name,
     address: space.address,
-    tagline: space.notices[0]?.slice(0, 48) ?? space.name,
-    description: space.notices.join("\n\n"),
+    tagline: (space.notices.join("\n").trim().slice(0, 48) || space.name),
+    description: space.notices.join("\n"),
     images,
     contact: space.contact,
     onlineLink: "",
