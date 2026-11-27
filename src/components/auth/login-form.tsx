@@ -133,8 +133,7 @@ export function LoginForm() {
 
   return (
     <div className="flex flex-1 flex-col px-4 pb-8 pt-8">
-      <h1 className="text-xl font-medium text-rsvd-text">로그인</h1>
-      <p className="mt-2 text-sm text-rsvd-text-muted">
+      <p className="text-sm text-rsvd-text-muted">
         이메일 입력 후, 로그인 코드 또는 비밀번호 사용.
       </p>
 
