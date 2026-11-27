@@ -33,6 +33,7 @@ vercel env pull .env.local
 | --- | --- |
 | `AUTH_SECRET` | OTP 쿠키 서명 |
 | `GMAIL_REFRESH_TOKEN` / `GMAIL_SENDER` / `GOOGLE_CLIENT_*` | 로그인 코드 메일 |
+| `NHN_SMS_APP_KEY` / `NHN_SMS_SECRET_KEY` / `NHN_SMS_SEND_NO` | 연락처 SMS 인증 ([NHN_SMS_SETUP.md](./NHN_SMS_SETUP.md)) |
 | `NEXT_PUBLIC_APP_URL` | OAuth·앱 URL |
 | `ADMIN_EMAIL` | 이 이메일로 로그인하면 `role: admin` (최고 등급) |
 | Redis URL + Token | 비밀번호·프로필·매장/사용자 카탈로그 저장 |
@@ -50,6 +51,8 @@ vercel env pull .env.local
 | `POST` | `/api/auth/login-password` | 서버에서 비밀번호 검증 후 로그인 |
 | `GET` | `/api/profile?e=` | 닉네임·아바타 메타 |
 | `POST` | `/api/profile` | 닉네임 저장 |
+| `POST` | `/api/profile/phone/request-code` | 연락처 SMS 인증 코드 발송 |
+| `POST` | `/api/profile/phone/verify` | 연락처 코드 검증·저장 |
 | `GET` | `/api/profile/avatar?e=` | 저장된 WebP 아바타 |
 | `POST` | `/api/profile/avatar` | WebP 아바타 업로드 (FormData) |
 

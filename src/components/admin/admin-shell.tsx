@@ -24,9 +24,8 @@ export function AdminShell({ children }: { children: ReactNode }) {
               href={routes.profile}
               className="text-sm font-medium text-rsvd-brand"
             >
-              rsvd 관리자
+              관리자모드
             </Link>
-            <p className="mt-1 text-xs text-rsvd-text-muted">ADMIN</p>
           </div>
           <nav className="flex flex-col gap-1 p-3">
             {NAV_ITEMS.map((item) => {

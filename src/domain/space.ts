@@ -21,6 +21,8 @@ export type SpaceItem = {
   totalLikeCount: number;
   /** ISO timestamp of the most recent reservation on this space. */
   lastReservedAt: string;
+  /** ISO timestamp of the most recent like/단골 승인; empty when none. */
+  lastLikedAt: string;
   recentReservers: SpaceReserver[];
   notice: string[];
 };
@@ -43,19 +45,20 @@ export function toTelHref(contact: string): string {
 /**
  * Platform list order:
  * 1) most recently reserved
- * 2) most regulars / likes
+ * 2) most recently liked
  * 3) name
  */
 export function sortSpacesByRecentReservationDesc(spaces: SpaceItem[]): SpaceItem[] {
   return [...spaces].sort((a, b) => {
-    const aTime = Date.parse(a.lastReservedAt) || 0;
-    const bTime = Date.parse(b.lastReservedAt) || 0;
-    if (bTime !== aTime) {
-      return bTime - aTime;
+    const aReserved = Date.parse(a.lastReservedAt) || 0;
+    const bReserved = Date.parse(b.lastReservedAt) || 0;
+    if (bReserved !== aReserved) {
+      return bReserved - aReserved;
     }
-    const likeDiff = b.totalLikeCount - a.totalLikeCount;
-    if (likeDiff !== 0) {
-      return likeDiff;
+    const aLiked = Date.parse(a.lastLikedAt) || 0;
+    const bLiked = Date.parse(b.lastLikedAt) || 0;
+    if (bLiked !== aLiked) {
+      return bLiked - aLiked;
     }
     return a.name.localeCompare(b.name, "ko");
   });

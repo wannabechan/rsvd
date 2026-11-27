@@ -17,9 +17,11 @@ import {
   readStoredSession,
   removeAvatar as removeAvatarRequest,
   requestLoginCode,
+  requestPhoneCode as requestPhoneCodeRequest,
   saveNickname as saveNicknameRequest,
   setupPasswordLogin,
   uploadAvatar as uploadAvatarRequest,
+  verifyPhoneCode as verifyPhoneCodeRequest,
   writeStoredSession,
 } from "@/data/auth-client";
 import type { AuthUser } from "@/domain/auth";
@@ -37,6 +39,13 @@ type AuthContextValue = {
     webpBlob: Blob,
   ) => Promise<{ ok: true; user: AuthUser } | { ok: false; error: string }>;
   removeAvatar: () => Promise<{ ok: true; user: AuthUser } | { ok: false; error: string }>;
+  requestPhoneCode: (
+    phone: string,
+  ) => Promise<{ ok: true; debugCode?: string } | { ok: false; error: string }>;
+  verifyPhone: (
+    phone: string,
+    code: string,
+  ) => Promise<{ ok: true; user: AuthUser } | { ok: false; error: string }>;
   requestCode: (email: string) => Promise<{ ok: true } | { ok: false; error: string }>;
   loginByCode: (
     email: string,
@@ -131,6 +140,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return result;
   }, [user]);
 
+  const requestPhoneCode = useCallback(
+    async (phone: string) => {
+      if (!user) {
+        return { ok: false as const, error: "로그인이 필요합니다." };
+      }
+      return requestPhoneCodeRequest(user.email, phone);
+    },
+    [user],
+  );
+
+  const verifyPhone = useCallback(
+    async (phone: string, code: string) => {
+      if (!user) {
+        return { ok: false as const, error: "로그인이 필요합니다." };
+      }
+      const result = await verifyPhoneCodeRequest(user.email, phone, code);
+      if (result.ok) {
+        setUser(result.user);
+      }
+      return result;
+    },
+    [user],
+  );
+
   const requestCode = useCallback(async (email: string) => requestLoginCode(email), []);
 
   const loginByCode = useCallback(async (email: string, code: string) => {
@@ -175,6 +208,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       saveNickname,
       uploadAvatar,
       removeAvatar,
+      requestPhoneCode,
+      verifyPhone,
       requestCode,
       loginByCode,
       loginByPassword,
@@ -189,6 +224,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       saveNickname,
       uploadAvatar,
       removeAvatar,
+      requestPhoneCode,
+      verifyPhone,
       requestCode,
       loginByCode,
       loginByPassword,

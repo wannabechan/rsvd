@@ -3,6 +3,8 @@
  * Keep free of React/Next/DOM.
  */
 
+import type { SpaceReserver } from "@/domain/space";
+
 export const WEEKDAY_KEYS = [
   "mon",
   "tue",
@@ -86,6 +88,13 @@ export type AdminSpace = {
   regularUserIds: string[];
   /** ISO timestamp of most recent reservation; empty when none. */
   lastReservedAt: string;
+  /** ISO timestamp of most recent like/단골 승인; empty when none. */
+  lastLikedAt: string;
+  /**
+   * Recent reservation users for public avatar stacks (not likers).
+   * List/detail UI caps display count.
+   */
+  recentReservers: SpaceReserver[];
 };
 
 export function openWeekdays(space: AdminSpace): WeekdayKey[] {

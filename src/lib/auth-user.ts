@@ -20,6 +20,7 @@ export async function resolveAuthUser(email: string): Promise<AuthUser> {
       id: userIdFromEmail(normalized),
       email: normalized,
       nickname: defaultNickname(normalized),
+      phone: null,
       avatarUrl: null,
       role,
     };

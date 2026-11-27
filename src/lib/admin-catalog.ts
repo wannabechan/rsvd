@@ -12,7 +12,8 @@ import { getRedis, isRedisConfigured } from "@/lib/redis";
 
 const SPACES_KEY = "rsvd:catalog:spaces";
 const USERS_KEY = "rsvd:catalog:users";
-const SEEDED_KEY = "rsvd:catalog:seeded:v2";
+/** Bump when seed shape changes so Redis re-seeds. */
+const SEEDED_KEY = "rsvd:catalog:seeded:v3";
 
 function mulberry32(seed: number) {
   return function next() {
@@ -29,16 +30,21 @@ function attachRandomRegulars(
 ): AdminSpace[] {
   const sampleUsers = users.filter((user) => user.grade === "sample");
   const rand = mulberry32(20261127);
+  const now = Date.parse("2025-11-27T18:00:00.000Z");
 
-  return spaces.map((space) => {
+  return spaces.map((space, index) => {
     const count = 1 + Math.floor(rand() * Math.min(8, sampleUsers.length));
     const shuffled = [...sampleUsers].sort(() => rand() - 0.5);
     const regularUserIds = shuffled.slice(0, count).map((user) => user.id);
+    // Stagger recent-like timestamps so secondary sort is meaningful.
+    const lastLikedAt = new Date(
+      now - index * 3_600_000 - Math.floor(rand() * 1_800_000),
+    ).toISOString();
     return {
       ...space,
       regularUserIds,
-      lastReservedAt: "",
-      currentReservationCount: 0,
+      lastLikedAt,
+      currentReservationCount: Math.min(space.recentReservers.length, 3),
     };
   });
 }
@@ -112,7 +118,8 @@ export function adminSpaceToPublicItem(space: AdminSpace): SpaceItem {
     onlineLink: "",
     totalLikeCount: space.regularUserIds.length,
     lastReservedAt: space.lastReservedAt || "",
-    recentReservers: [],
+    lastLikedAt: space.lastLikedAt || "",
+    recentReservers: space.recentReservers ?? [],
     notice: space.notices,
   };
 }

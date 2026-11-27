@@ -85,7 +85,9 @@ export function buildSeedAdminSpaces(): AdminSpace[] {
             ]
           : [],
       regularUserIds: [],
-      lastReservedAt: "",
+      lastReservedAt: space.lastReservedAt,
+      lastLikedAt: space.lastLikedAt,
+      recentReservers: space.recentReservers,
     };
   });
 }

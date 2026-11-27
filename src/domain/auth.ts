@@ -11,6 +11,8 @@ export type AuthUser = {
   email: string;
   /** Display name; defaults to email local-part. */
   nickname: string;
+  /** Verified mobile number digits, or null when not verified. */
+  phone: string | null;
   /** Public avatar image URL, or null for letter+tone fallback. */
   avatarUrl: string | null;
   role: UserRole;
@@ -18,6 +20,8 @@ export type AuthUser = {
 
 export type UserProfile = {
   nickname: string;
+  /** Verified mobile number (digits only), or null. */
+  phone: string | null;
   /** When true, avatar bytes exist in the user store. */
   hasAvatar: boolean;
   /** Cache-busting version for avatar URL. */
@@ -74,6 +78,33 @@ export function isValidNickname(nickname: string): boolean {
   return trimmed.length >= 1 && trimmed.length <= NICKNAME_MAX_LENGTH;
 }
 
+/** Digits only from free-form phone input. */
+export function normalizePhone(phone: string): string {
+  return phone.replace(/\D/g, "");
+}
+
+/** Korean mobile: 010/011/016/017/018/019 + 7–8 digits. */
+export function isValidPhone(phone: string): boolean {
+  return /^01[016789]\d{7,8}$/.test(normalizePhone(phone));
+}
+
+/** Display form: 010-1234-5678 (or 010-123-4567 for 10-digit). */
+export function formatPhoneDisplay(phone: string): string {
+  const digits = normalizePhone(phone);
+  if (digits.length === 11) {
+    return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`;
+  }
+  if (digits.length === 10) {
+    return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6)}`;
+  }
+  return digits;
+}
+
+/** SMS body for phone verification (keep short for SMS 90-byte limit). */
+export function phoneVerificationSmsBody(code: string): string {
+  return `[rsvd] 인증번호 ${code.trim()}`;
+}
+
 export function avatarPublicPath(email: string, version: number): string {
   return `/api/profile/avatar?e=${encodeURIComponent(normalizeEmail(email))}&v=${version}`;
 }
@@ -98,6 +129,7 @@ export function authUserFromProfile(
     id: userIdFromEmail(normalized),
     email: normalized,
     nickname: profile.nickname,
+    phone: profile.phone ? normalizePhone(profile.phone) : null,
     avatarUrl: profile.hasAvatar
       ? avatarPublicPath(normalized, profile.avatarVersion)
       : null,

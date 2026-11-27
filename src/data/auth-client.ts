@@ -7,7 +7,9 @@ import {
   defaultNickname,
   isValidEmail,
   isValidPassword,
+  isValidPhone,
   normalizeEmail,
+  normalizePhone,
   userIdFromEmail,
   type AuthUser,
 } from "@/domain/auth";
@@ -44,6 +46,10 @@ function normalizeSessionUser(value: unknown): AuthUser | null {
     return null;
   }
   const email = normalizeEmail(raw.email);
+  const phoneRaw =
+    typeof raw.phone === "string" && raw.phone.trim()
+      ? normalizePhone(raw.phone)
+      : null;
   return {
     id: typeof raw.id === "string" ? raw.id : userIdFromEmail(email),
     email,
@@ -51,6 +57,7 @@ function normalizeSessionUser(value: unknown): AuthUser | null {
       typeof raw.nickname === "string" && raw.nickname.trim()
         ? raw.nickname.trim()
         : defaultNickname(email),
+    phone: phoneRaw && isValidPhone(phoneRaw) ? phoneRaw : null,
     avatarUrl: typeof raw.avatarUrl === "string" ? raw.avatarUrl : null,
     role: raw.role === "admin" ? "admin" : "member",
   };
@@ -209,6 +216,40 @@ export async function saveNickname(
   const result = await postJson<{ user: AuthUser }>("/api/profile", {
     email: normalizeEmail(email),
     nickname,
+  });
+  if (!result.ok) {
+    return result;
+  }
+  const user = normalizeSessionUser(result.user);
+  if (!user) {
+    return { ok: false, error: "프로필 응답이 올바르지 않습니다." };
+  }
+  writeStoredSession(user);
+  return { ok: true, user };
+}
+
+export async function requestPhoneCode(
+  email: string,
+  phone: string,
+): Promise<{ ok: true; debugCode?: string } | { ok: false; error: string }> {
+  if (!isValidPhone(phone)) {
+    return { ok: false, error: "올바른 휴대폰 번호를 입력해 주세요." };
+  }
+  return postJson<{ debugCode?: string }>("/api/profile/phone/request-code", {
+    email: normalizeEmail(email),
+    phone: normalizePhone(phone),
+  });
+}
+
+export async function verifyPhoneCode(
+  email: string,
+  phone: string,
+  code: string,
+): Promise<{ ok: true; user: AuthUser } | { ok: false; error: string }> {
+  const result = await postJson<{ user: AuthUser }>("/api/profile/phone/verify", {
+    email: normalizeEmail(email),
+    phone: normalizePhone(phone),
+    code,
   });
   if (!result.ok) {
     return result;

@@ -5,7 +5,8 @@ import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/components/auth/auth-context";
 import { useLoginBoot } from "@/components/auth/login-boot-context";
 import { UserAvatar } from "@/components/auth/user-avatar";
-import { NICKNAME_MAX_LENGTH } from "@/domain/auth";
+import { PhoneVerifyModal } from "@/components/profile/phone-verify-modal";
+import { formatPhoneDisplay, NICKNAME_MAX_LENGTH } from "@/domain/auth";
 import { prepareAvatarWebp } from "@/lib/prepare-avatar-image";
 import { routes } from "@/lib/routes";
 
@@ -33,6 +34,7 @@ export default function ProfilePage() {
   const [pendingAvatar, setPendingAvatar] = useState<Blob | null>(null);
   const [pendingPreviewUrl, setPendingPreviewUrl] = useState<string | null>(null);
   const [confirmKind, setConfirmKind] = useState<ConfirmKind>(null);
+  const [phoneVerifyOpen, setPhoneVerifyOpen] = useState(false);
 
   useEffect(() => {
     if (isReady && !isLoggedIn && !loggingOutRef.current) {
@@ -65,6 +67,7 @@ export default function ProfilePage() {
   const previewUser = pendingPreviewUrl
     ? { ...user, avatarUrl: pendingPreviewUrl }
     : user;
+  const phoneDisplay = user.phone ? formatPhoneDisplay(user.phone) : "";
 
   async function handleSaveNickname() {
     setError(null);
@@ -138,14 +141,7 @@ export default function ProfilePage() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col px-4 pt-10 pb-6">
-      <section aria-labelledby="profile-email-heading">
-        <h2 id="profile-email-heading" className="text-sm font-medium text-rsvd-text">
-          이메일
-        </h2>
-        <p className="mt-2 text-sm text-rsvd-text-muted">{user.email}</p>
-      </section>
-
-      <section className="mt-8" aria-labelledby="profile-avatar-heading">
+      <section aria-labelledby="profile-avatar-heading">
         <h2 id="profile-avatar-heading" className="text-sm font-medium text-rsvd-text">
           프로필 이미지
         </h2>
@@ -216,6 +212,39 @@ export default function ProfilePage() {
         </div>
       </section>
 
+      <section className="mt-8" aria-labelledby="profile-phone-heading">
+        <h2 id="profile-phone-heading" className="text-sm font-medium text-rsvd-text">
+          연락처
+        </h2>
+        <div className="mt-2 flex items-center gap-2">
+          <label className="sr-only" htmlFor="profile-phone">
+            연락처
+          </label>
+          <input
+            id="profile-phone"
+            type="text"
+            readOnly
+            value={phoneDisplay}
+            placeholder="연락처를 인증하세요"
+            className="auth-input min-w-0 flex-1 rounded-2xl border border-rsvd-border bg-rsvd-surface px-3.5 py-3 text-sm text-rsvd-text placeholder:text-rsvd-text-muted"
+          />
+          <button
+            type="button"
+            onClick={() => setPhoneVerifyOpen(true)}
+            className="inline-flex h-11 shrink-0 items-center justify-center rounded-full bg-rsvd-brand px-4 text-sm font-medium text-rsvd-on-brand transition hover:bg-rsvd-brand-strong"
+          >
+            인증
+          </button>
+        </div>
+      </section>
+
+      <section className="mt-8" aria-labelledby="profile-email-heading">
+        <h2 id="profile-email-heading" className="text-sm font-medium text-rsvd-text">
+          이메일
+        </h2>
+        <p className="mt-2 text-sm text-rsvd-text-muted">{user.email}</p>
+      </section>
+
       {error ? (
         <p className="mt-4 text-sm text-rsvd-danger" role="alert">
           {error}
@@ -273,6 +302,13 @@ export default function ProfilePage() {
             }
             void confirmDeleteAvatar();
           }}
+        />
+      ) : null}
+
+      {phoneVerifyOpen ? (
+        <PhoneVerifyModal
+          onClose={() => setPhoneVerifyOpen(false)}
+          onVerified={() => setPhoneVerifyOpen(false)}
         />
       ) : null}
     </div>

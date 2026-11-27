@@ -7,6 +7,7 @@ import {
   defaultNickname,
   normalizeEmail,
   normalizeNickname,
+  normalizePhone,
   type AuthUser,
   type UserProfile,
 } from "@/domain/auth";
@@ -19,6 +20,7 @@ const AVATAR_KEY_PREFIX = "rsvd:user:avatar:";
 
 type StoredProfile = {
   nickname: string;
+  phone: string | null;
   hasAvatar: boolean;
   avatarVersion: number;
 };
@@ -60,14 +62,29 @@ function toUserProfile(email: string, stored: StoredProfile | null): UserProfile
   if (!stored) {
     return {
       nickname: defaultNickname(email),
+      phone: null,
       hasAvatar: false,
       avatarVersion: 0,
     };
   }
+  const phone =
+    typeof stored.phone === "string" && stored.phone
+      ? normalizePhone(stored.phone)
+      : null;
   return {
     nickname: stored.nickname || defaultNickname(email),
+    phone: phone || null,
     hasAvatar: Boolean(stored.hasAvatar),
     avatarVersion: Number(stored.avatarVersion) || 0,
+  };
+}
+
+function toStoredProfile(profile: UserProfile): StoredProfile {
+  return {
+    nickname: profile.nickname,
+    phone: profile.phone,
+    hasAvatar: profile.hasAvatar,
+    avatarVersion: profile.avatarVersion,
   };
 }
 
@@ -85,6 +102,7 @@ export async function ensureUserProfile(email: string): Promise<UserProfile> {
 
   const profile: StoredProfile = {
     nickname: defaultNickname(normalized),
+    phone: null,
     hasAvatar: false,
     avatarVersion: 0,
   };
@@ -103,11 +121,24 @@ export async function updateNickname(
 ): Promise<UserProfile> {
   const normalized = normalizeEmail(email);
   const current = await ensureUserProfile(normalized);
-  const next: StoredProfile = {
+  const next = toStoredProfile({
+    ...current,
     nickname: normalizeNickname(nickname, normalized),
-    hasAvatar: current.hasAvatar,
-    avatarVersion: current.avatarVersion,
-  };
+  });
+  await getRedis().set(profileKey(normalized), next);
+  return toUserProfile(normalized, next);
+}
+
+export async function updatePhone(
+  email: string,
+  phone: string,
+): Promise<UserProfile> {
+  const normalized = normalizeEmail(email);
+  const current = await ensureUserProfile(normalized);
+  const next = toStoredProfile({
+    ...current,
+    phone: normalizePhone(phone),
+  });
   await getRedis().set(profileKey(normalized), next);
   return toUserProfile(normalized, next);
 }
@@ -118,14 +149,13 @@ export async function saveAvatarWebp(
 ): Promise<UserProfile> {
   const normalized = normalizeEmail(email);
   const current = await ensureUserProfile(normalized);
-  const version = current.avatarVersion + 1;
+  const next = toStoredProfile({
+    ...current,
+    hasAvatar: true,
+    avatarVersion: current.avatarVersion + 1,
+  });
   const base64 = Buffer.from(webpBytes).toString("base64");
   await getRedis().set(avatarKey(normalized), base64);
-  const next: StoredProfile = {
-    nickname: current.nickname,
-    hasAvatar: true,
-    avatarVersion: version,
-  };
   await getRedis().set(profileKey(normalized), next);
   return toUserProfile(normalized, next);
 }
@@ -144,11 +174,11 @@ export async function clearAvatar(email: string): Promise<UserProfile> {
   const normalized = normalizeEmail(email);
   const current = await ensureUserProfile(normalized);
   await getRedis().del(avatarKey(normalized));
-  const next: StoredProfile = {
-    nickname: current.nickname,
+  const next = toStoredProfile({
+    ...current,
     hasAvatar: false,
     avatarVersion: current.avatarVersion + 1,
-  };
+  });
   await getRedis().set(profileKey(normalized), next);
   return toUserProfile(normalized, next);
 }
