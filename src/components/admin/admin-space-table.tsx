@@ -41,13 +41,13 @@ export function AdminSpaceTable({ initialSpaces }: AdminSpaceTableProps) {
   return (
     <div>
       <div className="mb-3 flex justify-end gap-2">
-        <button
-          type="button"
+        <Link
+          href={routes.adminSpaceNew}
           aria-label="매장 추가"
-          className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-rsvd-border bg-rsvd-surface text-rsvd-text"
+          className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-rsvd-border bg-rsvd-surface text-rsvd-text transition hover:bg-rsvd-bg"
         >
           <IconPlus />
-        </button>
+        </Link>
       </div>
 
       <div className="overflow-x-auto rounded-2xl border border-rsvd-border bg-rsvd-surface">

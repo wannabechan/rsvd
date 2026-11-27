@@ -38,7 +38,7 @@ vercel env pull .env.local
 | `ADMIN_EMAIL` | 이 이메일로 로그인하면 `role: admin` (최고 등급) |
 | Redis URL + Token | 비밀번호·프로필·매장/사용자 카탈로그 저장 |
 
-카탈로그 시드(`rsvd:catalog:seeded:v6`): 매장 7곳 + sample 사용자 15명 + 랜덤 단골(라이크) 연결. 현재예약수는 실제 예약 전까지 0. 영업시간은 기본 비움(`hours-cleared:v1`). 공개 아바타·단골수는 저장된 regularMembers 기준. 최초 읽기 시 자동 기록.
+카탈로그 시드(`rsvd:catalog:seeded:v6`): 매장 7곳 + sample 사용자 15명 + 랜덤 단골(라이크) 연결. 현재예약수는 실제 예약 전까지 0. 영업시간은 기본 비움(`hours-cleared:v1`). 매장 이미지는 WebP로 Redis 저장(`images-stored:v1`, `/api/space-images/...`). 공개 아바타·단골수는 저장된 regularMembers 기준. 최초 읽기 시 자동 기록.
 
 ## 3) API
 

@@ -1,0 +1,90 @@
+import { revalidatePath } from "next/cache";
+import { NextResponse } from "next/server";
+import {
+  createCatalogSpace,
+  type AdminSpaceEditableFields,
+} from "@/lib/admin-catalog";
+import { routes } from "@/lib/routes";
+import { isUserStoreConfigured } from "@/lib/user-store";
+
+function asStringArray(value: unknown): string[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  return value
+    .filter((item): item is string => typeof item === "string")
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function asNonNegInt(value: unknown, fallback: number): number {
+  const n = typeof value === "number" ? value : Number(value);
+  if (!Number.isFinite(n) || n < 0) {
+    return fallback;
+  }
+  return Math.floor(n);
+}
+
+export async function POST(request: Request) {
+  try {
+    if (!isUserStoreConfigured()) {
+      return NextResponse.json(
+        { ok: false, error: "저장소가 연결되지 않았습니다." },
+        { status: 503 },
+      );
+    }
+
+    const body = (await request.json()) as Partial<AdminSpaceEditableFields>;
+    const name = typeof body.name === "string" ? body.name.trim() : "";
+    const address = typeof body.address === "string" ? body.address.trim() : "";
+    if (!name) {
+      return NextResponse.json(
+        { ok: false, error: "공간명칭을 입력해 주세요." },
+        { status: 400 },
+      );
+    }
+    if (!address) {
+      return NextResponse.json(
+        { ok: false, error: "주소를 입력해 주세요." },
+        { status: 400 },
+      );
+    }
+
+    const fields: AdminSpaceEditableFields = {
+      name,
+      address,
+      contact: typeof body.contact === "string" ? body.contact.trim() : "",
+      adminEmail:
+        typeof body.adminEmail === "string" ? body.adminEmail.trim() : "",
+      notices: asStringArray(body.notices),
+      heroImage: typeof body.heroImage === "string" ? body.heroImage.trim() : "",
+      menuImages: asStringArray(body.menuImages),
+      otherImages: asStringArray(body.otherImages),
+      bookingBufferDays: asNonNegInt(body.bookingBufferDays, 0),
+      maxBookingDays: asNonNegInt(body.maxBookingDays, 30),
+      minPartySize: Math.max(1, asNonNegInt(body.minPartySize, 1)),
+      maxPartySize: Math.max(1, asNonNegInt(body.maxPartySize, 6)),
+      active: body.active !== false,
+    };
+
+    if (fields.minPartySize > fields.maxPartySize) {
+      return NextResponse.json(
+        { ok: false, error: "최소 인원은 최대 인원보다 클 수 없습니다." },
+        { status: 400 },
+      );
+    }
+
+    const space = await createCatalogSpace(fields);
+    revalidatePath(routes.adminSpaces);
+    revalidatePath(routes.spaceList);
+    revalidatePath(routes.spaceDetail(space.id));
+
+    return NextResponse.json({ ok: true, space });
+  } catch (error) {
+    console.error("admin space POST failed", error);
+    return NextResponse.json(
+      { ok: false, error: "공간 생성에 실패했습니다." },
+      { status: 500 },
+    );
+  }
+}

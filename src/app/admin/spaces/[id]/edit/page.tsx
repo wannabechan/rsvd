@@ -21,5 +21,5 @@ async function EditContent({ params }: EditPageProps) {
   if (!space) {
     notFound();
   }
-  return <AdminSpaceEditForm space={space} />;
+  return <AdminSpaceEditForm mode="edit" space={space} />;
 }

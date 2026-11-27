@@ -195,3 +195,34 @@ export function createEmptyWeekSchedule(): Record<WeekdayKey, WeekdaySchedule> {
     sun: { slots: [] },
   };
 }
+
+/** Space gallery image caps (upload UI + validation). */
+export const SPACE_HERO_IMAGE_MAX = 1;
+export const SPACE_MENU_IMAGES_MAX = 5;
+export const SPACE_OTHER_IMAGES_MAX = 20;
+
+export function createBlankAdminSpace(): AdminSpace {
+  return {
+    id: "",
+    name: "",
+    adminEmail: "",
+    notices: [],
+    address: "",
+    contact: "",
+    heroImage: "",
+    menuImages: [],
+    otherImages: [],
+    bookingBufferDays: 0,
+    maxBookingDays: 30,
+    minPartySize: 1,
+    maxPartySize: 6,
+    currentReservationCount: 0,
+    active: true,
+    weeklyHours: createEmptyWeekSchedule(),
+    exceptions: [],
+    regularUserIds: [],
+    regularMembers: [],
+    lastReservedAt: "",
+    lastLikedAt: "",
+  };
+}

@@ -68,8 +68,12 @@ export function AdminHoursEditor({ space }: AdminHoursEditorProps) {
         setSavingDay(null);
         return;
       }
+      const savedDay = data.space.weeklyHours[day];
       setSavedHours(data.space.weeklyHours);
-      setDraftHours(data.space.weeklyHours);
+      setDraftHours((current) => ({
+        ...current,
+        [day]: savedDay,
+      }));
       setSavingDay(null);
     } catch {
       setError("네트워크 오류가 발생했습니다.");

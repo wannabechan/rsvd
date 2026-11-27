@@ -3,14 +3,19 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
+import { AdminSpaceImageField } from "@/components/admin/admin-space-image-field";
 import {
   adminSpaceRegularCount,
   adminSpaceReservationCount,
+  SPACE_HERO_IMAGE_MAX,
+  SPACE_MENU_IMAGES_MAX,
+  SPACE_OTHER_IMAGES_MAX,
   type AdminSpace,
 } from "@/domain/admin-space";
 import { routes } from "@/lib/routes";
 
 type AdminSpaceEditFormProps = {
+  mode: "create" | "edit";
   space: AdminSpace;
 };
 
@@ -21,20 +26,18 @@ function linesToList(value: string): string[] {
     .filter(Boolean);
 }
 
-export function AdminSpaceEditForm({ space }: AdminSpaceEditFormProps) {
+export function AdminSpaceEditForm({ mode, space }: AdminSpaceEditFormProps) {
   const router = useRouter();
   const [name, setName] = useState(space.name);
   const [address, setAddress] = useState(space.address);
   const [contact, setContact] = useState(space.contact);
   const [adminEmail, setAdminEmail] = useState(space.adminEmail);
   const [noticesText, setNoticesText] = useState(space.notices.join("\n"));
-  const [heroImage, setHeroImage] = useState(space.heroImage);
-  const [menuImagesText, setMenuImagesText] = useState(
-    space.menuImages.join("\n"),
+  const [heroImages, setHeroImages] = useState(
+    space.heroImage ? [space.heroImage] : [],
   );
-  const [otherImagesText, setOtherImagesText] = useState(
-    space.otherImages.join("\n"),
-  );
+  const [menuImages, setMenuImages] = useState(space.menuImages);
+  const [otherImages, setOtherImages] = useState(space.otherImages);
   const [bookingBufferDays, setBookingBufferDays] = useState(
     String(space.bookingBufferDays),
   );
@@ -51,26 +54,33 @@ export function AdminSpaceEditForm({ space }: AdminSpaceEditFormProps) {
     setError(null);
     setSaving(true);
     try {
-      const response = await fetch(`/api/admin/spaces/${space.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        credentials: "same-origin",
-        body: JSON.stringify({
-          name,
-          address,
-          contact,
-          adminEmail,
-          notices: linesToList(noticesText),
-          heroImage,
-          menuImages: linesToList(menuImagesText),
-          otherImages: linesToList(otherImagesText),
-          bookingBufferDays: Number(bookingBufferDays),
-          maxBookingDays: Number(maxBookingDays),
-          minPartySize: Number(minPartySize),
-          maxPartySize: Number(maxPartySize),
-          active,
-        }),
-      });
+      const payload = {
+        name,
+        address,
+        contact,
+        adminEmail,
+        notices: linesToList(noticesText),
+        heroImage: heroImages[0] ?? "",
+        menuImages,
+        otherImages,
+        bookingBufferDays: Number(bookingBufferDays),
+        maxBookingDays: Number(maxBookingDays),
+        minPartySize: Number(minPartySize),
+        maxPartySize: Number(maxPartySize),
+        active,
+      };
+
+      const response = await fetch(
+        mode === "create"
+          ? "/api/admin/spaces"
+          : `/api/admin/spaces/${space.id}`,
+        {
+          method: mode === "create" ? "POST" : "PUT",
+          headers: { "Content-Type": "application/json" },
+          credentials: "same-origin",
+          body: JSON.stringify(payload),
+        },
+      );
       const data = (await response.json()) as {
         ok: boolean;
         error?: string;
@@ -93,8 +103,13 @@ export function AdminSpaceEditForm({ space }: AdminSpaceEditFormProps) {
     <div>
       <div className="mb-6 flex items-center justify-between gap-4">
         <h1 className="text-lg font-medium text-rsvd-text">
-          속성 수정{" "}
-          <span className="font-normal text-rsvd-text-muted">/ {space.name}</span>
+          {mode === "create" ? "매장 추가" : "속성 수정"}
+          {mode === "edit" ? (
+            <span className="font-normal text-rsvd-text-muted">
+              {" "}
+              / {space.name}
+            </span>
+          ) : null}
         </h1>
         <Link
           href={routes.adminSpaces}
@@ -149,31 +164,24 @@ export function AdminSpaceEditForm({ space }: AdminSpaceEditFormProps) {
           />
         </Field>
 
-        <Field label="대표 이미지 URL">
-          <input
-            value={heroImage}
-            onChange={(event) => setHeroImage(event.target.value)}
-            className="auth-input w-full rounded-xl border border-rsvd-border bg-rsvd-surface px-3.5 py-2.5 text-sm text-rsvd-text"
-          />
-        </Field>
-
-        <Field label="메뉴 이미지 URL (줄바꿈으로 구분)">
-          <textarea
-            value={menuImagesText}
-            onChange={(event) => setMenuImagesText(event.target.value)}
-            rows={3}
-            className="auth-input w-full rounded-xl border border-rsvd-border bg-rsvd-surface px-3.5 py-2.5 text-sm text-rsvd-text"
-          />
-        </Field>
-
-        <Field label="기타 이미지 URL (줄바꿈으로 구분)">
-          <textarea
-            value={otherImagesText}
-            onChange={(event) => setOtherImagesText(event.target.value)}
-            rows={3}
-            className="auth-input w-full rounded-xl border border-rsvd-border bg-rsvd-surface px-3.5 py-2.5 text-sm text-rsvd-text"
-          />
-        </Field>
+        <AdminSpaceImageField
+          label="대표 이미지"
+          urls={heroImages}
+          maxCount={SPACE_HERO_IMAGE_MAX}
+          onChange={setHeroImages}
+        />
+        <AdminSpaceImageField
+          label="메뉴 이미지"
+          urls={menuImages}
+          maxCount={SPACE_MENU_IMAGES_MAX}
+          onChange={setMenuImages}
+        />
+        <AdminSpaceImageField
+          label="기타 이미지"
+          urls={otherImages}
+          maxCount={SPACE_OTHER_IMAGES_MAX}
+          onChange={setOtherImages}
+        />
 
         <div className="grid gap-5 sm:grid-cols-2">
           <Field label="예약여유일">
@@ -217,10 +225,16 @@ export function AdminSpaceEditForm({ space }: AdminSpaceEditFormProps) {
         <div className="flex items-center justify-between gap-3 rounded-xl border border-rsvd-border bg-rsvd-bg px-4 py-3">
           <div>
             <p className="text-sm font-medium text-rsvd-text">활성 상태</p>
-            <p className="mt-0.5 text-xs text-rsvd-text-muted">
-              현재예약수 {adminSpaceReservationCount(space)} · 단골수{" "}
-              {adminSpaceRegularCount(space)}
-            </p>
+            {mode === "edit" ? (
+              <p className="mt-0.5 text-xs text-rsvd-text-muted">
+                현재예약수 {adminSpaceReservationCount(space)} · 단골수{" "}
+                {adminSpaceRegularCount(space)}
+              </p>
+            ) : (
+              <p className="mt-0.5 text-xs text-rsvd-text-muted">
+                목록·상세에 노출할지 설정합니다.
+              </p>
+            )}
           </div>
           <button
             type="button"

@@ -8,6 +8,8 @@ import { buildSeedSampleUsers } from "@/data/admin-users";
 import { sampleAvatarForUserId } from "@/data/spaces";
 import {
   createEmptyWeekSchedule,
+  SPACE_MENU_IMAGES_MAX,
+  SPACE_OTHER_IMAGES_MAX,
   syncAdminSpaceStats,
   type AdminSpace,
   type WeekdayKey,
@@ -19,7 +21,12 @@ import {
   type SpaceItem,
   type SpaceRegularMember,
 } from "@/domain/space";
+import { processSpaceImageToWebp } from "@/lib/process-space-image";
 import { getRedis, isRedisConfigured } from "@/lib/redis";
+import {
+  isStoredSpaceImageUrl,
+  saveSpaceImageWebp,
+} from "@/lib/space-image-store";
 
 const SPACES_KEY = "rsvd:catalog:spaces";
 const USERS_KEY = "rsvd:catalog:users";
@@ -27,6 +34,8 @@ const USERS_KEY = "rsvd:catalog:users";
 const SEEDED_KEY = "rsvd:catalog:seeded:v6";
 /** One-time clear of seeded weekly hours across existing catalog spaces. */
 const HOURS_CLEARED_KEY = "rsvd:catalog:hours-cleared:v1";
+/** One-time migrate remote gallery URLs into stored WebP assets. */
+const IMAGES_STORED_KEY = "rsvd:catalog:images-stored:v1";
 
 function mulberry32(seed: number) {
   return function next() {
@@ -116,6 +125,7 @@ export async function ensureAdminCatalogSeeded(): Promise<void> {
   const seeded = await redis.get<string>(SEEDED_KEY);
   if (seeded) {
     await ensureWeeklyHoursCleared();
+    await ensureSpaceImagesStored();
     return;
   }
 
@@ -126,6 +136,7 @@ export async function ensureAdminCatalogSeeded(): Promise<void> {
   await redis.set(SPACES_KEY, spaces);
   await redis.set(SEEDED_KEY, new Date().toISOString());
   await redis.set(HOURS_CLEARED_KEY, new Date().toISOString());
+  await ensureSpaceImagesStored();
 }
 
 async function ensureWeeklyHoursCleared(): Promise<void> {
@@ -146,6 +157,106 @@ async function ensureWeeklyHoursCleared(): Promise<void> {
   await redis.set(HOURS_CLEARED_KEY, new Date().toISOString());
 }
 
+async function ingestRemoteImageUrl(url: string): Promise<string> {
+  const trimmed = url.trim();
+  if (!trimmed) {
+    return "";
+  }
+  if (isStoredSpaceImageUrl(trimmed)) {
+    return trimmed;
+  }
+  if (!/^https?:\/\//i.test(trimmed)) {
+    return trimmed;
+  }
+
+  const response = await fetch(trimmed, {
+    headers: { Accept: "image/*" },
+    cache: "no-store",
+  });
+  if (!response.ok) {
+    throw new Error(`image-fetch-failed:${response.status}`);
+  }
+  const bytes = new Uint8Array(await response.arrayBuffer());
+  const webp = await processSpaceImageToWebp(bytes);
+  const saved = await saveSpaceImageWebp(webp);
+  return saved.url;
+}
+
+async function migrateSpaceImageFields(space: AdminSpace): Promise<AdminSpace> {
+  const heroImage = space.heroImage
+    ? await ingestRemoteImageUrl(space.heroImage)
+    : "";
+  const menuImages: string[] = [];
+  for (const url of space.menuImages.slice(0, SPACE_MENU_IMAGES_MAX)) {
+    const next = await ingestRemoteImageUrl(url);
+    if (next) {
+      menuImages.push(next);
+    }
+  }
+  const otherImages: string[] = [];
+  for (const url of space.otherImages.slice(0, SPACE_OTHER_IMAGES_MAX)) {
+    const next = await ingestRemoteImageUrl(url);
+    if (next) {
+      otherImages.push(next);
+    }
+  }
+  return {
+    ...space,
+    heroImage,
+    menuImages,
+    otherImages,
+  };
+}
+
+function spaceNeedsImageMigration(space: AdminSpace): boolean {
+  const urls = [
+    space.heroImage,
+    ...space.menuImages,
+    ...space.otherImages,
+  ].filter(Boolean);
+  return urls.some(
+    (url) => /^https?:\/\//i.test(url) && !isStoredSpaceImageUrl(url),
+  );
+}
+
+async function ensureSpaceImagesStored(): Promise<void> {
+  if (!isRedisConfigured()) {
+    return;
+  }
+  const redis = getRedis();
+  const done = await redis.get<string>(IMAGES_STORED_KEY);
+  if (done) {
+    return;
+  }
+
+  const spaces = (await redis.get<AdminSpace[]>(SPACES_KEY)) ?? [];
+  let pendingRemote = false;
+  const next = [...spaces];
+
+  for (let index = 0; index < next.length; index += 1) {
+    const space = next[index];
+    if (!spaceNeedsImageMigration(space)) {
+      continue;
+    }
+    try {
+      const migrated = await migrateSpaceImageFields(space);
+      next[index] = migrated;
+      if (spaceNeedsImageMigration(migrated)) {
+        pendingRemote = true;
+      }
+      // Persist per space so a serverless timeout can resume later.
+      await redis.set(SPACES_KEY, next);
+    } catch (error) {
+      console.error("space image migrate failed", space.id, error);
+      pendingRemote = true;
+    }
+  }
+
+  if (!pendingRemote) {
+    await redis.set(IMAGES_STORED_KEY, new Date().toISOString());
+  }
+}
+
 export async function listCatalogSpaces(): Promise<AdminSpace[]> {
   await ensureAdminCatalogSeeded();
   if (!isRedisConfigured()) {
@@ -155,6 +266,7 @@ export async function listCatalogSpaces(): Promise<AdminSpace[]> {
     ).map(syncAdminSpaceStats);
   }
   await ensureWeeklyHoursCleared();
+  await ensureSpaceImagesStored();
   const spaces = await getRedis().get<AdminSpace[]>(SPACES_KEY);
   return (spaces ?? []).map(syncAdminSpaceStats);
 }
@@ -187,6 +299,24 @@ export type AdminSpaceEditableFields = Pick<
   | "active"
 >;
 
+function normalizeImageFields(
+  fields: AdminSpaceEditableFields,
+): AdminSpaceEditableFields {
+  const heroImage = fields.heroImage.trim();
+  return {
+    ...fields,
+    heroImage,
+    menuImages: fields.menuImages
+      .map((url) => url.trim())
+      .filter(Boolean)
+      .slice(0, SPACE_MENU_IMAGES_MAX),
+    otherImages: fields.otherImages
+      .map((url) => url.trim())
+      .filter(Boolean)
+      .slice(0, SPACE_OTHER_IMAGES_MAX),
+  };
+}
+
 export async function updateCatalogSpace(
   id: string,
   fields: AdminSpaceEditableFields,
@@ -206,13 +336,41 @@ export async function updateCatalogSpace(
   const current = syncAdminSpaceStats(spaces[index]);
   const next = syncAdminSpaceStats({
     ...current,
-    ...fields,
+    ...normalizeImageFields(fields),
     id: current.id,
   });
   const updated = [...spaces];
   updated[index] = next;
   await redis.set(SPACES_KEY, updated);
   return next;
+}
+
+export async function createCatalogSpace(
+  fields: AdminSpaceEditableFields,
+): Promise<AdminSpace> {
+  await ensureAdminCatalogSeeded();
+  if (!isRedisConfigured()) {
+    throw new Error("Catalog store is not configured.");
+  }
+
+  const redis = getRedis();
+  const spaces = (await redis.get<AdminSpace[]>(SPACES_KEY)) ?? [];
+  const id = `space-${Date.now().toString(36)}-${Math.random()
+    .toString(36)
+    .slice(2, 7)}`;
+  const created = syncAdminSpaceStats({
+    id,
+    ...normalizeImageFields(fields),
+    currentReservationCount: 0,
+    weeklyHours: createEmptyWeekSchedule(),
+    exceptions: [],
+    regularUserIds: [],
+    regularMembers: [],
+    lastReservedAt: "",
+    lastLikedAt: "",
+  });
+  await redis.set(SPACES_KEY, [...spaces, created]);
+  return created;
 }
 
 export async function updateCatalogSpaceDayHours(
