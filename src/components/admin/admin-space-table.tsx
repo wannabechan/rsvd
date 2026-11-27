@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   IconCalendar,
   IconClock,
@@ -25,6 +25,10 @@ type AdminSpaceTableProps = {
 
 export function AdminSpaceTable({ initialSpaces }: AdminSpaceTableProps) {
   const [spaces, setSpaces] = useState(initialSpaces);
+
+  useEffect(() => {
+    setSpaces(initialSpaces);
+  }, [initialSpaces]);
 
   function toggleActive(id: string) {
     setSpaces((current) =>

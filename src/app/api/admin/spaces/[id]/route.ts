@@ -1,8 +1,10 @@
+import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 import {
   updateCatalogSpace,
   type AdminSpaceEditableFields,
 } from "@/lib/admin-catalog";
+import { routes } from "@/lib/routes";
 import { isUserStoreConfigured } from "@/lib/user-store";
 
 type RouteContext = {
@@ -91,6 +93,10 @@ export async function PUT(request: Request, context: RouteContext) {
         { status: 404 },
       );
     }
+
+    revalidatePath(routes.adminSpaces);
+    revalidatePath(routes.spaceList);
+    revalidatePath(routes.spaceDetail(id));
 
     return NextResponse.json({ ok: true, space });
   } catch (error) {

@@ -7,8 +7,11 @@ import { buildSeedAdminSpaces } from "@/data/admin-spaces";
 import { buildSeedSampleUsers } from "@/data/admin-users";
 import { sampleAvatarForUserId } from "@/data/spaces";
 import {
+  createEmptyWeekSchedule,
   syncAdminSpaceStats,
   type AdminSpace,
+  type WeekdayKey,
+  type WeekdaySchedule,
 } from "@/domain/admin-space";
 import type { AdminUser } from "@/domain/admin-user";
 import {
@@ -22,6 +25,8 @@ const SPACES_KEY = "rsvd:catalog:spaces";
 const USERS_KEY = "rsvd:catalog:users";
 /** Bump when seed shape / avatar-stack logic changes so Redis re-seeds. */
 const SEEDED_KEY = "rsvd:catalog:seeded:v6";
+/** One-time clear of seeded weekly hours across existing catalog spaces. */
+const HOURS_CLEARED_KEY = "rsvd:catalog:hours-cleared:v1";
 
 function mulberry32(seed: number) {
   return function next() {
@@ -110,6 +115,7 @@ export async function ensureAdminCatalogSeeded(): Promise<void> {
   const redis = getRedis();
   const seeded = await redis.get<string>(SEEDED_KEY);
   if (seeded) {
+    await ensureWeeklyHoursCleared();
     return;
   }
 
@@ -119,6 +125,25 @@ export async function ensureAdminCatalogSeeded(): Promise<void> {
   await redis.set(USERS_KEY, users);
   await redis.set(SPACES_KEY, spaces);
   await redis.set(SEEDED_KEY, new Date().toISOString());
+  await redis.set(HOURS_CLEARED_KEY, new Date().toISOString());
+}
+
+async function ensureWeeklyHoursCleared(): Promise<void> {
+  if (!isRedisConfigured()) {
+    return;
+  }
+  const redis = getRedis();
+  const cleared = await redis.get<string>(HOURS_CLEARED_KEY);
+  if (cleared) {
+    return;
+  }
+  const spaces = (await redis.get<AdminSpace[]>(SPACES_KEY)) ?? [];
+  const next = spaces.map((space) => ({
+    ...space,
+    weeklyHours: createEmptyWeekSchedule(),
+  }));
+  await redis.set(SPACES_KEY, next);
+  await redis.set(HOURS_CLEARED_KEY, new Date().toISOString());
 }
 
 export async function listCatalogSpaces(): Promise<AdminSpace[]> {
@@ -129,6 +154,7 @@ export async function listCatalogSpaces(): Promise<AdminSpace[]> {
       buildSeedSampleUsers(15),
     ).map(syncAdminSpaceStats);
   }
+  await ensureWeeklyHoursCleared();
   const spaces = await getRedis().get<AdminSpace[]>(SPACES_KEY);
   return (spaces ?? []).map(syncAdminSpaceStats);
 }
@@ -182,6 +208,43 @@ export async function updateCatalogSpace(
     ...current,
     ...fields,
     id: current.id,
+  });
+  const updated = [...spaces];
+  updated[index] = next;
+  await redis.set(SPACES_KEY, updated);
+  return next;
+}
+
+export async function updateCatalogSpaceDayHours(
+  id: string,
+  day: WeekdayKey,
+  schedule: WeekdaySchedule,
+): Promise<AdminSpace | null> {
+  await ensureAdminCatalogSeeded();
+  if (!isRedisConfigured()) {
+    throw new Error("Catalog store is not configured.");
+  }
+
+  const redis = getRedis();
+  const spaces = (await redis.get<AdminSpace[]>(SPACES_KEY)) ?? [];
+  const index = spaces.findIndex((space) => space.id === id);
+  if (index < 0) {
+    return null;
+  }
+
+  const current = syncAdminSpaceStats(spaces[index]);
+  const weeklyHours = {
+    ...current.weeklyHours,
+    [day]: {
+      slots: schedule.slots.map((slot) => ({
+        ...slot,
+        extraBufferDays: 0,
+      })),
+    },
+  };
+  const next = syncAdminSpaceStats({
+    ...current,
+    weeklyHours,
   });
   const updated = [...spaces];
   updated[index] = next;

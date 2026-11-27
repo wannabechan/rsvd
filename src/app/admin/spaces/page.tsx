@@ -1,3 +1,4 @@
+import { connection } from "next/server";
 import { Suspense } from "react";
 import { AdminSpaceTable } from "@/components/admin/admin-space-table";
 import { listCatalogSpaces } from "@/lib/admin-catalog";
@@ -11,6 +12,7 @@ export default function AdminSpacesPage() {
 }
 
 async function AdminSpacesContent() {
+  await connection();
   const spaces = await listCatalogSpaces();
   return <AdminSpaceTable initialSpaces={spaces} />;
 }

@@ -145,7 +145,7 @@ export function formatExceptionKind(kind: ExceptionKind): string {
 }
 
 export function formatSlotSummary(slot: TimeSlot): string {
-  return `${slot.start} - ${slot.end} · 간격 ${slot.intervalMinutes}분 · 예약 허용 ${slot.maxReservations}회 · 추가 여유일 ${slot.extraBufferDays}일`;
+  return `${slot.start} - ${slot.end} · 간격 ${slot.intervalMinutes}분 · 예약 허용 ${slot.maxReservations}회`;
 }
 
 /** Display like `08-20 (목)`. */
@@ -165,12 +165,23 @@ export function formatAdminDateLabel(isoDate: string): string {
 export function createEmptySlot(): TimeSlot {
   return {
     id: `slot-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-    start: "12:00",
-    end: "13:30",
-    intervalMinutes: 30,
+    start: "09:00",
+    end: "18:00",
+    intervalMinutes: 60,
     maxReservations: 1,
     extraBufferDays: 0,
   };
+}
+
+export function cloneDaySlots(
+  slots: TimeSlot[],
+  day: WeekdayKey,
+): TimeSlot[] {
+  return slots.map((slot) => ({
+    ...slot,
+    id: `${day}-${slot.id}-${Date.now()}-${Math.random().toString(36).slice(2, 5)}`,
+    extraBufferDays: 0,
+  }));
 }
 
 export function createEmptyWeekSchedule(): Record<WeekdayKey, WeekdaySchedule> {

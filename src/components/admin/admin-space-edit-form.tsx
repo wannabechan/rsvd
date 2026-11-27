@@ -82,6 +82,7 @@ export function AdminSpaceEditForm({ space }: AdminSpaceEditFormProps) {
       }
       router.push(routes.adminSpaces);
       router.refresh();
+      setSaving(false);
     } catch {
       setError("네트워크 오류가 발생했습니다.");
       setSaving(false);

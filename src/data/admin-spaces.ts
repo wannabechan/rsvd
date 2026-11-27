@@ -1,49 +1,8 @@
 import {
   createEmptyWeekSchedule,
   type AdminSpace,
-  type TimeSlot,
-  type WeekdayKey,
 } from "@/domain/admin-space";
 import { SAMPLE_SPACES } from "@/data/spaces";
-
-function lunchDinnerSlots(day: WeekdayKey): TimeSlot[] {
-  return [
-    {
-      id: `${day}-lunch`,
-      start: "12:00",
-      end: "13:30",
-      intervalMinutes: 30,
-      maxReservations: 1,
-      extraBufferDays: 0,
-    },
-    {
-      id: `${day}-dinner`,
-      start: "18:00",
-      end: "21:00",
-      intervalMinutes: 30,
-      maxReservations: 1,
-      extraBufferDays: 0,
-    },
-  ];
-}
-
-function scheduleForDays(...days: WeekdayKey[]) {
-  const base = createEmptyWeekSchedule();
-  for (const day of days) {
-    base[day] = { slots: lunchDinnerSlots(day) };
-  }
-  return base;
-}
-
-const WEEKDAY_OPEN = scheduleForDays("mon", "tue", "wed", "thu", "fri");
-const WEEKDAY_WITH_SAT = scheduleForDays(
-  "mon",
-  "tue",
-  "wed",
-  "thu",
-  "fri",
-  "sat",
-);
 
 /** Build the 7 seed stores (단골 links attached during Redis seed). */
 export function buildSeedAdminSpaces(): AdminSpace[] {
@@ -66,7 +25,7 @@ export function buildSeedAdminSpaces(): AdminSpace[] {
       maxPartySize: 6,
       currentReservationCount: 0,
       active: true,
-      weeklyHours: index % 2 === 0 ? WEEKDAY_OPEN : WEEKDAY_WITH_SAT,
+      weeklyHours: createEmptyWeekSchedule(),
       exceptions:
         index === 0
           ? [
