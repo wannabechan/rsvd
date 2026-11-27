@@ -3,7 +3,6 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/components/auth/auth-context";
-import { useReservationChat } from "@/components/reservation-chat/reservation-chat-context";
 import { isValidEmail, type LoginStep } from "@/domain/auth";
 import { consumeAuthIntent, LOGIN_RESET_EVENT } from "@/lib/auth-intent";
 import { routes } from "@/lib/routes";
@@ -13,7 +12,6 @@ const ERROR_DISMISS_MS = 5000;
 
 export function LoginForm() {
   const router = useRouter();
-  const { startChat } = useReservationChat();
   const {
     requestCode,
     loginByCode,
@@ -74,16 +72,8 @@ export function LoginForm() {
   }
 
   function finishLogin() {
-    const intent = consumeAuthIntent();
-    if (intent?.type === "open-chat") {
-      startChat({ spaceId: intent.spaceId, spaceName: intent.spaceName });
-      router.replace(routes.spaceDetail(intent.spaceId));
-      return;
-    }
-    if (intent?.type === "path") {
-      router.replace(intent.path);
-      return;
-    }
+    // Drop any pre-login intent; always land on the default home.
+    consumeAuthIntent();
     router.replace(routes.spaceList);
   }
 

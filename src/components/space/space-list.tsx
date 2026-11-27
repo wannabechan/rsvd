@@ -54,14 +54,14 @@ export function SpaceList({ spaces }: SpaceListProps) {
             id="my-liked-spaces-heading"
             className="text-sm font-medium text-rsvd-text"
           >
-            내가 라이크한 공간
+            내가 애정하는 단골 매장
           </h2>
           {myLikedSpaces.length > 0 ? (
             <div className="mt-3">
               <SpaceGrid spaces={myLikedSpaces} />
             </div>
           ) : (
-            <p className="mt-3 text-sm leading-relaxed text-rsvd-text-muted">
+            <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-rsvd-text-muted">
               {MY_LIKED_SPACES_EMPTY_MESSAGE}
             </p>
           )}

@@ -5,11 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/components/auth/auth-context";
 import { HeaderLogo } from "@/components/layout/header-logo";
 import { useReservationChat } from "@/components/reservation-chat/reservation-chat-context";
-import {
-  avatarToneForEmail,
-  emailInitial,
-  emailLocalPart,
-} from "@/domain/auth";
+import { avatarToneForEmail, emailInitial } from "@/domain/auth";
 import { requestLoginReset } from "@/lib/auth-intent";
 import { routes } from "@/lib/routes";
 
@@ -47,11 +43,8 @@ export function SiteHeader() {
             <Link
               href={routes.profile}
               aria-label="프로필"
-              className="inline-flex min-w-0 max-w-[11rem] items-center gap-2 rounded-full py-1 pl-1 pr-0.5"
+              className="inline-flex items-center rounded-full"
             >
-              <span className="min-w-0 truncate text-sm font-normal text-rsvd-text">
-                {emailLocalPart(user.email)}
-              </span>
               <UserAvatar email={user.email} />
             </Link>
           ) : (
