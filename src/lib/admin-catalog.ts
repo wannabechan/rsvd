@@ -6,7 +6,10 @@
 import { buildSeedAdminSpaces } from "@/data/admin-spaces";
 import { buildSeedSampleUsers } from "@/data/admin-users";
 import { sampleAvatarForUserId } from "@/data/spaces";
-import type { AdminSpace } from "@/domain/admin-space";
+import {
+  syncAdminSpaceStats,
+  type AdminSpace,
+} from "@/domain/admin-space";
 import type { AdminUser } from "@/domain/admin-user";
 import {
   spaceRegularsToAvatarStack,
@@ -18,7 +21,7 @@ import { getRedis, isRedisConfigured } from "@/lib/redis";
 const SPACES_KEY = "rsvd:catalog:spaces";
 const USERS_KEY = "rsvd:catalog:users";
 /** Bump when seed shape / avatar-stack logic changes so Redis re-seeds. */
-const SEEDED_KEY = "rsvd:catalog:seeded:v4";
+const SEEDED_KEY = "rsvd:catalog:seeded:v6";
 
 function mulberry32(seed: number) {
   return function next() {
@@ -62,28 +65,16 @@ function attachRandomRegulars(
           memberIndex * 900_000 -
           Math.floor(rand() * 600_000),
       ).toISOString();
-      // Most likers also have a reservation; some only liked.
-      const hasReservation = rand() > 0.25;
-      const lastReservedAt = hasReservation
-        ? new Date(
-            now -
-              spaceIndex * 2_400_000 -
-              memberIndex * 700_000 -
-              Math.floor(rand() * 500_000),
-          ).toISOString()
-        : "";
       return {
         userId: user.id,
         likedAt,
-        lastReservedAt,
+        // No real reservation history yet — keep empty until bookings exist.
+        lastReservedAt: "",
         imageUrl: sampleAvatarForUserId(user.id),
       };
     });
 
     const regularUserIds = regularMembers.map((member) => member.userId);
-    const lastReservedAt = maxIsoTimestamp(
-      regularMembers.map((member) => member.lastReservedAt),
-    );
     const lastLikedAt = maxIsoTimestamp(
       regularMembers.map((member) => member.likedAt),
     );
@@ -92,10 +83,9 @@ function attachRandomRegulars(
       ...space,
       regularUserIds,
       regularMembers,
-      lastReservedAt,
+      lastReservedAt: "",
       lastLikedAt,
-      currentReservationCount: regularMembers.filter((member) => member.lastReservedAt)
-        .length,
+      currentReservationCount: 0,
     };
   });
 }
@@ -134,10 +124,13 @@ export async function ensureAdminCatalogSeeded(): Promise<void> {
 export async function listCatalogSpaces(): Promise<AdminSpace[]> {
   await ensureAdminCatalogSeeded();
   if (!isRedisConfigured()) {
-    return attachRandomRegulars(buildSeedAdminSpaces(), buildSeedSampleUsers(15));
+    return attachRandomRegulars(
+      buildSeedAdminSpaces(),
+      buildSeedSampleUsers(15),
+    ).map(syncAdminSpaceStats);
   }
   const spaces = await getRedis().get<AdminSpace[]>(SPACES_KEY);
-  return spaces ?? [];
+  return (spaces ?? []).map(syncAdminSpaceStats);
 }
 
 export async function getCatalogSpaceById(
@@ -149,6 +142,51 @@ export async function getCatalogSpaceById(
 
 export async function saveCatalogSpaces(spaces: AdminSpace[]): Promise<void> {
   await getRedis().set(SPACES_KEY, spaces);
+}
+
+export type AdminSpaceEditableFields = Pick<
+  AdminSpace,
+  | "name"
+  | "adminEmail"
+  | "notices"
+  | "address"
+  | "contact"
+  | "heroImage"
+  | "menuImages"
+  | "otherImages"
+  | "bookingBufferDays"
+  | "maxBookingDays"
+  | "minPartySize"
+  | "maxPartySize"
+  | "active"
+>;
+
+export async function updateCatalogSpace(
+  id: string,
+  fields: AdminSpaceEditableFields,
+): Promise<AdminSpace | null> {
+  await ensureAdminCatalogSeeded();
+  if (!isRedisConfigured()) {
+    throw new Error("Catalog store is not configured.");
+  }
+
+  const redis = getRedis();
+  const spaces = (await redis.get<AdminSpace[]>(SPACES_KEY)) ?? [];
+  const index = spaces.findIndex((space) => space.id === id);
+  if (index < 0) {
+    return null;
+  }
+
+  const current = syncAdminSpaceStats(spaces[index]);
+  const next = syncAdminSpaceStats({
+    ...current,
+    ...fields,
+    id: current.id,
+  });
+  const updated = [...spaces];
+  updated[index] = next;
+  await redis.set(SPACES_KEY, updated);
+  return next;
 }
 
 export async function listCatalogUsers(): Promise<AdminUser[]> {

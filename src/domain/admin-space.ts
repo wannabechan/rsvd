@@ -76,7 +76,10 @@ export type AdminSpace = {
   maxBookingDays: number;
   minPartySize: number;
   maxPartySize: number;
-  /** 현재예약수 (표시용) */
+  /**
+   * 현재예약수 — stored count of members with a reservation on this space.
+   * Kept in sync with regularMembers (see syncAdminSpaceStats).
+   */
   currentReservationCount: number;
   active: boolean;
   weeklyHours: Record<WeekdayKey, WeekdaySchedule>;
@@ -88,6 +91,7 @@ export type AdminSpace = {
   regularUserIds: string[];
   /**
    * Liked members with per-user reservation/like times for public avatar stacks.
+   * Source of truth for 단골수 / reservation-derived stats when present.
    */
   regularMembers: SpaceRegularMember[];
   /** ISO timestamp of most recent reservation; empty when none. */
@@ -95,6 +99,42 @@ export type AdminSpace = {
   /** ISO timestamp of most recent like/단골 승인; empty when none. */
   lastLikedAt: string;
 };
+
+/** 단골수 from stored regularMembers (fallback: regularUserIds). */
+export function adminSpaceRegularCount(space: AdminSpace): number {
+  if (Array.isArray(space.regularMembers) && space.regularMembers.length > 0) {
+    return space.regularMembers.length;
+  }
+  return space.regularUserIds?.length ?? 0;
+}
+
+/** 현재예약수 from stored currentReservationCount. */
+export function adminSpaceReservationCount(space: AdminSpace): number {
+  const stored = Number(space.currentReservationCount);
+  return Number.isFinite(stored) && stored >= 0 ? stored : 0;
+}
+
+/**
+ * Align id list with regularMembers when that array is present.
+ * currentReservationCount stays the stored live booking count (0 until real reservations).
+ */
+export function syncAdminSpaceStats(space: AdminSpace): AdminSpace {
+  const members = Array.isArray(space.regularMembers) ? space.regularMembers : [];
+  if (members.length === 0) {
+    return {
+      ...space,
+      regularUserIds: space.regularUserIds ?? [],
+      regularMembers: space.regularMembers ?? [],
+      currentReservationCount: adminSpaceReservationCount(space),
+    };
+  }
+  return {
+    ...space,
+    regularMembers: members,
+    regularUserIds: members.map((member) => member.userId),
+    currentReservationCount: adminSpaceReservationCount(space),
+  };
+}
 
 export function openWeekdays(space: AdminSpace): WeekdayKey[] {
   return WEEKDAY_KEYS.filter((day) => space.weeklyHours[day].slots.length > 0);

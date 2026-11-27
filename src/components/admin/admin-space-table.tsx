@@ -10,6 +10,8 @@ import {
   IconPlus,
 } from "@/components/admin/admin-icons";
 import {
+  adminSpaceRegularCount,
+  adminSpaceReservationCount,
   openWeekdays,
   WEEKDAY_KEYS,
   WEEKDAY_SHORT,
@@ -35,13 +37,6 @@ export function AdminSpaceTable({ initialSpaces }: AdminSpaceTableProps) {
   return (
     <div>
       <div className="mb-3 flex justify-end gap-2">
-        <button
-          type="button"
-          aria-label="정렬"
-          className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-rsvd-border bg-rsvd-surface text-rsvd-text-muted"
-        >
-          ↕
-        </button>
         <button
           type="button"
           aria-label="매장 추가"
@@ -95,10 +90,10 @@ export function AdminSpaceTable({ initialSpaces }: AdminSpaceTableProps) {
                     </div>
                   </td>
                   <td className="px-4 py-3.5 text-rsvd-text">
-                    {space.currentReservationCount}
+                    {adminSpaceReservationCount(space)}
                   </td>
                   <td className="px-4 py-3.5 text-rsvd-text">
-                    {space.regularUserIds?.length ?? 0}
+                    {adminSpaceRegularCount(space)}
                   </td>
                   <td className="px-4 py-3.5">
                     <button
@@ -120,13 +115,13 @@ export function AdminSpaceTable({ initialSpaces }: AdminSpaceTableProps) {
                   </td>
                   <td className="px-4 py-3.5">
                     <div className="flex items-center gap-1.5 text-rsvd-text-muted">
-                      <button
-                        type="button"
-                        aria-label={`${space.name} 수정`}
+                      <Link
+                        href={routes.adminSpaceEdit(space.id)}
+                        aria-label={`${space.name} 속성 수정`}
                         className="inline-flex h-8 w-8 items-center justify-center rounded-lg hover:bg-rsvd-bg hover:text-rsvd-text"
                       >
                         <IconEdit />
-                      </button>
+                      </Link>
                       <Link
                         href={routes.adminSpaceHours(space.id)}
                         aria-label={`${space.name} 영업시간`}
