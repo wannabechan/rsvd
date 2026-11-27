@@ -1,10 +1,27 @@
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 import { SpaceDetail } from "@/components/space/space-detail";
 import { getPublicSpaceById } from "@/lib/admin-catalog";
 
-export const dynamic = "force-dynamic";
+export default function SpaceDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  return (
+    <Suspense
+      fallback={
+        <div className="px-4 py-10">
+          <p className="text-sm text-rsvd-text-muted">불러오는 중…</p>
+        </div>
+      }
+    >
+      <SpaceDetailContent params={params} />
+    </Suspense>
+  );
+}
 
-export default async function SpaceDetailPage({
+async function SpaceDetailContent({
   params,
 }: {
   params: Promise<{ id: string }>;

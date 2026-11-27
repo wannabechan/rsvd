@@ -1,9 +1,22 @@
+import { Suspense } from "react";
 import { SpaceList } from "@/components/space/space-list";
 import { listPublicSpaces } from "@/lib/admin-catalog";
 
-export const dynamic = "force-dynamic";
+export default function SpacePage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="px-4 py-10">
+          <p className="text-sm text-rsvd-text-muted">불러오는 중…</p>
+        </div>
+      }
+    >
+      <SpacePageContent />
+    </Suspense>
+  );
+}
 
-export default async function SpacePage() {
+async function SpacePageContent() {
   const spaces = await listPublicSpaces();
   return <SpaceList spaces={spaces} />;
 }
