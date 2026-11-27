@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/components/auth/auth-context";
 import { HeaderLogo } from "@/components/layout/header-logo";
 import { useReservationChat } from "@/components/reservation-chat/reservation-chat-context";
@@ -9,13 +10,23 @@ import {
   emailInitial,
   emailLocalPart,
 } from "@/domain/auth";
+import { requestLoginReset } from "@/lib/auth-intent";
 import { routes } from "@/lib/routes";
 
 const HEADER_ICON_CLASS = "h-[1.65rem] w-[1.65rem]";
 
 export function SiteHeader() {
+  const router = useRouter();
+  const pathname = usePathname();
   const { user, isLoggedIn } = useAuth();
   const { activeChat, endChat } = useReservationChat();
+
+  function openInitialLogin() {
+    requestLoginReset();
+    if (pathname !== routes.login) {
+      router.push(routes.login);
+    }
+  }
 
   return (
     <header className="relative z-50 shrink-0">
@@ -36,7 +47,7 @@ export function SiteHeader() {
             <Link
               href={routes.profile}
               aria-label="프로필"
-              className="inline-flex min-w-0 max-w-[11rem] items-center gap-2 rounded-full py-1 pl-1 pr-0.5 transition hover:bg-rsvd-tint"
+              className="inline-flex min-w-0 max-w-[11rem] items-center gap-2 rounded-full py-1 pl-1 pr-0.5"
             >
               <span className="min-w-0 truncate text-sm font-normal text-rsvd-text">
                 {emailLocalPart(user.email)}
@@ -44,12 +55,13 @@ export function SiteHeader() {
               <UserAvatar email={user.email} />
             </Link>
           ) : (
-            <Link
-              href={routes.login}
+            <button
+              type="button"
+              onClick={openInitialLogin}
               className="inline-flex h-10 translate-y-[2px] items-center justify-center px-0 text-sm font-normal text-rsvd-text"
             >
               로그인
-            </Link>
+            </button>
           )}
         </nav>
       </div>

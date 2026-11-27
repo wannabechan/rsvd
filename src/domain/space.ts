@@ -19,9 +19,15 @@ export type SpaceItem = {
   onlineLink: string;
   /** Reservation-chat setup count. Display with displayLikeCount(). */
   totalLikeCount: number;
+  /** ISO timestamp of the most recent reservation on this space. */
+  lastReservedAt: string;
   recentReservers: SpaceReserver[];
   notice: string[];
 };
+
+/** Logged-in home: empty “내가 라이크한 공간” body copy. */
+export const MY_LIKED_SPACES_EMPTY_MESSAGE =
+  "아직 애정하는 단골 매장이 없습니다. 아래의 '+' 버튼을 눌러 단골 맺기를 신청하세요.";
 
 /** Heart count shown in UI: reservation-chat setups, minimum 1 when exposed. */
 export function displayLikeCount(totalLikeCount: number): number {
@@ -34,13 +40,22 @@ export function toTelHref(contact: string): string {
   return digits ? `tel:${digits}` : "";
 }
 
-/** Default guest list order: most likes first. */
-export function sortSpacesByLikeCountDesc(spaces: SpaceItem[]): SpaceItem[] {
+/** Platform list order: most recently reserved first. */
+export function sortSpacesByRecentReservationDesc(spaces: SpaceItem[]): SpaceItem[] {
   return [...spaces].sort((a, b) => {
-    const likeDiff = displayLikeCount(b.totalLikeCount) - displayLikeCount(a.totalLikeCount);
-    if (likeDiff !== 0) {
-      return likeDiff;
+    const timeDiff = Date.parse(b.lastReservedAt) - Date.parse(a.lastReservedAt);
+    if (timeDiff !== 0) {
+      return timeDiff;
     }
     return a.name.localeCompare(b.name, "ko");
   });
+}
+
+/** Spaces the current user liked, ordered by recent reservation. */
+export function filterSpacesByLikedIds(
+  spaces: SpaceItem[],
+  likedSpaceIds: readonly string[],
+): SpaceItem[] {
+  const liked = new Set(likedSpaceIds);
+  return sortSpacesByRecentReservationDesc(spaces.filter((space) => liked.has(space.id)));
 }

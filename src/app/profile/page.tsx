@@ -1,16 +1,17 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useAuth } from "@/components/auth/auth-context";
 import { routes } from "@/lib/routes";
 
 export default function ProfilePage() {
   const router = useRouter();
   const { user, isReady, isLoggedIn, logout } = useAuth();
+  const loggingOutRef = useRef(false);
 
   useEffect(() => {
-    if (isReady && !isLoggedIn) {
+    if (isReady && !isLoggedIn && !loggingOutRef.current) {
       router.replace(routes.login);
     }
   }, [isReady, isLoggedIn, router]);
@@ -30,6 +31,7 @@ export default function ProfilePage() {
       <button
         type="button"
         onClick={() => {
+          loggingOutRef.current = true;
           logout();
           router.replace(routes.spaceList);
         }}

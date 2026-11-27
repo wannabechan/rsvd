@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/components/auth/auth-context";
 import { useReservationChat } from "@/components/reservation-chat/reservation-chat-context";
 import { isValidEmail, type LoginStep } from "@/domain/auth";
-import { consumeAuthIntent } from "@/lib/auth-intent";
+import { consumeAuthIntent, LOGIN_RESET_EVENT } from "@/lib/auth-intent";
 import { routes } from "@/lib/routes";
 
 const CODE_PLACEHOLDER = "이메일 발송된 6자리 숫자";
@@ -31,14 +31,6 @@ export function LoginForm() {
   const [pendingAction, setPendingAction] = useState<"request-code" | null>(null);
   const errorTimerRef = useRef<number | null>(null);
 
-  useEffect(() => {
-    return () => {
-      if (errorTimerRef.current !== null) {
-        window.clearTimeout(errorTimerRef.current);
-      }
-    };
-  }, []);
-
   function clearError() {
     if (errorTimerRef.current !== null) {
       window.clearTimeout(errorTimerRef.current);
@@ -46,6 +38,29 @@ export function LoginForm() {
     }
     setError(null);
   }
+
+  function resetToInitialLogin() {
+    setStep("email");
+    setEmail("");
+    setCode("");
+    setPassword("");
+    setPending(false);
+    setPendingAction(null);
+    clearError();
+  }
+
+  useEffect(() => {
+    const onReset = () => {
+      resetToInitialLogin();
+    };
+    window.addEventListener(LOGIN_RESET_EVENT, onReset);
+    return () => {
+      window.removeEventListener(LOGIN_RESET_EVENT, onReset);
+      if (errorTimerRef.current !== null) {
+        window.clearTimeout(errorTimerRef.current);
+      }
+    };
+  }, []);
 
   function showError(message: string) {
     if (errorTimerRef.current !== null) {
@@ -179,6 +194,7 @@ export function LoginForm() {
           value={email}
           disabled={step !== "email" || pending}
           onChange={(event) => setEmail(event.target.value)}
+          onFocus={clearError}
           placeholder="name@example.com"
           className={`auth-input auth-input-email mt-2 w-full rounded-2xl border border-rsvd-border px-3.5 py-3 text-sm text-rsvd-text placeholder:text-rsvd-text-muted disabled:text-rsvd-text-muted ${
             emailFilled ? "bg-rsvd-tint disabled:bg-rsvd-tint" : "bg-rsvd-surface disabled:bg-rsvd-bg"

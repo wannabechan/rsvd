@@ -45,6 +45,7 @@ export const SAMPLE_SPACES: SpaceItem[] = [
     contact: "0212345678",
     onlineLink: "",
     totalLikeCount: 128,
+    lastReservedAt: "2025-11-27T10:20:00.000Z",
     recentReservers: reservers(15, 0),
     notice: [
       "엘 플라토를 찾아 주셔서 감사합니다. 이번 주에는 제철 재료로 구성한 스페인 디너 코스를 운영하며, 주말 디너는 예약 손님을 우선으로 안내합니다.",
@@ -65,6 +66,7 @@ export const SAMPLE_SPACES: SpaceItem[] = [
     contact: "027654321",
     onlineLink: "",
     totalLikeCount: 42,
+    lastReservedAt: "2025-11-26T14:05:00.000Z",
     recentReservers: reservers(8, 2),
     notice: [
       "아틀리에 노리는 한 테이블씩 천천히 진행하는 코스 다이닝입니다. 런치 라스트 오더는 오후 1시 30분이며, 디너 예약은 2인 기준으로 안내합니다.",
@@ -85,6 +87,7 @@ export const SAMPLE_SPACES: SpaceItem[] = [
     contact: "023334444",
     onlineLink: "",
     totalLikeCount: 19,
+    lastReservedAt: "2025-11-25T09:40:00.000Z",
     recentReservers: reservers(11, 1),
     notice: [
       "하나 테이블은 점심·저녁 모두 예약제로 운영합니다. 점심 코스는 11:30부터 입장이 가능하고, 아이 동반은 평일 런치에만 안내하고 있습니다.",
@@ -105,6 +108,7 @@ export const SAMPLE_SPACES: SpaceItem[] = [
     contact: "024445555",
     onlineLink: "",
     totalLikeCount: 7,
+    lastReservedAt: "2025-11-24T18:15:00.000Z",
     recentReservers: reservers(4, 4),
     notice: [
       "올리브 룸은 날씨에 따라 테라스 좌석을 열고, 피자 화덕은 저녁 5시부터 가동합니다. 반려견은 테라스에서만 동반할 수 있습니다.",
@@ -125,6 +129,7 @@ export const SAMPLE_SPACES: SpaceItem[] = [
     contact: "025556666",
     onlineLink: "",
     totalLikeCount: 1,
+    lastReservedAt: "2025-11-22T11:00:00.000Z",
     recentReservers: reservers(1, 6),
     notice: [
       "서울 그레인은 오전 10시부터 브런치를 시작하며, 주말 브런치는 타임제로 운영합니다. 글루텐 프리 메뉴가 필요하면 별도로 요청해 주세요.",
@@ -145,6 +150,7 @@ export const SAMPLE_SPACES: SpaceItem[] = [
     contact: "026667777",
     onlineLink: "",
     totalLikeCount: 86,
+    lastReservedAt: "2025-11-27T12:45:00.000Z",
     recentReservers: reservers(13, 3),
     notice: [
       "문 하버는 일몰 시간대 창가 좌석 예약이 빠르게 마감됩니다. 오이스터 해피아워는 평일 5–7시에 진행되며, 드레스 코드는 스마트 캐주얼입니다.",
@@ -165,6 +171,7 @@ export const SAMPLE_SPACES: SpaceItem[] = [
     contact: "027778888",
     onlineLink: "",
     totalLikeCount: 31,
+    lastReservedAt: "2025-11-23T16:30:00.000Z",
     recentReservers: reservers(9, 5),
     notice: [
       "밤부 키친은 점심 특선과 저녁 코스를 따로 운영합니다. 만두는 하루 한정으로 준비되며, 매운맛 단계는 주문 시 알려 주세요.",
