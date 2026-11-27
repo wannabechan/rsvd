@@ -37,10 +37,13 @@ export function SiteHeader() {
 
   return (
     <header className="relative z-50 shrink-0">
-      <div className="flex w-full items-center justify-between border-b border-rsvd-border bg-rsvd-surface px-4 py-4">
-        <HeaderLogo />
+      {/* Fixed action row (h-10) + py-4 keeps header height identical across modes. */}
+      <div className="flex h-[4.5rem] w-full items-center justify-between border-b border-rsvd-border bg-rsvd-surface px-4">
+        <div className="flex h-10 items-center">
+          <HeaderLogo />
+        </div>
 
-        <nav className="ml-auto flex min-w-0 items-center">
+        <nav className="ml-auto flex h-10 min-w-0 items-center">
           {activeChat ? (
             <button
               type="button"
@@ -63,15 +66,18 @@ export function SiteHeader() {
             <Link
               href={routes.profile}
               aria-label="프로필"
-              className="inline-flex items-center rounded-full"
+              className="inline-flex h-10 max-w-[11rem] items-center gap-2 rounded-full"
             >
+              <span className="min-w-0 truncate text-sm font-normal text-rsvd-text">
+                {user.nickname}
+              </span>
               <UserAvatar user={user} />
             </Link>
           ) : (
             <button
               type="button"
               onClick={openInitialLogin}
-              className="inline-flex h-10 translate-y-[2px] items-center justify-center px-0 text-sm font-normal text-rsvd-text"
+              className="inline-flex h-10 items-center justify-center px-0 text-sm font-normal text-rsvd-text"
             >
               로그인
             </button>

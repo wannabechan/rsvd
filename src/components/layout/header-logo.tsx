@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useAuth } from "@/components/auth/auth-context";
 import { useReservationChat } from "@/components/reservation-chat/reservation-chat-context";
 import { routes } from "@/lib/routes";
 
@@ -15,11 +16,14 @@ const LOGO_SLOT_WIDTH = `calc(${LOGO_HEIGHT} * 1800 / 800)`;
 
 export function HeaderLogo() {
   const pathname = usePathname();
+  const { isLoggedIn } = useAuth();
   const { activeChat } = useReservationChat();
   const [showSymbol, setShowSymbol] = useState(false);
   const isChatActive = Boolean(activeChat);
   const freezeMainLogo = pathname === routes.profile;
   const displaySymbol = !freezeMainLogo && (isChatActive || showSymbol);
+  // After login, idle symbol state shows no “을 눌러…” copy (chat status still shows).
+  const showStatusLabel = displaySymbol && (isChatActive || !isLoggedIn);
 
   useEffect(() => {
     if (freezeMainLogo) {
@@ -92,13 +96,13 @@ export function HeaderLogo() {
       />
       <span
         className={`pointer-events-none absolute top-1/2 max-w-[min(16.5rem,calc(100vw-7.5rem))] -translate-y-[calc(50%-2px)] truncate text-sm font-normal leading-none text-rsvd-text-muted transition-opacity ease-in-out ${
-          displaySymbol ? "opacity-100" : "opacity-0"
+          showStatusLabel ? "opacity-100" : "opacity-0"
         }`}
         style={{
           left: `calc(${SYMBOL_HEIGHT} + 0.4rem)`,
           transitionDuration: isChatActive ? "0ms" : `${DISSOLVE_MS}ms`,
         }}
-        aria-hidden={!displaySymbol}
+        aria-hidden={!showStatusLabel}
       >
         {statusLabel}
       </span>
