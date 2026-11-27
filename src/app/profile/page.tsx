@@ -6,11 +6,21 @@ import { useAuth } from "@/components/auth/auth-context";
 import { useLoginBoot } from "@/components/auth/login-boot-context";
 import { UserAvatar } from "@/components/auth/user-avatar";
 import { PhoneVerifyModal } from "@/components/profile/phone-verify-modal";
-import { formatPhoneDisplay, NICKNAME_MAX_LENGTH } from "@/domain/auth";
+import {
+  defaultNickname,
+  isValidPhone,
+  normalizePhone,
+  NICKNAME_MAX_LENGTH,
+} from "@/domain/auth";
 import { prepareAvatarWebp } from "@/lib/prepare-avatar-image";
 import { routes } from "@/lib/routes";
 
 type ConfirmKind = "save-avatar" | "delete-avatar" | null;
+
+const PROFILE_ACTION_BTN =
+  "inline-flex h-11 shrink-0 items-center justify-center rounded-full px-4 text-sm font-medium transition";
+const PROFILE_ACTION_PRIMARY = `${PROFILE_ACTION_BTN} bg-rsvd-brand text-rsvd-on-brand hover:bg-rsvd-brand-strong disabled:bg-rsvd-disabled-bg disabled:text-rsvd-disabled-text`;
+const PROFILE_ACTION_SECONDARY = `${PROFILE_ACTION_BTN} border border-rsvd-border bg-rsvd-surface text-rsvd-text hover:bg-rsvd-bg disabled:pointer-events-none disabled:text-rsvd-disabled-text`;
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -23,6 +33,7 @@ export default function ProfilePage() {
     saveNickname,
     uploadAvatar,
     removeAvatar,
+    clearPhone,
   } = useAuth();
   const loggingOutRef = useRef(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -35,6 +46,9 @@ export default function ProfilePage() {
   const [pendingPreviewUrl, setPendingPreviewUrl] = useState<string | null>(null);
   const [confirmKind, setConfirmKind] = useState<ConfirmKind>(null);
   const [phoneVerifyOpen, setPhoneVerifyOpen] = useState(false);
+  const [phoneInput, setPhoneInput] = useState("");
+  const [phonePendingClear, setPhonePendingClear] = useState(false);
+  const [savingPhoneClear, setSavingPhoneClear] = useState(false);
 
   useEffect(() => {
     if (isReady && !isLoggedIn && !loggingOutRef.current) {
@@ -47,6 +61,14 @@ export default function ProfilePage() {
       setNickname(user.nickname);
     }
   }, [user]);
+
+  useEffect(() => {
+    if (!user) {
+      return;
+    }
+    setPhonePendingClear(false);
+    setPhoneInput(user.phone ?? "");
+  }, [user?.phone]);
 
   useEffect(() => {
     return () => {
@@ -67,7 +89,10 @@ export default function ProfilePage() {
   const previewUser = pendingPreviewUrl
     ? { ...user, avatarUrl: pendingPreviewUrl }
     : user;
-  const phoneDisplay = user.phone ? formatPhoneDisplay(user.phone) : "";
+  const phoneFieldValue = phonePendingClear ? "" : phoneInput;
+  const canVerifyPhone = !phonePendingClear && isValidPhone(phoneInput);
+  const canDeletePhone = phonePendingClear || Boolean(user.phone);
+  const nicknameDefault = defaultNickname(user.email);
 
   async function handleSaveNickname() {
     setError(null);
@@ -79,6 +104,19 @@ export default function ProfilePage() {
       return;
     }
     setNickname(result.user.nickname);
+  }
+
+  async function handleSavePhoneClear() {
+    setError(null);
+    setSavingPhoneClear(true);
+    const result = await clearPhone();
+    setSavingPhoneClear(false);
+    if (!result.ok) {
+      setError(result.error);
+      return;
+    }
+    setPhonePendingClear(false);
+    setPhoneInput("");
   }
 
   async function handleAvatarSelected(file: File | null) {
@@ -201,11 +239,19 @@ export default function ProfilePage() {
           />
           <button
             type="button"
+            disabled={savingNickname || nickname === nicknameDefault}
+            onClick={() => setNickname(nicknameDefault)}
+            className={PROFILE_ACTION_SECONDARY}
+          >
+            초기화
+          </button>
+          <button
+            type="button"
             disabled={savingNickname || !nickname.trim()}
             onClick={() => {
               void handleSaveNickname();
             }}
-            className="inline-flex h-11 shrink-0 items-center justify-center rounded-full bg-rsvd-brand px-4 text-sm font-medium text-rsvd-on-brand transition hover:bg-rsvd-brand-strong disabled:bg-rsvd-disabled-bg disabled:text-rsvd-disabled-text"
+            className={PROFILE_ACTION_PRIMARY}
           >
             {savingNickname ? "…" : "저장"}
           </button>
@@ -222,16 +268,41 @@ export default function ProfilePage() {
           </label>
           <input
             id="profile-phone"
-            type="text"
-            readOnly
-            value={phoneDisplay}
+            type="tel"
+            inputMode="numeric"
+            autoComplete="tel"
+            value={phoneFieldValue}
             placeholder="연락처를 인증하세요"
+            onChange={(event) => {
+              if (phonePendingClear) {
+                setPhonePendingClear(false);
+              }
+              setPhoneInput(normalizePhone(event.target.value));
+            }}
             className="auth-input min-w-0 flex-1 rounded-2xl border border-rsvd-border bg-rsvd-surface px-3.5 py-3 text-sm text-rsvd-text placeholder:text-rsvd-text-muted"
           />
           <button
             type="button"
+            disabled={savingPhoneClear || !canDeletePhone}
+            onClick={() => {
+              if (phonePendingClear) {
+                void handleSavePhoneClear();
+                return;
+              }
+              setPhonePendingClear(true);
+              setPhoneInput("");
+            }}
+            className={
+              phonePendingClear ? PROFILE_ACTION_PRIMARY : PROFILE_ACTION_SECONDARY
+            }
+          >
+            {savingPhoneClear ? "…" : phonePendingClear ? "저장" : "삭제"}
+          </button>
+          <button
+            type="button"
+            disabled={savingPhoneClear || !canVerifyPhone}
             onClick={() => setPhoneVerifyOpen(true)}
-            className="inline-flex h-11 shrink-0 items-center justify-center rounded-full bg-rsvd-brand px-4 text-sm font-medium text-rsvd-on-brand transition hover:bg-rsvd-brand-strong"
+            className={PROFILE_ACTION_PRIMARY}
           >
             인증
           </button>
@@ -307,8 +378,12 @@ export default function ProfilePage() {
 
       {phoneVerifyOpen ? (
         <PhoneVerifyModal
+          initialPhone={phoneInput}
           onClose={() => setPhoneVerifyOpen(false)}
-          onVerified={() => setPhoneVerifyOpen(false)}
+          onVerified={() => {
+            setPhonePendingClear(false);
+            setPhoneVerifyOpen(false);
+          }}
         />
       ) : null}
     </div>

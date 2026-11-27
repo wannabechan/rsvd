@@ -100,9 +100,9 @@ export function formatPhoneDisplay(phone: string): string {
   return digits;
 }
 
-/** SMS body for phone verification (keep short for SMS 90-byte limit). */
+/** SMS body for phone verification. */
 export function phoneVerificationSmsBody(code: string): string {
-  return `[rsvd] 인증번호 ${code.trim()}`;
+  return `애정하는 단골 예약 rsvd. 연락처 인증번호 ${code.trim()}`;
 }
 
 export function avatarPublicPath(email: string, version: number): string {

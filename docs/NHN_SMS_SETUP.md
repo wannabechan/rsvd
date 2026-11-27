@@ -39,7 +39,7 @@ vercel env pull .env.local
 
 - `POST /api/profile/phone/request-code` — NHN으로 SMS 발송 + OTP 쿠키
 - `POST /api/profile/phone/verify` — 코드 검증 후 Redis 프로필에 연락처 저장
-- 본문 예: `[rsvd] 인증번호 123456`
+- 본문 예: `애정하는 단골 예약 rsvd. 연락처 인증번호 123456`
 - 세 키가 **모두** 있을 때만 실발송. 없으면 서버 로그 + 응답 `debugCode`(개발 폴백)
 
 ## 4) 점검

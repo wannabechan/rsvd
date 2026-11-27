@@ -143,6 +143,17 @@ export async function updatePhone(
   return toUserProfile(normalized, next);
 }
 
+export async function clearPhone(email: string): Promise<UserProfile> {
+  const normalized = normalizeEmail(email);
+  const current = await ensureUserProfile(normalized);
+  const next = toStoredProfile({
+    ...current,
+    phone: null,
+  });
+  await getRedis().set(profileKey(normalized), next);
+  return toUserProfile(normalized, next);
+}
+
 export async function saveAvatarWebp(
   email: string,
   webpBytes: Uint8Array,

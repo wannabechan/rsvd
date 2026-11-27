@@ -12,14 +12,19 @@ import {
 type PhoneVerifyStep = "phone" | "code";
 
 type PhoneVerifyModalProps = {
+  initialPhone?: string;
   onClose: () => void;
   onVerified: () => void;
 };
 
-export function PhoneVerifyModal({ onClose, onVerified }: PhoneVerifyModalProps) {
+export function PhoneVerifyModal({
+  initialPhone = "",
+  onClose,
+  onVerified,
+}: PhoneVerifyModalProps) {
   const { requestPhoneCode, verifyPhone } = useAuth();
   const [step, setStep] = useState<PhoneVerifyStep>("phone");
-  const [phone, setPhone] = useState("");
+  const [phone, setPhone] = useState(() => normalizePhone(initialPhone));
   const [code, setCode] = useState("");
   const [debugCode, setDebugCode] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -146,7 +151,7 @@ export function PhoneVerifyModal({ onClose, onVerified }: PhoneVerifyModalProps)
             type="button"
             disabled={
               pending ||
-              (step === "phone" ? !phone.trim() : code.length !== 6)
+              (step === "phone" ? !isValidPhone(phone) : code.length !== 6)
             }
             onClick={() => {
               if (step === "phone") {

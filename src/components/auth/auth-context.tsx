@@ -15,6 +15,7 @@ import {
   loginWithCode,
   loginWithPassword,
   readStoredSession,
+  clearPhone as clearPhoneRequest,
   removeAvatar as removeAvatarRequest,
   requestLoginCode,
   requestPhoneCode as requestPhoneCodeRequest,
@@ -46,6 +47,7 @@ type AuthContextValue = {
     phone: string,
     code: string,
   ) => Promise<{ ok: true; user: AuthUser } | { ok: false; error: string }>;
+  clearPhone: () => Promise<{ ok: true; user: AuthUser } | { ok: false; error: string }>;
   requestCode: (email: string) => Promise<{ ok: true } | { ok: false; error: string }>;
   loginByCode: (
     email: string,
@@ -164,6 +166,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [user],
   );
 
+  const clearPhone = useCallback(async () => {
+    if (!user) {
+      return { ok: false as const, error: "로그인이 필요합니다." };
+    }
+    const result = await clearPhoneRequest(user.email);
+    if (result.ok) {
+      setUser(result.user);
+    }
+    return result;
+  }, [user]);
+
   const requestCode = useCallback(async (email: string) => requestLoginCode(email), []);
 
   const loginByCode = useCallback(async (email: string, code: string) => {
@@ -210,6 +223,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       removeAvatar,
       requestPhoneCode,
       verifyPhone,
+      clearPhone,
       requestCode,
       loginByCode,
       loginByPassword,
@@ -226,6 +240,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       removeAvatar,
       requestPhoneCode,
       verifyPhone,
+      clearPhone,
       requestCode,
       loginByCode,
       loginByPassword,
