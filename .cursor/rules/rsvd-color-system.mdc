@@ -33,3 +33,5 @@ Source of truth: [docs/RSVD_COLOR_SYSTEM.md](docs/RSVD_COLOR_SYSTEM.md)
 | `--rsvd-success` | `#28724F` | Confirmed |
 | `--rsvd-danger` | `#B4433D` | Error / cancel |
 | `--rsvd-on-brand` | `#FFFFFF` | Text on brand |
+| `--rsvd-disabled-bg` | `#CFD6D1` | Disabled button background |
+| `--rsvd-disabled-text` | `#7A857E` | Disabled button text |

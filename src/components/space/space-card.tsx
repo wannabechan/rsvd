@@ -86,7 +86,7 @@ export function SpaceCard({ space }: SpaceCardProps) {
 
       <div className="flex min-w-0 items-center justify-between gap-2 pt-1">
         {recentReservers.length > 0 ? (
-          <div className="flex min-w-0 items-center" aria-label="최근 예약한 사용자">
+          <div className="flex min-w-0 items-center" aria-label="단골 사용자">
             {recentReservers.map((reserver, index) => (
               // eslint-disable-next-line @next/next/no-img-element
               <img

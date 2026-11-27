@@ -5,7 +5,9 @@ alwaysApply: true
 
 # RSVD Domain Semantics
 
-- **Like count (하트 숫자)**: 예약챗이 설정된 횟수. 공간에 노출되면 최소 1.
-- **Profile avatars (원형 프로필)**: 최근 **라이크**가 아니라 최근 **예약** 사용자 기준.
-- 리스트·공간 상세 모두 동일. 리스트/상세 표시 개수는 UI 상수로 제한(현재 각 최대 7).
-- 데이터 필드명은 `recentReservers`를 사용. `recentLikers`로 되돌려 쓰지 말 것.
+- **Like count (하트 숫자)**: 단골(라이크) 승인된 사용자 수. 공간에 노출되면 최소 1 (`displayLikeCount`).
+- **Profile avatars (원형 프로필)**: **라이크한 사용자** 중에서 표시. 정렬은
+  1) 최근 예약순
+  2) 최근 라이크순
+- 리스트·공간 상세 모두 동일. UI 표시 개수 상한(현재 각 최대 7)에 걸리지 않으면 **프로필 개수 = 라이크 수**.
+- 공개 필드명은 `recentReservers`를 유지(아바타 스택). `recentLikers`로 바꾸지 말 것. 내용은 위 정렬의 단골 사용자이다.

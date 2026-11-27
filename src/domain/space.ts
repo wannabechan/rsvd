@@ -8,6 +8,16 @@ export type SpaceReserver = {
   imageUrl: string;
 };
 
+/** Liked (단골) member with activity timestamps for avatar ordering. */
+export type SpaceRegularMember = {
+  userId: string;
+  /** ISO timestamp when like/단골 was approved. */
+  likedAt: string;
+  /** ISO timestamp of this member's most recent reservation; empty if none. */
+  lastReservedAt: string;
+  imageUrl: string;
+};
+
 export type SpaceItem = {
   id: string;
   name: string;
@@ -17,15 +27,47 @@ export type SpaceItem = {
   images: string[];
   contact: string;
   onlineLink: string;
-  /** Reservation-chat setup count. Display with displayLikeCount(). */
+  /** Liked (단골) user count. Display with displayLikeCount(). */
   totalLikeCount: number;
   /** ISO timestamp of the most recent reservation on this space. */
   lastReservedAt: string;
   /** ISO timestamp of the most recent like/단골 승인; empty when none. */
   lastLikedAt: string;
+  /**
+   * Avatar stack: liked users sorted by recent reservation, then recent like.
+   * UI caps display (e.g. 7); uncapped length equals totalLikeCount.
+   */
   recentReservers: SpaceReserver[];
   notice: string[];
 };
+
+/** Avatar order among likers: recent reservation → recent like → userId. */
+export function sortSpaceRegularMembers(
+  members: readonly SpaceRegularMember[],
+): SpaceRegularMember[] {
+  return [...members].sort((a, b) => {
+    const aReserved = Date.parse(a.lastReservedAt) || 0;
+    const bReserved = Date.parse(b.lastReservedAt) || 0;
+    if (bReserved !== aReserved) {
+      return bReserved - aReserved;
+    }
+    const aLiked = Date.parse(a.likedAt) || 0;
+    const bLiked = Date.parse(b.likedAt) || 0;
+    if (bLiked !== aLiked) {
+      return bLiked - aLiked;
+    }
+    return a.userId.localeCompare(b.userId);
+  });
+}
+
+export function spaceRegularsToAvatarStack(
+  members: readonly SpaceRegularMember[],
+): SpaceReserver[] {
+  return sortSpaceRegularMembers(members).map((member) => ({
+    id: member.userId,
+    imageUrl: member.imageUrl,
+  }));
+}
 
 /** Logged-in home: empty “내가 애정하는 단골 매장” body copy. */
 export const MY_LIKED_SPACES_EMPTY_MESSAGE =

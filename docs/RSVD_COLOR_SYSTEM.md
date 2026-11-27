@@ -26,6 +26,8 @@
 | `--rsvd-success` | 포레스트그린 | `#28724F` | 예약 확정 텍스트 및 아이콘 |
 | `--rsvd-danger` | 뮤트레드 | `#B4433D` | 입력 오류, 취소·실패 안내 |
 | `--rsvd-on-brand` | 화이트 | `#FFFFFF` | 딥그린 버튼 및 어두운 영역 위 텍스트·로고 |
+| `--rsvd-disabled-bg` | 워시드그레이 | `#CFD6D1` | 비활성 버튼 배경 (브랜드·화이트와 명확히 구분) |
+| `--rsvd-disabled-text` | 미스트그린그레이 | `#7A857E` | 비활성 버튼 텍스트·아이콘 |
 
 ## CSS 변수
 
@@ -61,8 +63,8 @@
   --rsvd-badge-bg: var(--rsvd-accent);
   --rsvd-badge-text: var(--rsvd-text);
   --rsvd-focus: var(--rsvd-brand);
-  --rsvd-disabled-bg: var(--rsvd-border);
-  --rsvd-disabled-text: var(--rsvd-text-muted);
+  --rsvd-disabled-bg: #CFD6D1;
+  --rsvd-disabled-text: #7A857E;
 }
 ```
 

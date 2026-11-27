@@ -29,8 +29,9 @@
   --rsvd-badge-bg: var(--rsvd-accent);
   --rsvd-badge-text: var(--rsvd-text);
   --rsvd-focus: var(--rsvd-brand);
-  --rsvd-disabled-bg: var(--rsvd-border);
-  --rsvd-disabled-text: var(--rsvd-text-muted);
+  /* Washed gray — clearly distinct from brand green and white surface */
+  --rsvd-disabled-bg: #cfd6d1;
+  --rsvd-disabled-text: #7a857e;
 
   --background: var(--rsvd-bg);
   --foreground: var(--rsvd-text);
@@ -51,6 +52,8 @@
   --color-rsvd-success: var(--rsvd-success);
   --color-rsvd-danger: var(--rsvd-danger);
   --color-rsvd-on-brand: var(--rsvd-on-brand);
+  --color-rsvd-disabled-bg: var(--rsvd-disabled-bg);
+  --color-rsvd-disabled-text: var(--rsvd-disabled-text);
   --font-sans: "Pretendard Variable", Pretendard, sans-serif;
 }
 

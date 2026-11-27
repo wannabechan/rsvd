@@ -3,7 +3,7 @@
  * Keep free of React/Next/DOM.
  */
 
-import type { SpaceReserver } from "@/domain/space";
+import type { SpaceRegularMember } from "@/domain/space";
 
 export const WEEKDAY_KEYS = [
   "mon",
@@ -82,19 +82,18 @@ export type AdminSpace = {
   weeklyHours: Record<WeekdayKey, WeekdaySchedule>;
   exceptions: ExceptionDateRange[];
   /**
-   * 단골목록 — 라이크 승인된 사용자 id 목록.
+   * 단골목록 — 라이크 승인된 사용자 id 목록 (regularMembers와 동기).
    * Approval workflow comes later; seed/admin may set directly.
    */
   regularUserIds: string[];
+  /**
+   * Liked members with per-user reservation/like times for public avatar stacks.
+   */
+  regularMembers: SpaceRegularMember[];
   /** ISO timestamp of most recent reservation; empty when none. */
   lastReservedAt: string;
   /** ISO timestamp of most recent like/단골 승인; empty when none. */
   lastLikedAt: string;
-  /**
-   * Recent reservation users for public avatar stacks (not likers).
-   * List/detail UI caps display count.
-   */
-  recentReservers: SpaceReserver[];
 };
 
 export function openWeekdays(space: AdminSpace): WeekdayKey[] {

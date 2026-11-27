@@ -38,7 +38,7 @@ vercel env pull .env.local
 | `ADMIN_EMAIL` | 이 이메일로 로그인하면 `role: admin` (최고 등급) |
 | Redis URL + Token | 비밀번호·프로필·매장/사용자 카탈로그 저장 |
 
-카탈로그 시드(`rsvd:catalog:seeded:v2`): 매장 7곳 + sample 사용자 15명 + 랜덤 단골 연결. 최초 읽기 시 자동 기록.
+카탈로그 시드(`rsvd:catalog:seeded:v4`): 매장 7곳 + sample 사용자 15명 + 랜덤 단골(라이크) 연결. 공개 아바타는 단골을 최근 예약→최근 라이크 순으로 정렬. 최초 읽기 시 자동 기록.
 
 ## 3) API
 

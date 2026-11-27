@@ -96,7 +96,7 @@ export function SpaceDetail({ space }: SpaceDetailProps) {
       {recentReservers.length > 0 ? (
         <div
           className="mt-5 flex flex-wrap items-center gap-1.5"
-          aria-label="최근 예약한 사용자"
+          aria-label="단골 사용자"
         >
           {recentReservers.map((reserver) => (
             // eslint-disable-next-line @next/next/no-img-element

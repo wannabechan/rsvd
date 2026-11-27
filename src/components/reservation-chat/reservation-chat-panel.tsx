@@ -134,7 +134,7 @@ export function ReservationChatPanel({ space }: ReservationChatPanelProps) {
               type="submit"
               disabled={!draft.trim()}
               aria-label="보내기"
-              className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-rsvd-brand text-rsvd-on-brand transition hover:bg-rsvd-brand-strong disabled:bg-rsvd-disabled-bg disabled:text-rsvd-disabled-text"
+              className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-rsvd-brand text-rsvd-on-brand transition hover:bg-rsvd-brand-strong disabled:bg-rsvd-disabled-bg disabled:text-rsvd-disabled-text disabled:hover:bg-rsvd-disabled-bg"
             >
               <SendArrowIcon />
             </button>

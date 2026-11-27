@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useAuth } from "@/components/auth/auth-context";
+import { ButtonSpinner } from "@/components/ui/button-spinner";
 import {
   formatPhoneDisplay,
   isValidLoginCode,
@@ -10,6 +11,7 @@ import {
 } from "@/domain/auth";
 
 type PhoneVerifyStep = "phone" | "code";
+type PendingAction = "request-code" | "verify" | null;
 
 type PhoneVerifyModalProps = {
   onClose: () => void;
@@ -23,7 +25,8 @@ export function PhoneVerifyModal({ onClose, onVerified }: PhoneVerifyModalProps)
   const [code, setCode] = useState("");
   const [debugCode, setDebugCode] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [pending, setPending] = useState(false);
+  const [pendingAction, setPendingAction] = useState<PendingAction>(null);
+  const pending = pendingAction !== null;
 
   async function handleRequestCode() {
     setError(null);
@@ -31,16 +34,17 @@ export function PhoneVerifyModal({ onClose, onVerified }: PhoneVerifyModalProps)
       setError("올바른 휴대폰 번호를 입력해 주세요.");
       return;
     }
-    setPending(true);
+    setPendingAction("request-code");
     const result = await requestPhoneCode(phone);
-    setPending(false);
     if (!result.ok) {
+      setPendingAction(null);
       setError(result.error);
       return;
     }
     setDebugCode(result.debugCode ?? null);
     setCode("");
     setStep("code");
+    setPendingAction(null);
   }
 
   async function handleVerify() {
@@ -49,9 +53,9 @@ export function PhoneVerifyModal({ onClose, onVerified }: PhoneVerifyModalProps)
       setError("인증 코드 6자리를 입력해 주세요.");
       return;
     }
-    setPending(true);
+    setPendingAction("verify");
     const result = await verifyPhone(phone, code);
-    setPending(false);
+    setPendingAction(null);
     if (!result.ok) {
       setError(result.error);
       return;
@@ -138,7 +142,7 @@ export function PhoneVerifyModal({ onClose, onVerified }: PhoneVerifyModalProps)
               }
               onClose();
             }}
-            className="inline-flex h-11 items-center justify-center rounded-full border border-rsvd-border bg-rsvd-surface text-sm font-medium text-rsvd-text transition hover:bg-rsvd-bg disabled:pointer-events-none"
+            className="inline-flex h-11 items-center justify-center rounded-full border border-rsvd-border bg-rsvd-surface text-sm font-medium text-rsvd-text transition hover:bg-rsvd-bg disabled:border-rsvd-disabled-bg disabled:bg-rsvd-disabled-bg disabled:text-rsvd-disabled-text disabled:hover:bg-rsvd-disabled-bg"
           >
             {step === "code" ? "이전" : "취소"}
           </button>
@@ -148,6 +152,7 @@ export function PhoneVerifyModal({ onClose, onVerified }: PhoneVerifyModalProps)
               pending ||
               (step === "phone" ? !phone.trim() : code.length !== 6)
             }
+            aria-busy={pendingAction === "request-code" || pendingAction === "verify"}
             onClick={() => {
               if (step === "phone") {
                 void handleRequestCode();
@@ -155,9 +160,19 @@ export function PhoneVerifyModal({ onClose, onVerified }: PhoneVerifyModalProps)
               }
               void handleVerify();
             }}
-            className="inline-flex h-11 items-center justify-center rounded-full bg-rsvd-brand text-sm font-medium text-rsvd-on-brand transition hover:bg-rsvd-brand-strong disabled:bg-rsvd-disabled-bg disabled:text-rsvd-disabled-text"
+            className={`inline-flex h-11 items-center justify-center rounded-full bg-rsvd-brand text-sm font-medium text-rsvd-on-brand transition hover:bg-rsvd-brand-strong ${
+              pendingAction === "request-code" || pendingAction === "verify"
+                ? "disabled:bg-rsvd-brand disabled:text-rsvd-on-brand disabled:hover:bg-rsvd-brand"
+                : "disabled:border-rsvd-disabled-bg disabled:bg-rsvd-disabled-bg disabled:text-rsvd-disabled-text disabled:hover:bg-rsvd-disabled-bg"
+            }`}
           >
-            {pending ? "…" : step === "phone" ? "코드 받기" : "확인"}
+            {pendingAction === "request-code" || pendingAction === "verify" ? (
+              <ButtonSpinner tone="on-brand" />
+            ) : step === "phone" ? (
+              "코드 받기"
+            ) : (
+              "확인"
+            )}
           </button>
         </div>
       </div>

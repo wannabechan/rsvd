@@ -18,8 +18,10 @@ type ConfirmKind = "save-avatar" | "delete-avatar" | null;
 
 const PROFILE_ACTION_BTN =
   "inline-flex h-11 shrink-0 items-center justify-center rounded-full px-4 text-sm font-medium transition";
-const PROFILE_ACTION_PRIMARY = `${PROFILE_ACTION_BTN} bg-rsvd-brand text-rsvd-on-brand hover:bg-rsvd-brand-strong disabled:bg-rsvd-disabled-bg disabled:text-rsvd-disabled-text`;
-const PROFILE_ACTION_SECONDARY = `${PROFILE_ACTION_BTN} border border-rsvd-border bg-rsvd-surface text-rsvd-text hover:bg-rsvd-bg disabled:pointer-events-none disabled:text-rsvd-disabled-text`;
+const PROFILE_ACTION_DISABLED =
+  "disabled:border-rsvd-disabled-bg disabled:bg-rsvd-disabled-bg disabled:text-rsvd-disabled-text disabled:hover:bg-rsvd-disabled-bg";
+const PROFILE_ACTION_PRIMARY = `${PROFILE_ACTION_BTN} bg-rsvd-brand text-rsvd-on-brand hover:bg-rsvd-brand-strong ${PROFILE_ACTION_DISABLED}`;
+const PROFILE_ACTION_SECONDARY = `${PROFILE_ACTION_BTN} border border-rsvd-border bg-rsvd-surface text-rsvd-text hover:bg-rsvd-bg ${PROFILE_ACTION_DISABLED}`;
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -85,6 +87,8 @@ export default function ProfilePage() {
   const phoneDisplay =
     phonePendingClear || !user.phone ? "" : formatPhoneDisplay(user.phone);
   const nicknameDefault = defaultNickname(user.email);
+  const isNicknameDefault = nickname.trim() === nicknameDefault;
+  const hasRegisteredPhone = Boolean(user.phone);
 
   async function handleSaveNickname() {
     setError(null);
@@ -196,7 +200,7 @@ export default function ProfilePage() {
               type="button"
               disabled={avatarBusy}
               onClick={() => fileInputRef.current?.click()}
-              className="inline-flex h-11 items-center justify-center rounded-full border border-rsvd-border bg-rsvd-surface px-4 text-sm font-medium text-rsvd-text transition hover:bg-rsvd-bg disabled:pointer-events-none disabled:text-rsvd-disabled-text"
+              className={`inline-flex h-11 items-center justify-center rounded-full border border-rsvd-border bg-rsvd-surface px-4 text-sm font-medium text-rsvd-text transition hover:bg-rsvd-bg ${PROFILE_ACTION_DISABLED}`}
             >
               이미지 등록
             </button>
@@ -204,7 +208,7 @@ export default function ProfilePage() {
               type="button"
               disabled={avatarBusy || (!user.avatarUrl && !pendingPreviewUrl)}
               onClick={() => setConfirmKind("delete-avatar")}
-              className="inline-flex h-11 items-center justify-center rounded-full border border-rsvd-border bg-rsvd-bg px-4 text-sm font-medium text-rsvd-text-muted transition hover:bg-rsvd-tint disabled:pointer-events-none disabled:text-rsvd-disabled-text"
+              className={`inline-flex h-11 items-center justify-center rounded-full border border-rsvd-border bg-rsvd-bg px-4 text-sm font-medium text-rsvd-text-muted transition hover:bg-rsvd-tint ${PROFILE_ACTION_DISABLED}`}
             >
               이미지 삭제
             </button>
@@ -230,7 +234,7 @@ export default function ProfilePage() {
           />
           <button
             type="button"
-            disabled={savingNickname || nickname === nicknameDefault}
+            disabled={savingNickname || isNicknameDefault}
             onClick={() => setNickname(nicknameDefault)}
             className={PROFILE_ACTION_SECONDARY}
           >
@@ -272,11 +276,15 @@ export default function ProfilePage() {
           <button
             type="button"
             disabled={
-              savingPhoneClear || (!phonePendingClear && !user.phone)
+              savingPhoneClear ||
+              (phonePendingClear ? false : !hasRegisteredPhone)
             }
             onClick={() => {
               if (phonePendingClear) {
                 void handleSavePhoneClear();
+                return;
+              }
+              if (!hasRegisteredPhone) {
                 return;
               }
               setPhonePendingClear(true);
@@ -413,7 +421,7 @@ function ConfirmModal({
             type="button"
             disabled={busy}
             onClick={onCancel}
-            className="inline-flex h-11 items-center justify-center rounded-full border border-rsvd-border bg-rsvd-surface text-sm font-medium text-rsvd-text transition hover:bg-rsvd-bg disabled:pointer-events-none"
+            className={`inline-flex h-11 items-center justify-center rounded-full border border-rsvd-border bg-rsvd-surface text-sm font-medium text-rsvd-text transition hover:bg-rsvd-bg ${PROFILE_ACTION_DISABLED}`}
           >
             취소
           </button>
@@ -421,7 +429,7 @@ function ConfirmModal({
             type="button"
             disabled={busy}
             onClick={onConfirm}
-            className="inline-flex h-11 items-center justify-center rounded-full bg-rsvd-brand text-sm font-medium text-rsvd-on-brand transition hover:bg-rsvd-brand-strong disabled:pointer-events-none"
+            className={`inline-flex h-11 items-center justify-center rounded-full bg-rsvd-brand text-sm font-medium text-rsvd-on-brand transition hover:bg-rsvd-brand-strong ${PROFILE_ACTION_DISABLED}`}
           >
             {busy ? "…" : confirmLabel}
           </button>

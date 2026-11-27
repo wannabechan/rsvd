@@ -2,7 +2,7 @@ import type { SpaceItem, SpaceReserver } from "@/domain/space";
 
 export type { SpaceItem, SpaceReserver } from "@/domain/space";
 
-const AVATARS = [
+export const SAMPLE_USER_AVATARS = [
   "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=160&q=80",
   "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=160&q=80",
   "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=160&q=80",
@@ -25,8 +25,17 @@ const MAX_RESERVER_SAMPLES = 15;
 function reservers(count: number, offset = 0): SpaceReserver[] {
   return Array.from({ length: Math.min(count, MAX_RESERVER_SAMPLES) }, (_, index) => ({
     id: `reserver-${offset}-${index}`,
-    imageUrl: AVATARS[(offset + index) % AVATARS.length],
+    imageUrl: SAMPLE_USER_AVATARS[(offset + index) % SAMPLE_USER_AVATARS.length],
   }));
+}
+
+/** Stable demo avatar URL for a catalog user id. */
+export function sampleAvatarForUserId(userId: string): string {
+  let hash = 0;
+  for (let index = 0; index < userId.length; index += 1) {
+    hash = (hash * 31 + userId.charCodeAt(index)) >>> 0;
+  }
+  return SAMPLE_USER_AVATARS[hash % SAMPLE_USER_AVATARS.length];
 }
 
 
@@ -44,7 +53,7 @@ export const SAMPLE_SPACES: SpaceItem[] = [
     ],
     contact: "0212345678",
     onlineLink: "",
-    totalLikeCount: 128,
+    totalLikeCount: 15,
     lastReservedAt: "2025-11-27T10:20:00.000Z",
     lastLikedAt: "2025-11-27T10:20:00.000Z",
     recentReservers: reservers(15, 0),
@@ -66,7 +75,7 @@ export const SAMPLE_SPACES: SpaceItem[] = [
     ],
     contact: "027654321",
     onlineLink: "",
-    totalLikeCount: 42,
+    totalLikeCount: 8,
     lastReservedAt: "2025-11-26T14:05:00.000Z",
     lastLikedAt: "2025-11-26T14:05:00.000Z",
     recentReservers: reservers(8, 2),
@@ -88,7 +97,7 @@ export const SAMPLE_SPACES: SpaceItem[] = [
     ],
     contact: "023334444",
     onlineLink: "",
-    totalLikeCount: 19,
+    totalLikeCount: 11,
     lastReservedAt: "2025-11-25T09:40:00.000Z",
     lastLikedAt: "2025-11-25T09:40:00.000Z",
     recentReservers: reservers(11, 1),
@@ -110,7 +119,7 @@ export const SAMPLE_SPACES: SpaceItem[] = [
     ],
     contact: "024445555",
     onlineLink: "",
-    totalLikeCount: 7,
+    totalLikeCount: 4,
     lastReservedAt: "2025-11-24T18:15:00.000Z",
     lastLikedAt: "2025-11-24T18:15:00.000Z",
     recentReservers: reservers(4, 4),
@@ -154,7 +163,7 @@ export const SAMPLE_SPACES: SpaceItem[] = [
     ],
     contact: "026667777",
     onlineLink: "",
-    totalLikeCount: 86,
+    totalLikeCount: 13,
     lastReservedAt: "2025-11-27T12:45:00.000Z",
     lastLikedAt: "2025-11-27T12:45:00.000Z",
     recentReservers: reservers(13, 3),
@@ -176,7 +185,7 @@ export const SAMPLE_SPACES: SpaceItem[] = [
     ],
     contact: "027778888",
     onlineLink: "",
-    totalLikeCount: 31,
+    totalLikeCount: 9,
     lastReservedAt: "2025-11-23T16:30:00.000Z",
     lastLikedAt: "2025-11-23T16:30:00.000Z",
     recentReservers: reservers(9, 5),

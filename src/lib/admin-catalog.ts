@@ -5,15 +5,20 @@
 
 import { buildSeedAdminSpaces } from "@/data/admin-spaces";
 import { buildSeedSampleUsers } from "@/data/admin-users";
+import { sampleAvatarForUserId } from "@/data/spaces";
 import type { AdminSpace } from "@/domain/admin-space";
 import type { AdminUser } from "@/domain/admin-user";
-import type { SpaceItem } from "@/domain/space";
+import {
+  spaceRegularsToAvatarStack,
+  type SpaceItem,
+  type SpaceRegularMember,
+} from "@/domain/space";
 import { getRedis, isRedisConfigured } from "@/lib/redis";
 
 const SPACES_KEY = "rsvd:catalog:spaces";
 const USERS_KEY = "rsvd:catalog:users";
-/** Bump when seed shape changes so Redis re-seeds. */
-const SEEDED_KEY = "rsvd:catalog:seeded:v3";
+/** Bump when seed shape / avatar-stack logic changes so Redis re-seeds. */
+const SEEDED_KEY = "rsvd:catalog:seeded:v4";
 
 function mulberry32(seed: number) {
   return function next() {
@@ -24,6 +29,19 @@ function mulberry32(seed: number) {
   };
 }
 
+function maxIsoTimestamp(values: string[]): string {
+  let best = "";
+  let bestMs = 0;
+  for (const value of values) {
+    const ms = Date.parse(value) || 0;
+    if (ms > bestMs) {
+      bestMs = ms;
+      best = value;
+    }
+  }
+  return best;
+}
+
 function attachRandomRegulars(
   spaces: AdminSpace[],
   users: AdminUser[],
@@ -32,21 +50,67 @@ function attachRandomRegulars(
   const rand = mulberry32(20261127);
   const now = Date.parse("2025-11-27T18:00:00.000Z");
 
-  return spaces.map((space, index) => {
+  return spaces.map((space, spaceIndex) => {
     const count = 1 + Math.floor(rand() * Math.min(8, sampleUsers.length));
     const shuffled = [...sampleUsers].sort(() => rand() - 0.5);
-    const regularUserIds = shuffled.slice(0, count).map((user) => user.id);
-    // Stagger recent-like timestamps so secondary sort is meaningful.
-    const lastLikedAt = new Date(
-      now - index * 3_600_000 - Math.floor(rand() * 1_800_000),
-    ).toISOString();
+    const picked = shuffled.slice(0, count);
+
+    const regularMembers: SpaceRegularMember[] = picked.map((user, memberIndex) => {
+      const likedAt = new Date(
+        now -
+          spaceIndex * 3_600_000 -
+          memberIndex * 900_000 -
+          Math.floor(rand() * 600_000),
+      ).toISOString();
+      // Most likers also have a reservation; some only liked.
+      const hasReservation = rand() > 0.25;
+      const lastReservedAt = hasReservation
+        ? new Date(
+            now -
+              spaceIndex * 2_400_000 -
+              memberIndex * 700_000 -
+              Math.floor(rand() * 500_000),
+          ).toISOString()
+        : "";
+      return {
+        userId: user.id,
+        likedAt,
+        lastReservedAt,
+        imageUrl: sampleAvatarForUserId(user.id),
+      };
+    });
+
+    const regularUserIds = regularMembers.map((member) => member.userId);
+    const lastReservedAt = maxIsoTimestamp(
+      regularMembers.map((member) => member.lastReservedAt),
+    );
+    const lastLikedAt = maxIsoTimestamp(
+      regularMembers.map((member) => member.likedAt),
+    );
+
     return {
       ...space,
       regularUserIds,
+      regularMembers,
+      lastReservedAt,
       lastLikedAt,
-      currentReservationCount: Math.min(space.recentReservers.length, 3),
+      currentReservationCount: regularMembers.filter((member) => member.lastReservedAt)
+        .length,
     };
   });
+}
+
+function normalizeRegularMembers(space: AdminSpace): SpaceRegularMember[] {
+  if (space.regularMembers?.length) {
+    return space.regularMembers;
+  }
+  // Legacy seed rows: ids only — synthesize members so avatar count still matches likes.
+  return (space.regularUserIds ?? []).map((userId, index) => ({
+    userId,
+    likedAt: space.lastLikedAt || new Date(0).toISOString(),
+    lastReservedAt: index === 0 ? space.lastReservedAt || "" : "",
+    imageUrl: sampleAvatarForUserId(userId),
+  }));
 }
 
 export async function ensureAdminCatalogSeeded(): Promise<void> {
@@ -106,6 +170,8 @@ export function adminSpaceToPublicItem(space: AdminSpace): SpaceItem {
     ...space.menuImages,
     ...space.otherImages,
   ].filter(Boolean);
+  const regularMembers = normalizeRegularMembers(space);
+  const recentReservers = spaceRegularsToAvatarStack(regularMembers);
 
   return {
     id: space.id,
@@ -116,10 +182,10 @@ export function adminSpaceToPublicItem(space: AdminSpace): SpaceItem {
     images,
     contact: space.contact,
     onlineLink: "",
-    totalLikeCount: space.regularUserIds.length,
+    totalLikeCount: regularMembers.length,
     lastReservedAt: space.lastReservedAt || "",
     lastLikedAt: space.lastLikedAt || "",
-    recentReservers: space.recentReservers ?? [],
+    recentReservers,
     notice: space.notices,
   };
 }

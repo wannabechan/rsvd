@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/components/auth/auth-context";
+import { ButtonSpinner } from "@/components/ui/button-spinner";
 import { isValidEmail, type LoginStep } from "@/domain/auth";
 import { consumeAuthIntent } from "@/lib/auth-intent";
 import { routes } from "@/lib/routes";
@@ -285,7 +286,7 @@ export function LoginForm() {
                   disabled={pending}
                   aria-busy={pendingAction === "request-code"}
                   onClick={handleRequestCodeLogin}
-                  className="inline-flex h-11 items-center justify-center rounded-full bg-rsvd-brand px-3 text-sm font-medium text-rsvd-on-brand transition hover:bg-rsvd-brand-strong disabled:pointer-events-none"
+                  className="inline-flex h-11 items-center justify-center rounded-full bg-rsvd-brand px-3 text-sm font-medium text-rsvd-on-brand transition hover:bg-rsvd-brand-strong disabled:bg-rsvd-disabled-bg disabled:text-rsvd-disabled-text disabled:hover:bg-rsvd-disabled-bg"
                 >
                   {pendingAction === "request-code" ? (
                     <ButtonSpinner tone="on-brand" />
@@ -298,7 +299,7 @@ export function LoginForm() {
                   disabled={pending}
                   aria-busy={pendingAction === "choose-password"}
                   onClick={handleChoosePassword}
-                  className="inline-flex h-11 items-center justify-center rounded-full border border-rsvd-brand bg-rsvd-surface px-3 text-sm font-medium text-rsvd-brand transition hover:bg-rsvd-tint disabled:pointer-events-none"
+                  className="inline-flex h-11 items-center justify-center rounded-full border border-rsvd-brand bg-rsvd-surface px-3 text-sm font-medium text-rsvd-brand transition hover:bg-rsvd-tint disabled:border-rsvd-disabled-bg disabled:bg-rsvd-disabled-bg disabled:text-rsvd-disabled-text disabled:hover:bg-rsvd-disabled-bg"
                 >
                   {pendingAction === "choose-password" ? (
                     <ButtonSpinner tone="brand" />
@@ -316,7 +317,7 @@ export function LoginForm() {
                 type="button"
                 disabled={pending || code.length !== 6}
                 onClick={handleVerifyCode}
-                className="inline-flex h-11 items-center justify-center rounded-full bg-rsvd-brand px-3 text-sm font-medium text-rsvd-on-brand transition hover:bg-rsvd-brand-strong disabled:bg-rsvd-disabled-bg disabled:text-rsvd-disabled-text"
+                className="inline-flex h-11 items-center justify-center rounded-full bg-rsvd-brand px-3 text-sm font-medium text-rsvd-on-brand transition hover:bg-rsvd-brand-strong disabled:bg-rsvd-disabled-bg disabled:text-rsvd-disabled-text disabled:hover:bg-rsvd-disabled-bg"
               >
                 코드로 로그인
               </button>
@@ -341,7 +342,7 @@ export function LoginForm() {
                 type="button"
                 disabled={pending || !password}
                 onClick={handlePasswordLogin}
-                className="inline-flex h-11 items-center justify-center rounded-full bg-rsvd-brand px-3 text-sm font-medium text-rsvd-on-brand transition hover:bg-rsvd-brand-strong disabled:bg-rsvd-disabled-bg disabled:text-rsvd-disabled-text"
+                className="inline-flex h-11 items-center justify-center rounded-full bg-rsvd-brand px-3 text-sm font-medium text-rsvd-on-brand transition hover:bg-rsvd-brand-strong disabled:bg-rsvd-disabled-bg disabled:text-rsvd-disabled-text disabled:hover:bg-rsvd-disabled-bg"
               >
                 비밀번호로 로그인
               </button>
@@ -366,7 +367,7 @@ export function LoginForm() {
                 type="button"
                 disabled={pending || code.length !== 6 || !password}
                 onClick={handlePasswordSetup}
-                className="inline-flex h-11 items-center justify-center rounded-full bg-rsvd-brand px-3 text-sm font-medium text-rsvd-on-brand transition hover:bg-rsvd-brand-strong disabled:bg-rsvd-disabled-bg disabled:text-rsvd-disabled-text"
+                className="inline-flex h-11 items-center justify-center rounded-full bg-rsvd-brand px-3 text-sm font-medium text-rsvd-on-brand transition hover:bg-rsvd-brand-strong disabled:bg-rsvd-disabled-bg disabled:text-rsvd-disabled-text disabled:hover:bg-rsvd-disabled-bg"
               >
                 비밀번호 설정 후 로그인
               </button>
@@ -391,16 +392,3 @@ export function LoginForm() {
   );
 }
 
-function ButtonSpinner({ tone }: { tone: "on-brand" | "brand" }) {
-  const borderClass =
-    tone === "brand"
-      ? "border-rsvd-brand border-t-transparent"
-      : "border-rsvd-on-brand border-t-transparent";
-
-  return (
-    <span
-      aria-hidden="true"
-      className={`inline-block h-5 w-5 animate-spin rounded-full border-2 ${borderClass}`}
-    />
-  );
-}
