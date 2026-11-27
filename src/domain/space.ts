@@ -39,7 +39,8 @@ export type SpaceItem = {
    * UI caps display (e.g. 7); uncapped length equals totalLikeCount.
    */
   recentReservers: SpaceReserver[];
-  notice: string[];
+  /** Full notice text; blank lines are significant. */
+  notice: string;
 };
 
 /** Avatar order among likers: recent reservation → recent like → userId. */

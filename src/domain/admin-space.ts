@@ -64,8 +64,11 @@ export type AdminSpace = {
   id: string;
   name: string;
   adminEmail: string;
-  /** Notice body as lines (including empty lines for blank-line spacing). */
-  notices: string[];
+  /**
+   * Notice body as a single text blob (preserves blank lines).
+   * Legacy Redis rows may still be string[]; normalize with normalizeNoticesText().
+   */
+  notices: string;
   address: string;
   contact: string;
   heroImage: string;
@@ -120,10 +123,12 @@ export function adminSpaceReservationCount(space: AdminSpace): number {
  * currentReservationCount stays the stored live booking count (0 until real reservations).
  */
 export function syncAdminSpaceStats(space: AdminSpace): AdminSpace {
+  const notices = normalizeNoticesText(space.notices);
   const members = Array.isArray(space.regularMembers) ? space.regularMembers : [];
   if (members.length === 0) {
     return {
       ...space,
+      notices,
       regularUserIds: space.regularUserIds ?? [],
       regularMembers: space.regularMembers ?? [],
       currentReservationCount: adminSpaceReservationCount(space),
@@ -131,6 +136,7 @@ export function syncAdminSpaceStats(space: AdminSpace): AdminSpace {
   }
   return {
     ...space,
+    notices,
     regularMembers: members,
     regularUserIds: members.map((member) => member.userId),
     currentReservationCount: adminSpaceReservationCount(space),
@@ -202,13 +208,24 @@ export const SPACE_HERO_IMAGE_MAX = 1;
 export const SPACE_MENU_IMAGES_MAX = 5;
 export const SPACE_OTHER_IMAGES_MAX = 20;
 
-/** Round-trip notice textarea ↔ stored lines (keeps blank lines). */
-export function noticesToEditableText(notices: string[]): string {
-  return notices.join("\n");
+/** Normalize legacy string[] notices or string into one textarea blob. */
+export function normalizeNoticesText(notices: unknown): string {
+  if (typeof notices === "string") {
+    return notices.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+  }
+  if (Array.isArray(notices)) {
+    return notices
+      .filter((item): item is string => typeof item === "string")
+      .join("\n")
+      .replace(/\r\n/g, "\n")
+      .replace(/\r/g, "\n");
+  }
+  return "";
 }
 
-export function editableTextToNotices(text: string): string[] {
-  return text.split("\n");
+/** @deprecated Use normalizeNoticesText — kept for call-site clarity in forms. */
+export function noticesToEditableText(notices: string | string[]): string {
+  return normalizeNoticesText(notices);
 }
 
 export function createBlankAdminSpace(): AdminSpace {
@@ -216,7 +233,7 @@ export function createBlankAdminSpace(): AdminSpace {
     id: "",
     name: "",
     adminEmail: "",
-    notices: [],
+    notices: "",
     address: "",
     contact: "",
     heroImage: "",

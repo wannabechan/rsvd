@@ -21,15 +21,19 @@ function asStringArray(value: unknown): string[] {
     .filter(Boolean);
 }
 
-/** Preserve newlines and blank lines from textarea / line arrays. */
-function asNoticeLines(value: unknown): string[] {
+/** Preserve newlines and blank lines as one text blob. */
+function asNoticeText(value: unknown): string {
   if (typeof value === "string") {
-    return value.split("\n");
+    return value.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
   }
-  if (!Array.isArray(value)) {
-    return [];
+  if (Array.isArray(value)) {
+    return value
+      .filter((item): item is string => typeof item === "string")
+      .join("\n")
+      .replace(/\r\n/g, "\n")
+      .replace(/\r/g, "\n");
   }
-  return value.filter((item): item is string => typeof item === "string");
+  return "";
 }
 
 function asNonNegInt(value: unknown, fallback: number): number {
@@ -88,7 +92,7 @@ export async function PUT(request: Request, context: RouteContext) {
       contact: typeof body.contact === "string" ? body.contact.trim() : "",
       adminEmail:
         typeof body.adminEmail === "string" ? body.adminEmail.trim() : "",
-      notices: asNoticeLines(body.notices),
+      notices: asNoticeText(body.notices),
       heroImage,
       menuImages: asStringArray(body.menuImages),
       otherImages: asStringArray(body.otherImages),

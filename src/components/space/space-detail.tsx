@@ -5,6 +5,7 @@ import { useAuth } from "@/components/auth/auth-context";
 import { useReservationChat } from "@/components/reservation-chat/reservation-chat-context";
 import { ReservationChatPanel } from "@/components/reservation-chat/reservation-chat-panel";
 import { SpaceImageCarousel } from "@/components/space/space-image-carousel";
+import { SpaceNoticeText } from "@/components/space/space-notice-text";
 import { displayLikeCount, toTelHref, type SpaceItem } from "@/domain/space";
 import { saveAuthIntent } from "@/lib/auth-intent";
 import { routes } from "@/lib/routes";
@@ -86,9 +87,10 @@ export function SpaceDetail({ space }: SpaceDetailProps) {
       <p className="mt-2 text-[0.84rem] font-bold break-words text-rsvd-text">{space.address}</p>
 
       <section className="mt-5" aria-label="매장 공지사항">
-        <p className="whitespace-pre-wrap text-sm leading-[1.4625] text-rsvd-text-muted">
-          {space.notice.join("\n")}
-        </p>
+        <SpaceNoticeText
+          text={space.notice}
+          className="text-sm leading-[1.4625] text-rsvd-text-muted"
+        />
       </section>
 
       {recentReservers.length > 0 ? (

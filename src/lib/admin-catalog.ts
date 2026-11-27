@@ -9,6 +9,7 @@ import { sampleAvatarForUserId } from "@/data/spaces";
 import {
   adminSpaceReservationCount,
   createEmptyWeekSchedule,
+  normalizeNoticesText,
   SPACE_MENU_IMAGES_MAX,
   SPACE_OTHER_IMAGES_MAX,
   syncAdminSpaceStats,
@@ -319,6 +320,7 @@ function normalizeImageFields(
   const heroImage = fields.heroImage.trim();
   return {
     ...fields,
+    notices: normalizeNoticesText(fields.notices),
     heroImage,
     menuImages: fields.menuImages
       .map((url) => url.trim())
@@ -649,8 +651,8 @@ export function adminSpaceToPublicItem(space: AdminSpace): SpaceItem {
     id: space.id,
     name: space.name,
     address: space.address,
-    tagline: (space.notices.join("\n").trim().slice(0, 48) || space.name),
-    description: space.notices.join("\n"),
+    tagline: (normalizeNoticesText(space.notices).trim().slice(0, 48) || space.name),
+    description: normalizeNoticesText(space.notices),
     images,
     contact: space.contact,
     onlineLink: "",
@@ -658,7 +660,7 @@ export function adminSpaceToPublicItem(space: AdminSpace): SpaceItem {
     lastReservedAt: space.lastReservedAt || "",
     lastLikedAt: space.lastLikedAt || "",
     recentReservers,
-    notice: space.notices,
+    notice: normalizeNoticesText(space.notices),
   };
 }
 
