@@ -5,16 +5,6 @@
 
 const STORAGE_KEY = "rsvd:auth-intent";
 
-/** Dispatched when header "로그인" should force the initial email step. */
-export const LOGIN_RESET_EVENT = "rsvd:login-reset";
-
-export function requestLoginReset() {
-  if (typeof window === "undefined") {
-    return;
-  }
-  window.dispatchEvent(new Event(LOGIN_RESET_EVENT));
-}
-
 export type AuthIntent =
   | { type: "path"; path: string }
   | { type: "open-chat"; spaceId: string; spaceName: string };

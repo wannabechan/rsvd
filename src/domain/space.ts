@@ -27,7 +27,7 @@ export type SpaceItem = {
 
 /** Logged-in home: empty “내가 애정하는 단골 매장” body copy. */
 export const MY_LIKED_SPACES_EMPTY_MESSAGE =
-  "아직 애정하는 단골 매장이 없네요.\n아래의 '+' 버튼을 눌러 단골 맺기를 요청하세요.";
+  "아직 애정하는 단골 매장이 없네요.\n'+' 버튼을 눌러 단골 맺기를 요청하세요.";
 
 /** Heart count shown in UI: reservation-chat setups, minimum 1 when exposed. */
 export function displayLikeCount(totalLikeCount: number): number {

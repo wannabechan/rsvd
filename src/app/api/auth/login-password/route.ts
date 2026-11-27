@@ -1,15 +1,8 @@
 import { NextResponse } from "next/server";
-import {
-  isValidEmail,
-  isValidPassword,
-  normalizeEmail,
-  userIdFromEmail,
-} from "@/domain/auth";
+import { isValidEmail, isValidPassword, normalizeEmail } from "@/domain/auth";
+import { resolveAuthUser } from "@/lib/auth-user";
 import { verifyPassword } from "@/lib/password-hash";
-import {
-  getPasswordHash,
-  isUserStoreConfigured,
-} from "@/lib/user-store";
+import { getPasswordHash, isUserStoreConfigured } from "@/lib/user-store";
 
 export async function POST(request: Request) {
   try {
@@ -60,10 +53,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const user = {
-      id: userIdFromEmail(email),
-      email,
-    };
+    const user = await resolveAuthUser(email);
     return NextResponse.json({ ok: true, user });
   } catch (error) {
     console.error("login-password failed", error);

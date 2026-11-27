@@ -11,11 +11,14 @@ import {
 } from "react";
 import {
   checkPasswordLogin,
+  fetchProfile,
   loginWithCode,
   loginWithPassword,
   readStoredSession,
   requestLoginCode,
+  saveNickname as saveNicknameRequest,
   setupPasswordLogin,
+  uploadAvatar as uploadAvatarRequest,
   writeStoredSession,
 } from "@/data/auth-client";
 import type { AuthUser } from "@/domain/auth";
@@ -25,6 +28,13 @@ type AuthContextValue = {
   isReady: boolean;
   isLoggedIn: boolean;
   logout: () => void;
+  refreshProfile: () => Promise<{ ok: true; user: AuthUser } | { ok: false; error: string }>;
+  saveNickname: (
+    nickname: string,
+  ) => Promise<{ ok: true; user: AuthUser } | { ok: false; error: string }>;
+  uploadAvatar: (
+    webpBlob: Blob,
+  ) => Promise<{ ok: true; user: AuthUser } | { ok: false; error: string }>;
   requestCode: (email: string) => Promise<{ ok: true } | { ok: false; error: string }>;
   loginByCode: (
     email: string,
@@ -51,14 +61,62 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    setUser(readStoredSession());
+    const session = readStoredSession();
+    setUser(session);
     setIsReady(true);
+    if (!session) {
+      return;
+    }
+    void fetchProfile(session.email).then((result) => {
+      if (result.ok) {
+        setUser(result.user);
+      }
+    });
   }, []);
 
   const logout = useCallback(() => {
     writeStoredSession(null);
     setUser(null);
   }, []);
+
+  const refreshProfile = useCallback(async () => {
+    if (!user) {
+      return { ok: false as const, error: "로그인이 필요합니다." };
+    }
+    const result = await fetchProfile(user.email);
+    if (result.ok) {
+      setUser(result.user);
+    }
+    return result;
+  }, [user]);
+
+  const saveNickname = useCallback(
+    async (nickname: string) => {
+      if (!user) {
+        return { ok: false as const, error: "로그인이 필요합니다." };
+      }
+      const result = await saveNicknameRequest(user.email, nickname);
+      if (result.ok) {
+        setUser(result.user);
+      }
+      return result;
+    },
+    [user],
+  );
+
+  const uploadAvatar = useCallback(
+    async (webpBlob: Blob) => {
+      if (!user) {
+        return { ok: false as const, error: "로그인이 필요합니다." };
+      }
+      const result = await uploadAvatarRequest(user.email, webpBlob);
+      if (result.ok) {
+        setUser(result.user);
+      }
+      return result;
+    },
+    [user],
+  );
 
   const requestCode = useCallback(async (email: string) => requestLoginCode(email), []);
 
@@ -100,6 +158,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isReady,
       isLoggedIn: Boolean(user),
       logout,
+      refreshProfile,
+      saveNickname,
+      uploadAvatar,
       requestCode,
       loginByCode,
       loginByPassword,
@@ -110,6 +171,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user,
       isReady,
       logout,
+      refreshProfile,
+      saveNickname,
+      uploadAvatar,
       requestCode,
       loginByCode,
       loginByPassword,

@@ -5,8 +5,8 @@ import {
   isValidLoginCode,
   isValidPassword,
   normalizeEmail,
-  userIdFromEmail,
 } from "@/domain/auth";
+import { resolveAuthUser } from "@/lib/auth-user";
 import {
   OTP_COOKIE,
   otpCookieOptions,
@@ -65,11 +65,7 @@ export async function POST(request: Request) {
     const passwordHash = await hashPassword(password);
     await setPasswordHash(email, passwordHash);
 
-    const user = {
-      id: userIdFromEmail(email),
-      email,
-    };
-
+    const user = await resolveAuthUser(email);
     const response = NextResponse.json({ ok: true, user });
     response.cookies.set(OTP_COOKIE, "", { ...otpCookieOptions(0), maxAge: 0 });
     return response;

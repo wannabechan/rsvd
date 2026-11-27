@@ -1,11 +1,7 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import {
-  isValidEmail,
-  isValidLoginCode,
-  normalizeEmail,
-  userIdFromEmail,
-} from "@/domain/auth";
+import { isValidEmail, isValidLoginCode, normalizeEmail } from "@/domain/auth";
+import { resolveAuthUser } from "@/lib/auth-user";
 import {
   OTP_COOKIE,
   otpCookieOptions,
@@ -37,11 +33,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: false, error: verified.error }, { status: 401 });
     }
 
-    const user = {
-      id: userIdFromEmail(email),
-      email,
-    };
-
+    const user = await resolveAuthUser(email);
     const response = NextResponse.json({ ok: true, user });
     response.cookies.set(OTP_COOKIE, "", { ...otpCookieOptions(0), maxAge: 0 });
     return response;

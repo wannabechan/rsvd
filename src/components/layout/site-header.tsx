@@ -3,10 +3,10 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/components/auth/auth-context";
+import { useLoginBoot } from "@/components/auth/login-boot-context";
+import { UserAvatar } from "@/components/auth/user-avatar";
 import { HeaderLogo } from "@/components/layout/header-logo";
 import { useReservationChat } from "@/components/reservation-chat/reservation-chat-context";
-import { avatarToneForEmail, emailInitial } from "@/domain/auth";
-import { requestLoginReset } from "@/lib/auth-intent";
 import { routes } from "@/lib/routes";
 
 const HEADER_ICON_CLASS = "h-[1.65rem] w-[1.65rem]";
@@ -14,11 +14,13 @@ const HEADER_ICON_CLASS = "h-[1.65rem] w-[1.65rem]";
 export function SiteHeader() {
   const router = useRouter();
   const pathname = usePathname();
+  const { bumpLoginBoot } = useLoginBoot();
   const { user, isLoggedIn } = useAuth();
   const { activeChat, endChat } = useReservationChat();
 
   function openInitialLogin() {
-    requestLoginReset();
+    // Bump remounts LoginForm to the email step even if /login was cached.
+    bumpLoginBoot();
     if (pathname !== routes.login) {
       router.push(routes.login);
     }
@@ -45,7 +47,7 @@ export function SiteHeader() {
               aria-label="프로필"
               className="inline-flex items-center rounded-full"
             >
-              <UserAvatar email={user.email} />
+              <UserAvatar user={user} />
             </Link>
           ) : (
             <button
@@ -59,21 +61,6 @@ export function SiteHeader() {
         </nav>
       </div>
     </header>
-  );
-}
-
-function UserAvatar({ email }: { email: string }) {
-  const tone = avatarToneForEmail(email);
-  const initial = emailInitial(email);
-
-  return (
-    <span
-      aria-hidden="true"
-      className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-medium leading-none"
-      style={{ backgroundColor: tone.background, color: tone.foreground }}
-    >
-      {initial}
-    </span>
   );
 }
 

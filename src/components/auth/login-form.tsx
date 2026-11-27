@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/components/auth/auth-context";
 import { isValidEmail, type LoginStep } from "@/domain/auth";
-import { consumeAuthIntent, LOGIN_RESET_EVENT } from "@/lib/auth-intent";
+import { consumeAuthIntent } from "@/lib/auth-intent";
 import { routes } from "@/lib/routes";
 
 const CODE_PLACEHOLDER = "이메일 발송된 6자리 숫자";
@@ -39,23 +39,8 @@ export function LoginForm() {
     setError(null);
   }
 
-  function resetToInitialLogin() {
-    setStep("email");
-    setEmail("");
-    setCode("");
-    setPassword("");
-    setPending(false);
-    setPendingAction(null);
-    clearError();
-  }
-
   useEffect(() => {
-    const onReset = () => {
-      resetToInitialLogin();
-    };
-    window.addEventListener(LOGIN_RESET_EVENT, onReset);
     return () => {
-      window.removeEventListener(LOGIN_RESET_EVENT, onReset);
       if (errorTimerRef.current !== null) {
         window.clearTimeout(errorTimerRef.current);
       }

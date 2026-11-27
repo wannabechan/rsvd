@@ -45,8 +45,13 @@ vercel env pull .env.local
 | `POST` | `/api/auth/password-status` | 해당 이메일에 비밀번호 설정 여부 |
 | `POST` | `/api/auth/setup-password` | OTP 검증 후 비밀번호 해시 저장 |
 | `POST` | `/api/auth/login-password` | 서버에서 비밀번호 검증 후 로그인 |
+| `GET` | `/api/profile?e=` | 닉네임·아바타 메타 |
+| `POST` | `/api/profile` | 닉네임 저장 |
+| `GET` | `/api/profile/avatar?e=` | 저장된 WebP 아바타 |
+| `POST` | `/api/profile/avatar` | WebP 아바타 업로드 (FormData) |
 
-비밀번호는 Redis에 **scrypt 해시**로만 저장됩니다. 평문 저장 없음.
+비밀번호는 Redis에 **scrypt 해시**로만 저장됩니다. 평문 저장 없음.  
+닉네임·아바타(WebP)도 같은 Redis에 저장됩니다. 기본 닉네임은 이메일 `@` 앞 부분입니다.
 
 브라우저 `localStorage`에는 **세션(현재 로그인 사용자)** 만 남습니다.  
 비밀번호 설정 여부는 더 이상 로컬에 두지 않습니다.

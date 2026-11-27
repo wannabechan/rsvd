@@ -4,9 +4,11 @@
  */
 
 import {
+  defaultNickname,
   isValidEmail,
   isValidPassword,
   normalizeEmail,
+  userIdFromEmail,
   type AuthUser,
 } from "@/domain/auth";
 
@@ -33,8 +35,28 @@ function writeJson(key: string, value: unknown) {
   window.localStorage.setItem(key, JSON.stringify(value));
 }
 
+function normalizeSessionUser(value: unknown): AuthUser | null {
+  if (!value || typeof value !== "object") {
+    return null;
+  }
+  const raw = value as Partial<AuthUser> & { email?: string; id?: string };
+  if (!raw.email || typeof raw.email !== "string") {
+    return null;
+  }
+  const email = normalizeEmail(raw.email);
+  return {
+    id: typeof raw.id === "string" ? raw.id : userIdFromEmail(email),
+    email,
+    nickname:
+      typeof raw.nickname === "string" && raw.nickname.trim()
+        ? raw.nickname.trim()
+        : defaultNickname(email),
+    avatarUrl: typeof raw.avatarUrl === "string" ? raw.avatarUrl : null,
+  };
+}
+
 export function readStoredSession(): AuthUser | null {
-  return readJson<AuthUser | null>(SESSION_KEY, null);
+  return normalizeSessionUser(readJson<unknown>(SESSION_KEY, null));
 }
 
 export function writeStoredSession(user: AuthUser | null) {
@@ -45,7 +67,7 @@ export function writeStoredSession(user: AuthUser | null) {
     window.localStorage.removeItem(SESSION_KEY);
     return;
   }
-  writeJson(SESSION_KEY, user);
+  writeJson(SESSION_KEY, normalizeSessionUser(user));
 }
 
 async function postJson<T>(url: string, body: unknown): Promise<ApiResult<T>> {
@@ -86,8 +108,12 @@ export async function loginWithCode(
   if (!result.ok) {
     return result;
   }
-  writeStoredSession(result.user);
-  return result;
+  const user = normalizeSessionUser(result.user);
+  if (!user) {
+    return { ok: false, error: "로그인 응답이 올바르지 않습니다." };
+  }
+  writeStoredSession(user);
+  return { ok: true, user };
 }
 
 export async function checkPasswordLogin(
@@ -118,9 +144,12 @@ export async function setupPasswordLogin(
   if (!result.ok) {
     return result;
   }
-
-  writeStoredSession(result.user);
-  return result;
+  const user = normalizeSessionUser(result.user);
+  if (!user) {
+    return { ok: false, error: "로그인 응답이 올바르지 않습니다." };
+  }
+  writeStoredSession(user);
+  return { ok: true, user };
 }
 
 export async function loginWithPassword(
@@ -141,7 +170,80 @@ export async function loginWithPassword(
   if (!result.ok) {
     return result;
   }
+  const user = normalizeSessionUser(result.user);
+  if (!user) {
+    return { ok: false, error: "로그인 응답이 올바르지 않습니다." };
+  }
+  writeStoredSession(user);
+  return { ok: true, user };
+}
 
-  writeStoredSession(result.user);
-  return result;
+export async function fetchProfile(
+  email: string,
+): Promise<{ ok: true; user: AuthUser } | { ok: false; error: string }> {
+  try {
+    const response = await fetch(
+      `/api/profile?e=${encodeURIComponent(normalizeEmail(email))}`,
+      { credentials: "same-origin" },
+    );
+    const data = (await response.json()) as ApiResult<{ user: AuthUser }>;
+    if (!data.ok) {
+      return data;
+    }
+    const user = normalizeSessionUser(data.user);
+    if (!user) {
+      return { ok: false, error: "프로필 응답이 올바르지 않습니다." };
+    }
+    writeStoredSession(user);
+    return { ok: true, user };
+  } catch {
+    return { ok: false, error: "네트워크 오류가 발생했습니다." };
+  }
+}
+
+export async function saveNickname(
+  email: string,
+  nickname: string,
+): Promise<{ ok: true; user: AuthUser } | { ok: false; error: string }> {
+  const result = await postJson<{ user: AuthUser }>("/api/profile", {
+    email: normalizeEmail(email),
+    nickname,
+  });
+  if (!result.ok) {
+    return result;
+  }
+  const user = normalizeSessionUser(result.user);
+  if (!user) {
+    return { ok: false, error: "프로필 응답이 올바르지 않습니다." };
+  }
+  writeStoredSession(user);
+  return { ok: true, user };
+}
+
+export async function uploadAvatar(
+  email: string,
+  webpBlob: Blob,
+): Promise<{ ok: true; user: AuthUser } | { ok: false; error: string }> {
+  try {
+    const form = new FormData();
+    form.set("email", normalizeEmail(email));
+    form.set("avatar", webpBlob, "avatar.webp");
+    const response = await fetch("/api/profile/avatar", {
+      method: "POST",
+      credentials: "same-origin",
+      body: form,
+    });
+    const data = (await response.json()) as ApiResult<{ user: AuthUser }>;
+    if (!data.ok) {
+      return data;
+    }
+    const user = normalizeSessionUser(data.user);
+    if (!user) {
+      return { ok: false, error: "프로필 응답이 올바르지 않습니다." };
+    }
+    writeStoredSession(user);
+    return { ok: true, user };
+  } catch {
+    return { ok: false, error: "네트워크 오류가 발생했습니다." };
+  }
 }
