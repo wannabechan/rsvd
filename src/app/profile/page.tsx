@@ -226,6 +226,9 @@ export default function ProfilePage() {
         {user.role === "admin" ? (
           <button
             type="button"
+            onClick={() => {
+              router.push(routes.admin);
+            }}
             className="px-0 text-left text-xs font-normal text-rsvd-text-muted"
           >
             *관리자모드

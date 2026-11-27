@@ -40,12 +40,22 @@ export function toTelHref(contact: string): string {
   return digits ? `tel:${digits}` : "";
 }
 
-/** Platform list order: most recently reserved first. */
+/**
+ * Platform list order:
+ * 1) most recently reserved
+ * 2) most regulars / likes
+ * 3) name
+ */
 export function sortSpacesByRecentReservationDesc(spaces: SpaceItem[]): SpaceItem[] {
   return [...spaces].sort((a, b) => {
-    const timeDiff = Date.parse(b.lastReservedAt) - Date.parse(a.lastReservedAt);
-    if (timeDiff !== 0) {
-      return timeDiff;
+    const aTime = Date.parse(a.lastReservedAt) || 0;
+    const bTime = Date.parse(b.lastReservedAt) || 0;
+    if (bTime !== aTime) {
+      return bTime - aTime;
+    }
+    const likeDiff = b.totalLikeCount - a.totalLikeCount;
+    if (likeDiff !== 0) {
+      return likeDiff;
     }
     return a.name.localeCompare(b.name, "ko");
   });

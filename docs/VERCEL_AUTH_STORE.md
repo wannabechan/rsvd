@@ -35,7 +35,9 @@ vercel env pull .env.local
 | `GMAIL_REFRESH_TOKEN` / `GMAIL_SENDER` / `GOOGLE_CLIENT_*` | 로그인 코드 메일 |
 | `NEXT_PUBLIC_APP_URL` | OAuth·앱 URL |
 | `ADMIN_EMAIL` | 이 이메일로 로그인하면 `role: admin` (최고 등급) |
-| Redis URL + Token | 비밀번호·프로필 저장 |
+| Redis URL + Token | 비밀번호·프로필·매장/사용자 카탈로그 저장 |
+
+카탈로그 시드(`rsvd:catalog:seeded:v2`): 매장 7곳 + sample 사용자 15명 + 랜덤 단골 연결. 최초 읽기 시 자동 기록.
 
 ## 3) API
 

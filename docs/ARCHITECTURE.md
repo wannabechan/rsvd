@@ -22,6 +22,7 @@ Preferred near-term native path: **Capacitor (or equivalent) WebView shell** aro
 - Login codes: Gmail API + signed OTP cookie — [GMAIL_API_SETUP.md](./GMAIL_API_SETUP.md)
 - Password hashes: Upstash Redis on Vercel — [VERCEL_AUTH_STORE.md](./VERCEL_AUTH_STORE.md)
 - Browser `localStorage` holds only the current session user, not password credentials.
+- `ADMIN_EMAIL` logins get `role: admin` and can open desktop `/admin` (프로필 → *관리자모드).
 
 ## Deep links
 

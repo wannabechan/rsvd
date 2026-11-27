@@ -1,10 +1,8 @@
 import { notFound } from "next/navigation";
 import { SpaceDetail } from "@/components/space/space-detail";
-import { getSpaceById, SAMPLE_SPACES } from "@/data/spaces";
+import { getPublicSpaceById } from "@/lib/admin-catalog";
 
-export function generateStaticParams() {
-  return SAMPLE_SPACES.map((space) => ({ id: space.id }));
-}
+export const dynamic = "force-dynamic";
 
 export default async function SpaceDetailPage({
   params,
@@ -12,7 +10,7 @@ export default async function SpaceDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const space = getSpaceById(id);
+  const space = await getPublicSpaceById(id);
 
   if (!space) {
     notFound();

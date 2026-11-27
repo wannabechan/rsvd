@@ -1,6 +1,9 @@
 import { SpaceList } from "@/components/space/space-list";
-import { SAMPLE_SPACES } from "@/data/spaces";
+import { listPublicSpaces } from "@/lib/admin-catalog";
 
-export default function SpacePage() {
-  return <SpaceList spaces={SAMPLE_SPACES} />;
+export const dynamic = "force-dynamic";
+
+export default async function SpacePage() {
+  const spaces = await listPublicSpaces();
+  return <SpaceList spaces={spaces} />;
 }

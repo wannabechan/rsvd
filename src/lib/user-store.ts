@@ -1,10 +1,7 @@
 /**
  * Server-only user credential + profile store (Upstash Redis on Vercel).
- * Env: UPSTASH_REDIS_REST_URL + UPSTASH_REDIS_REST_TOKEN
- * (Vercel Marketplace also injects KV_REST_API_URL / KV_REST_API_TOKEN)
  */
 
-import { Redis } from "@upstash/redis";
 import {
   authUserFromProfile,
   defaultNickname,
@@ -14,6 +11,7 @@ import {
   type UserProfile,
 } from "@/domain/auth";
 import { resolveUserRole } from "@/lib/admin";
+import { getRedis, isRedisConfigured } from "@/lib/redis";
 
 const PASSWORD_KEY_PREFIX = "rsvd:user:password:";
 const PROFILE_KEY_PREFIX = "rsvd:user:profile:";
@@ -25,33 +23,8 @@ type StoredProfile = {
   avatarVersion: number;
 };
 
-let redisClient: Redis | null | undefined;
-
-function getRedis(): Redis {
-  if (redisClient) {
-    return redisClient;
-  }
-
-  const url =
-    process.env.UPSTASH_REDIS_REST_URL ?? process.env.KV_REST_API_URL;
-  const token =
-    process.env.UPSTASH_REDIS_REST_TOKEN ?? process.env.KV_REST_API_TOKEN;
-
-  if (!url || !token) {
-    throw new Error(
-      "Missing Redis credentials. Set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN (or KV_REST_API_* from Vercel Upstash).",
-    );
-  }
-
-  redisClient = new Redis({ url, token });
-  return redisClient;
-}
-
 export function isUserStoreConfigured(): boolean {
-  return Boolean(
-    (process.env.UPSTASH_REDIS_REST_URL ?? process.env.KV_REST_API_URL) &&
-      (process.env.UPSTASH_REDIS_REST_TOKEN ?? process.env.KV_REST_API_TOKEN),
-  );
+  return isRedisConfigured();
 }
 
 function passwordKey(email: string): string {
