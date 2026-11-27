@@ -154,19 +154,13 @@ export function AdminSpaceCandidatesTable({
                 <span className="mb-1.5 block text-sm font-medium text-rsvd-text">
                   채널
                 </span>
-                <select
+                <input
                   value={channel}
-                  onChange={(event) =>
-                    setChannel(event.target.value as SpaceCandidateChannel)
-                  }
-                  className="auth-input w-full rounded-xl border border-rsvd-border bg-rsvd-surface px-3.5 py-2.5 text-sm text-rsvd-text"
-                >
-                  {SPACE_CANDIDATE_CHANNELS.map((option) => (
-                    <option key={option} value={option}>
-                      {option}
-                    </option>
-                  ))}
-                </select>
+                  readOnly
+                  tabIndex={-1}
+                  aria-readonly="true"
+                  className="auth-input w-full rounded-xl border border-rsvd-border bg-rsvd-bg px-3.5 py-2.5 text-sm text-rsvd-text"
+                />
               </label>
 
               <label className="block">

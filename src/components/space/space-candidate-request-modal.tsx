@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import { useAuth } from "@/components/auth/auth-context";
 import {
   SPACE_CANDIDATE_CHANNELS,
-  SPACE_CANDIDATE_INVITE_MESSAGE,
-  SPACE_CANDIDATE_REPEAT_INVITE_MESSAGE,
   SPACE_CANDIDATE_REQUEST_TITLE,
+  spaceCandidateInviteMessage,
+  spaceCandidateRepeatInviteMessage,
   type SpaceCandidateChannel,
 } from "@/domain/admin-space-candidate";
 
@@ -18,6 +19,8 @@ type Step = "form" | "confirm";
 export function SpaceCandidateRequestModal({
   onClose,
 }: SpaceCandidateRequestModalProps) {
+  const { user } = useAuth();
+  const nickname = user?.nickname?.trim() || "회원";
   const [step, setStep] = useState<Step>("form");
   const [channel, setChannel] = useState<SpaceCandidateChannel>(
     SPACE_CANDIDATE_CHANNELS[0],
@@ -115,19 +118,13 @@ export function SpaceCandidateRequestModal({
                 <span className="mb-1.5 block text-sm font-medium text-rsvd-text">
                   채널
                 </span>
-                <select
+                <input
                   value={channel}
-                  onChange={(event) =>
-                    setChannel(event.target.value as SpaceCandidateChannel)
-                  }
-                  className="auth-input w-full rounded-xl border border-rsvd-border bg-rsvd-surface px-3.5 py-2.5 text-sm text-rsvd-text"
-                >
-                  {SPACE_CANDIDATE_CHANNELS.map((option) => (
-                    <option key={option} value={option}>
-                      {option}
-                    </option>
-                  ))}
-                </select>
+                  readOnly
+                  tabIndex={-1}
+                  aria-readonly="true"
+                  className="auth-input w-full rounded-xl border border-rsvd-border bg-rsvd-bg px-3.5 py-2.5 text-sm text-rsvd-text"
+                />
               </label>
 
               <label className="block">
@@ -166,7 +163,7 @@ export function SpaceCandidateRequestModal({
                 }}
                 className="inline-flex h-11 items-center justify-center rounded-full bg-rsvd-brand text-sm font-medium text-rsvd-on-brand transition hover:bg-rsvd-brand-strong disabled:bg-rsvd-disabled-bg disabled:text-rsvd-disabled-text"
               >
-                {checking ? "…" : "저장"}
+                {checking ? "…" : "등록 요청"}
               </button>
             </div>
           </>
@@ -192,8 +189,8 @@ export function SpaceCandidateRequestModal({
 
             <p className="mt-4 text-sm leading-relaxed text-rsvd-text-muted">
               {isRepeat
-                ? SPACE_CANDIDATE_REPEAT_INVITE_MESSAGE
-                : SPACE_CANDIDATE_INVITE_MESSAGE}
+                ? spaceCandidateRepeatInviteMessage(nickname)
+                : spaceCandidateInviteMessage(nickname)}
             </p>
 
             {error ? (
@@ -202,14 +199,25 @@ export function SpaceCandidateRequestModal({
               </p>
             ) : null}
 
-            <div className="mt-5 flex justify-center">
+            <div className="mt-5 grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                disabled={saving}
+                onClick={() => {
+                  setError(null);
+                  setStep("form");
+                }}
+                className="inline-flex h-11 items-center justify-center rounded-full border border-rsvd-border bg-rsvd-surface text-sm font-medium text-rsvd-text transition hover:bg-rsvd-bg disabled:bg-rsvd-disabled-bg disabled:text-rsvd-disabled-text"
+              >
+                돌아가기
+              </button>
               <button
                 type="button"
                 disabled={saving}
                 onClick={() => {
                   void handleConfirm();
                 }}
-                className="inline-flex h-11 min-w-[7rem] items-center justify-center rounded-full bg-rsvd-brand px-4 text-sm font-medium text-rsvd-on-brand transition hover:bg-rsvd-brand-strong disabled:bg-rsvd-disabled-bg disabled:text-rsvd-disabled-text"
+                className="inline-flex h-11 items-center justify-center rounded-full bg-rsvd-brand text-sm font-medium text-rsvd-on-brand transition hover:bg-rsvd-brand-strong disabled:bg-rsvd-disabled-bg disabled:text-rsvd-disabled-text"
               >
                 {saving ? "…" : "확인"}
               </button>

@@ -45,8 +45,9 @@ export function createSpaceCandidateId(): string {
     .slice(2, 7)}`;
 }
 
+/** Trim and drop @ so "@shop" and "shop" store/match the same. */
 export function normalizeCandidateHandle(handle: string): string {
-  return handle.trim();
+  return handle.trim().replace(/@/g, "");
 }
 
 export function candidateHandlesMatch(a: string, b: string): boolean {
@@ -65,9 +66,13 @@ export function candidateRequestCount(candidate: AdminSpaceCandidate): number {
 export const SPACE_CANDIDATE_REQUEST_TITLE = "단골 매장 등록 요청하기";
 
 /** Shown after the user submits channel + handle, before confirming registration. */
-export const SPACE_CANDIDATE_INVITE_MESSAGE =
-  "위 매장 사장님을 rsvd.에 초대하겠습니다. 초대를 수락하시는대로 등록해 두신 연락처 또는 이메일로 알려드릴게요!";
+export function spaceCandidateInviteMessage(nickname: string): string {
+  const name = nickname.trim() || "회원";
+  return `위 매장 사장님을 초대하겠습니다. 초대를 수락하시는대로 ${name} 님의 연락처 또는 이메일로 알려드릴게요!`;
+}
 
 /** Shown when the same channel + handle was requested before. */
-export const SPACE_CANDIDATE_REPEAT_INVITE_MESSAGE =
-  "다시 한 번 위 매장 사장님을 rsvd.에 초대하겠습니다. 초대를 수락하시는대로 등록해 두신 연락처 또는 이메일로 알려드릴게요!";
+export function spaceCandidateRepeatInviteMessage(nickname: string): string {
+  const name = nickname.trim() || "회원";
+  return `다시 한 번 위 매장 사장님을 초대하겠습니다. 초대를 수락하시는대로 ${name} 님의 연락처 또는 이메일로 알려드릴게요!`;
+}
