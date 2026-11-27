@@ -15,6 +15,7 @@ import {
   loginWithCode,
   loginWithPassword,
   readStoredSession,
+  removeAvatar as removeAvatarRequest,
   requestLoginCode,
   saveNickname as saveNicknameRequest,
   setupPasswordLogin,
@@ -35,6 +36,7 @@ type AuthContextValue = {
   uploadAvatar: (
     webpBlob: Blob,
   ) => Promise<{ ok: true; user: AuthUser } | { ok: false; error: string }>;
+  removeAvatar: () => Promise<{ ok: true; user: AuthUser } | { ok: false; error: string }>;
   requestCode: (email: string) => Promise<{ ok: true } | { ok: false; error: string }>;
   loginByCode: (
     email: string,
@@ -118,6 +120,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [user],
   );
 
+  const removeAvatar = useCallback(async () => {
+    if (!user) {
+      return { ok: false as const, error: "로그인이 필요합니다." };
+    }
+    const result = await removeAvatarRequest(user.email);
+    if (result.ok) {
+      setUser(result.user);
+    }
+    return result;
+  }, [user]);
+
   const requestCode = useCallback(async (email: string) => requestLoginCode(email), []);
 
   const loginByCode = useCallback(async (email: string, code: string) => {
@@ -161,6 +174,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       refreshProfile,
       saveNickname,
       uploadAvatar,
+      removeAvatar,
       requestCode,
       loginByCode,
       loginByPassword,
@@ -174,6 +188,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       refreshProfile,
       saveNickname,
       uploadAvatar,
+      removeAvatar,
       requestCode,
       loginByCode,
       loginByPassword,

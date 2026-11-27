@@ -85,3 +85,20 @@ body {
   box-shadow: 0 0 0 1000px var(--rsvd-tint) inset;
   -webkit-text-fill-color: var(--rsvd-text);
 }
+
+/* Floating + : pulse current border with darker brand */
+@keyframes rsvd-add-attention {
+  0%,
+  100% {
+    background-color: var(--rsvd-border);
+    color: var(--rsvd-brand);
+  }
+  50% {
+    background-color: var(--rsvd-brand);
+    color: var(--rsvd-on-brand);
+  }
+}
+
+.rsvd-add-attention {
+  animation: rsvd-add-attention 1.6s ease-in-out infinite;
+}

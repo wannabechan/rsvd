@@ -247,3 +247,26 @@ export async function uploadAvatar(
     return { ok: false, error: "네트워크 오류가 발생했습니다." };
   }
 }
+
+export async function removeAvatar(
+  email: string,
+): Promise<{ ok: true; user: AuthUser } | { ok: false; error: string }> {
+  try {
+    const response = await fetch(
+      `/api/profile/avatar?e=${encodeURIComponent(normalizeEmail(email))}`,
+      { method: "DELETE", credentials: "same-origin" },
+    );
+    const data = (await response.json()) as ApiResult<{ user: AuthUser }>;
+    if (!data.ok) {
+      return data;
+    }
+    const user = normalizeSessionUser(data.user);
+    if (!user) {
+      return { ok: false, error: "프로필 응답이 올바르지 않습니다." };
+    }
+    writeStoredSession(user);
+    return { ok: true, user };
+  } catch {
+    return { ok: false, error: "네트워크 오류가 발생했습니다." };
+  }
+}

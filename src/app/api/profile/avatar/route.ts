@@ -5,6 +5,7 @@ import {
   normalizeEmail,
 } from "@/domain/auth";
 import {
+  clearAvatar,
   getAvatarWebpBytes,
   isUserStoreConfigured,
   saveAvatarWebp,
@@ -111,6 +112,39 @@ export async function POST(request: Request) {
     console.error("avatar POST failed", error);
     return NextResponse.json(
       { ok: false, error: "프로필 이미지 저장에 실패했습니다." },
+      { status: 500 },
+    );
+  }
+}
+
+export async function DELETE(request: Request) {
+  try {
+    if (!isUserStoreConfigured()) {
+      return NextResponse.json(
+        { ok: false, error: "프로필 저장소가 연결되지 않았습니다." },
+        { status: 503 },
+      );
+    }
+
+    const email = normalizeEmail(
+      new URL(request.url).searchParams.get("e") ?? "",
+    );
+    if (!isValidEmail(email)) {
+      return NextResponse.json(
+        { ok: false, error: "올바른 이메일을 입력해 주세요." },
+        { status: 400 },
+      );
+    }
+
+    const profile = await clearAvatar(email);
+    return NextResponse.json({
+      ok: true,
+      user: authUserFromProfile(email, profile),
+    });
+  } catch (error) {
+    console.error("avatar DELETE failed", error);
+    return NextResponse.json(
+      { ok: false, error: "프로필 이미지 삭제에 실패했습니다." },
       { status: 500 },
     );
   }

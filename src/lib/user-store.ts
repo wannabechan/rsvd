@@ -165,3 +165,16 @@ export async function getAvatarWebpBytes(
   }
   return new Uint8Array(Buffer.from(base64, "base64"));
 }
+
+export async function clearAvatar(email: string): Promise<UserProfile> {
+  const normalized = normalizeEmail(email);
+  const current = await ensureUserProfile(normalized);
+  await getRedis().del(avatarKey(normalized));
+  const next: StoredProfile = {
+    nickname: current.nickname,
+    hasAvatar: false,
+    avatarVersion: current.avatarVersion + 1,
+  };
+  await getRedis().set(profileKey(normalized), next);
+  return toUserProfile(normalized, next);
+}

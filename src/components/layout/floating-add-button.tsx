@@ -1,11 +1,47 @@
-export function FloatingAddButton() {
+"use client";
+
+import { usePathname, useRouter } from "next/navigation";
+import { useAuth } from "@/components/auth/auth-context";
+import { useLoginBoot } from "@/components/auth/login-boot-context";
+import { routes } from "@/lib/routes";
+
+type FloatingAddButtonProps = {
+  /** Logged out, or logged in with no favorite shops yet. */
+  attention?: boolean;
+};
+
+export function FloatingAddButton({ attention = false }: FloatingAddButtonProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const { bumpLoginBoot } = useLoginBoot();
+  const { isReady, isLoggedIn } = useAuth();
+
+  function handleClick() {
+    if (!isReady) {
+      return;
+    }
+    if (!isLoggedIn) {
+      bumpLoginBoot();
+      if (pathname !== routes.login) {
+        router.push(routes.login);
+      }
+      return;
+    }
+    // Logged-in “단골 맺기” flow — reserved until the add flow ships.
+  }
+
   return (
     <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40 mx-auto w-full max-w-[480px]">
       <div className="pointer-events-auto flex justify-end p-4 pb-6">
         <button
           type="button"
-          aria-label="추가"
-          className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-rsvd-border text-rsvd-on-brand shadow-sm transition hover:bg-rsvd-tint"
+          aria-label="단골 맺기"
+          onClick={handleClick}
+          className={`inline-flex h-14 w-14 items-center justify-center rounded-full shadow-sm ${
+            attention
+              ? "rsvd-add-attention text-rsvd-brand"
+              : "bg-rsvd-border text-rsvd-brand transition hover:bg-rsvd-tint"
+          }`}
         >
           <PlusIcon />
         </button>

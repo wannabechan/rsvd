@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useReservationChat } from "@/components/reservation-chat/reservation-chat-context";
 import { routes } from "@/lib/routes";
@@ -13,12 +14,19 @@ const SYMBOL_HEIGHT = `calc(${LOGO_HEIGHT} * ${SYMBOL_SCALE})`;
 const LOGO_SLOT_WIDTH = `calc(${LOGO_HEIGHT} * 1800 / 800)`;
 
 export function HeaderLogo() {
+  const pathname = usePathname();
   const { activeChat } = useReservationChat();
   const [showSymbol, setShowSymbol] = useState(false);
   const isChatActive = Boolean(activeChat);
-  const displaySymbol = isChatActive || showSymbol;
+  const freezeMainLogo = pathname === routes.profile;
+  const displaySymbol = !freezeMainLogo && (isChatActive || showSymbol);
 
   useEffect(() => {
+    if (freezeMainLogo) {
+      setShowSymbol(false);
+      return;
+    }
+
     if (isChatActive) {
       setShowSymbol(true);
       return;
@@ -34,7 +42,7 @@ export function HeaderLogo() {
     return () => {
       window.clearInterval(timer);
     };
-  }, [isChatActive]);
+  }, [freezeMainLogo, isChatActive]);
 
   const statusLabel = activeChat
     ? `${activeChat.spaceName} 예약챗 진행중`

@@ -17,6 +17,7 @@ export function SiteHeader() {
   const { bumpLoginBoot } = useLoginBoot();
   const { user, isLoggedIn } = useAuth();
   const { activeChat, endChat } = useReservationChat();
+  const onProfile = pathname === routes.profile;
 
   function openInitialLogin() {
     // Bump remounts LoginForm to the email step even if /login was cached.
@@ -24,6 +25,14 @@ export function SiteHeader() {
     if (pathname !== routes.login) {
       router.push(routes.login);
     }
+  }
+
+  function leaveProfile() {
+    if (typeof window !== "undefined" && window.history.length > 1) {
+      router.back();
+      return;
+    }
+    router.replace(routes.spaceList);
   }
 
   return (
@@ -37,6 +46,15 @@ export function SiteHeader() {
               type="button"
               aria-label="예약챗 닫기"
               onClick={endChat}
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full text-rsvd-text transition hover:bg-rsvd-tint"
+            >
+              <CloseIcon />
+            </button>
+          ) : onProfile ? (
+            <button
+              type="button"
+              aria-label="프로필 닫기"
+              onClick={leaveProfile}
               className="inline-flex h-10 w-10 items-center justify-center rounded-full text-rsvd-text transition hover:bg-rsvd-tint"
             >
               <CloseIcon />

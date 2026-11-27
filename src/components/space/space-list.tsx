@@ -25,7 +25,7 @@ export function SpaceList({ spaces }: SpaceListProps) {
         <div className="px-4 pb-24 pt-4">
           <p className="text-sm text-rsvd-text-muted">불러오는 중…</p>
         </div>
-        <FloatingAddButton />
+        <FloatingAddButton attention />
       </>
     );
   }
@@ -36,7 +36,7 @@ export function SpaceList({ spaces }: SpaceListProps) {
         <div className="px-4 pb-24 pt-4">
           <SpaceGrid spaces={platformSpaces} />
         </div>
-        <FloatingAddButton />
+        <FloatingAddButton attention />
       </>
     );
   }
@@ -45,6 +45,7 @@ export function SpaceList({ spaces }: SpaceListProps) {
     spaces,
     getLikedSpaceIdsForUser(user.id),
   );
+  const needsFavoriteAttention = myLikedSpaces.length === 0;
 
   return (
     <>
@@ -73,7 +74,7 @@ export function SpaceList({ spaces }: SpaceListProps) {
           <SpaceGrid spaces={platformSpaces} />
         </section>
       </div>
-      <FloatingAddButton />
+      <FloatingAddButton attention={needsFavoriteAttention} />
     </>
   );
 }
