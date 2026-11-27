@@ -26,7 +26,9 @@ export function LoginForm() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
-  const [pendingAction, setPendingAction] = useState<"request-code" | null>(null);
+  const [pendingAction, setPendingAction] = useState<
+    "request-code" | "choose-password" | null
+  >(null);
   const errorTimerRef = useRef<number | null>(null);
 
   function clearError() {
@@ -107,15 +109,18 @@ export function LoginForm() {
     }
 
     setPending(true);
+    setPendingAction("choose-password");
     const status = await checkCanUsePasswordLogin(email);
     if (!status.ok) {
       setPending(false);
+      setPendingAction(null);
       showError(status.error);
       return;
     }
 
     if (status.hasPassword) {
       setPending(false);
+      setPendingAction(null);
       setPassword("");
       setStep("password");
       return;
@@ -123,6 +128,7 @@ export function LoginForm() {
 
     const result = await requestCode(email);
     setPending(false);
+    setPendingAction(null);
 
     if (!result.ok) {
       showError(result.error);
@@ -297,7 +303,7 @@ export function LoginForm() {
                   className="inline-flex h-11 items-center justify-center rounded-full bg-rsvd-brand px-3 text-sm font-medium text-rsvd-on-brand transition hover:bg-rsvd-brand-strong disabled:pointer-events-none"
                 >
                   {pendingAction === "request-code" ? (
-                    <ButtonSpinner />
+                    <ButtonSpinner tone="on-brand" />
                   ) : (
                     "로그인 코드"
                   )}
@@ -305,10 +311,15 @@ export function LoginForm() {
                 <button
                   type="button"
                   disabled={pending}
+                  aria-busy={pendingAction === "choose-password"}
                   onClick={handleChoosePassword}
-                  className="inline-flex h-11 items-center justify-center rounded-full border border-rsvd-brand bg-rsvd-surface px-3 text-sm font-medium text-rsvd-brand transition hover:bg-rsvd-tint disabled:border-rsvd-border disabled:text-rsvd-disabled-text"
+                  className="inline-flex h-11 items-center justify-center rounded-full border border-rsvd-brand bg-rsvd-surface px-3 text-sm font-medium text-rsvd-brand transition hover:bg-rsvd-tint disabled:pointer-events-none"
                 >
-                  내 비밀번호
+                  {pendingAction === "choose-password" ? (
+                    <ButtonSpinner tone="brand" />
+                  ) : (
+                    "내 비밀번호"
+                  )}
                 </button>
               </div>
             </>
@@ -395,11 +406,16 @@ export function LoginForm() {
   );
 }
 
-function ButtonSpinner() {
+function ButtonSpinner({ tone }: { tone: "on-brand" | "brand" }) {
+  const borderClass =
+    tone === "brand"
+      ? "border-rsvd-brand border-t-transparent"
+      : "border-rsvd-on-brand border-t-transparent";
+
   return (
     <span
       aria-hidden="true"
-      className="inline-block h-5 w-5 animate-spin rounded-full border-2 border-rsvd-on-brand border-t-transparent"
+      className={`inline-block h-5 w-5 animate-spin rounded-full border-2 ${borderClass}`}
     />
   );
 }
