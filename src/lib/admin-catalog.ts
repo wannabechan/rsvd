@@ -16,12 +16,18 @@ import {
   type WeekdayKey,
   type WeekdaySchedule,
 } from "@/domain/admin-space";
-import type { AdminUser } from "@/domain/admin-user";
+import {
+  DEFAULT_PLATFORM_USER_GRADE,
+  type AdminUser,
+  type PlatformUserGrade,
+} from "@/domain/admin-user";
+import { normalizeEmail, userIdFromEmail } from "@/domain/auth";
 import {
   spaceRegularsToAvatarStack,
   type SpaceItem,
   type SpaceRegularMember,
 } from "@/domain/space";
+import { resolveUserRole } from "@/lib/admin";
 import { processSpaceImageToWebp } from "@/lib/process-space-image";
 import { getRedis, isRedisConfigured } from "@/lib/redis";
 import {
@@ -464,11 +470,87 @@ export async function listCatalogUsers(): Promise<AdminUser[]> {
     return buildSeedSampleUsers(15);
   }
   const users = await getRedis().get<AdminUser[]>(USERS_KEY);
-  return users ?? [];
+  return sortCatalogUsers(users ?? []);
 }
 
 export async function saveCatalogUsers(users: AdminUser[]): Promise<void> {
   await getRedis().set(USERS_KEY, users);
+}
+
+function onboardGradeForEmail(email: string): PlatformUserGrade {
+  return resolveUserRole(email) === "admin"
+    ? "admin"
+    : DEFAULT_PLATFORM_USER_GRADE;
+}
+
+function sortCatalogUsers(users: AdminUser[]): AdminUser[] {
+  return [...users].sort((a, b) => {
+    if (a.grade === "admin" && b.grade !== "admin") {
+      return -1;
+    }
+    if (b.grade === "admin" && a.grade !== "admin") {
+      return 1;
+    }
+    const aJoined = Date.parse(a.joinedAt) || 0;
+    const bJoined = Date.parse(b.joinedAt) || 0;
+    if (aJoined !== bJoined) {
+      return bJoined - aJoined;
+    }
+    return a.email.localeCompare(b.email);
+  });
+}
+
+/**
+ * Ensure an onboarded auth account appears in the admin user list.
+ * New accounts default to user3; ADMIN_EMAIL accounts use admin.
+ */
+export async function syncOnboardedCatalogUser(input: {
+  email: string;
+  nickname: string;
+  phone: string | null;
+}): Promise<void> {
+  if (!isRedisConfigured()) {
+    return;
+  }
+  await ensureAdminCatalogSeeded();
+
+  const redis = getRedis();
+  const email = normalizeEmail(input.email);
+  const users = (await redis.get<AdminUser[]>(USERS_KEY)) ?? [];
+  const index = users.findIndex(
+    (user) => normalizeEmail(user.email) === email,
+  );
+  const desiredGrade = onboardGradeForEmail(email);
+  const nickname = input.nickname.trim() || email;
+  const phone = input.phone?.trim() || "";
+
+  if (index >= 0) {
+    const current = users[index];
+    let grade = current.grade;
+    if (desiredGrade === "admin") {
+      grade = "admin";
+    } else if (grade === "sample") {
+      grade = desiredGrade;
+    }
+    users[index] = {
+      ...current,
+      email,
+      nickname,
+      phone,
+      grade,
+    };
+  } else {
+    users.push({
+      id: userIdFromEmail(email),
+      email,
+      joinedAt: new Date().toISOString(),
+      nickname,
+      phone,
+      grade: desiredGrade,
+    });
+  }
+
+  await redis.set(USERS_KEY, users);
 }
 
 export function adminSpaceToPublicItem(space: AdminSpace): SpaceItem {

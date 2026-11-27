@@ -1,3 +1,4 @@
+import { connection } from "next/server";
 import { Suspense } from "react";
 import { AdminUsersTable } from "@/components/admin/admin-users-table";
 import { listCatalogUsers } from "@/lib/admin-catalog";
@@ -11,6 +12,7 @@ export default function AdminUsersPage() {
 }
 
 async function AdminUsersContent() {
+  await connection();
   const users = await listCatalogUsers();
   return <AdminUsersTable users={users} />;
 }

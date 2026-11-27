@@ -12,6 +12,7 @@ export const routes = {
   adminSettings: "/admin",
   adminSpaces: "/admin/spaces",
   adminSpaceNew: "/admin/spaces/new",
+  adminSpaceCandidates: "/admin/space-candidates",
   adminUsers: "/admin/users",
   adminSpaceEdit: (spaceId: string) => `/admin/spaces/${spaceId}/edit`,
   adminSpaceHours: (spaceId: string) => `/admin/spaces/${spaceId}/hours`,

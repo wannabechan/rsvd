@@ -9,6 +9,11 @@ import { routes } from "@/lib/routes";
 const NAV_ITEMS = [
   { href: routes.adminSettings, label: "기본설정", match: "exact" as const },
   { href: routes.adminSpaces, label: "매장목록", match: "prefix" as const },
+  {
+    href: routes.adminSpaceCandidates,
+    label: "매장후보",
+    match: "prefix" as const,
+  },
   { href: routes.adminUsers, label: "사용자", match: "prefix" as const },
 ];
 

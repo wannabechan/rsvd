@@ -11,6 +11,7 @@ import {
   type AuthUser,
   type UserProfile,
 } from "@/domain/auth";
+import { syncOnboardedCatalogUser } from "@/lib/admin-catalog";
 import { resolveUserRole } from "@/lib/admin";
 import { getRedis, isRedisConfigured } from "@/lib/redis";
 
@@ -93,11 +94,28 @@ export async function getUserProfile(email: string): Promise<UserProfile> {
   return toUserProfile(email, stored);
 }
 
+async function syncCatalogListing(
+  email: string,
+  profile: UserProfile,
+): Promise<void> {
+  try {
+    await syncOnboardedCatalogUser({
+      email,
+      nickname: profile.nickname,
+      phone: profile.phone,
+    });
+  } catch (error) {
+    console.error("catalog user sync failed", email, error);
+  }
+}
+
 export async function ensureUserProfile(email: string): Promise<UserProfile> {
   const normalized = normalizeEmail(email);
   const existing = await getRedis().get<StoredProfile>(profileKey(normalized));
   if (existing) {
-    return toUserProfile(normalized, existing);
+    const profile = toUserProfile(normalized, existing);
+    await syncCatalogListing(normalized, profile);
+    return profile;
   }
 
   const profile: StoredProfile = {
@@ -107,7 +125,9 @@ export async function ensureUserProfile(email: string): Promise<UserProfile> {
     avatarVersion: 0,
   };
   await getRedis().set(profileKey(normalized), profile);
-  return toUserProfile(normalized, profile);
+  const next = toUserProfile(normalized, profile);
+  await syncCatalogListing(normalized, next);
+  return next;
 }
 
 export async function buildAuthUser(email: string): Promise<AuthUser> {
@@ -126,7 +146,9 @@ export async function updateNickname(
     nickname: normalizeNickname(nickname, normalized),
   });
   await getRedis().set(profileKey(normalized), next);
-  return toUserProfile(normalized, next);
+  const profile = toUserProfile(normalized, next);
+  await syncCatalogListing(normalized, profile);
+  return profile;
 }
 
 export async function updatePhone(
@@ -140,7 +162,9 @@ export async function updatePhone(
     phone: normalizePhone(phone),
   });
   await getRedis().set(profileKey(normalized), next);
-  return toUserProfile(normalized, next);
+  const profile = toUserProfile(normalized, next);
+  await syncCatalogListing(normalized, profile);
+  return profile;
 }
 
 export async function clearPhone(email: string): Promise<UserProfile> {
@@ -151,7 +175,9 @@ export async function clearPhone(email: string): Promise<UserProfile> {
     phone: null,
   });
   await getRedis().set(profileKey(normalized), next);
-  return toUserProfile(normalized, next);
+  const profile = toUserProfile(normalized, next);
+  await syncCatalogListing(normalized, profile);
+  return profile;
 }
 
 export async function saveAvatarWebp(
