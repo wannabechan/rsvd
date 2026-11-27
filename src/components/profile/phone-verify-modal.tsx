@@ -89,7 +89,7 @@ export function PhoneVerifyModal({
               type="tel"
               inputMode="numeric"
               autoComplete="tel"
-              placeholder="01012345678"
+              placeholder="연락처를 입력하세요."
               value={phone}
               onChange={(event) => setPhone(normalizePhone(event.target.value))}
               className="auth-input w-full rounded-2xl border border-rsvd-border bg-rsvd-surface px-3.5 py-3 text-sm text-rsvd-text"

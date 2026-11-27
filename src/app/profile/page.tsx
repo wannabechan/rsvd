@@ -272,7 +272,11 @@ export default function ProfilePage() {
             inputMode="numeric"
             autoComplete="tel"
             value={phoneFieldValue}
-            placeholder="연락처를 인증하세요"
+            placeholder={
+              phoneVerifyOpen
+                ? "연락처를 입력하세요."
+                : "연락처를 인증하세요"
+            }
             onChange={(event) => {
               if (phonePendingClear) {
                 setPhonePendingClear(false);
