@@ -171,7 +171,7 @@ export function LoginForm() {
   const emailFilled = email.trim().length > 0;
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
+    <div className="flex min-h-0 flex-1 flex-col bg-rsvd-surface">
       <div className="min-h-0 flex-1 overflow-y-auto px-4 pt-8 pb-4">
         <label className="block text-sm font-medium text-rsvd-text" htmlFor="login-email">
           이메일 로그인

@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { SiteShell } from "@/components/layout/site-shell";
 import { brandFavicons } from "@/lib/brand-assets";
 import "./globals.css";
@@ -14,6 +14,14 @@ export const metadata: Metadata = {
     ],
     apple: [{ url: brandFavicons[180], sizes: "180x180", type: "image/png" }],
   },
+};
+
+/** Shrink layout with the virtual keyboard where the browser supports it (e.g. Chrome Android). */
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  interactiveWidget: "resizes-content",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
