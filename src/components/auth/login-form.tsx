@@ -27,6 +27,7 @@ export function LoginForm() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [pendingAction, setPendingAction] = useState<"request-code" | null>(null);
 
   function finishLogin() {
     const intent = consumeAuthIntent();
@@ -50,8 +51,10 @@ export function LoginForm() {
     }
 
     setPending(true);
+    setPendingAction("request-code");
     const result = await requestCode(email);
     setPending(false);
+    setPendingAction(null);
 
     if (!result.ok) {
       setError(result.error);
@@ -133,12 +136,8 @@ export function LoginForm() {
 
   return (
     <div className="flex flex-1 flex-col px-4 pb-8 pt-8">
-      <p className="text-sm text-rsvd-text-muted">
-        이메일 입력 후, 로그인 코드 또는 비밀번호 사용.
-      </p>
-
-      <label className="mt-8 block text-sm font-medium text-rsvd-text" htmlFor="login-email">
-        이메일
+      <label className="block text-sm font-medium text-rsvd-text" htmlFor="login-email">
+        이메일 로그인
       </label>
       <input
         id="login-email"
@@ -151,6 +150,11 @@ export function LoginForm() {
         placeholder="name@example.com"
         className="auth-input mt-2 w-full rounded-2xl border border-rsvd-border bg-rsvd-surface px-3.5 py-3 text-sm text-rsvd-text placeholder:text-rsvd-text-muted disabled:bg-rsvd-bg disabled:text-rsvd-text-muted"
       />
+      {step === "email" ? (
+        <p className="mt-3 text-sm text-rsvd-text-muted">
+          이메일 입력 후, 아래 중 한 가지를 선택하세요.
+        </p>
+      ) : null}
 
       {step === "code" ? (
         <div className="mt-5">
@@ -193,7 +197,8 @@ export function LoginForm() {
       {step === "password-setup" ? (
         <div className="mt-5 space-y-4">
           <p className="text-sm text-rsvd-text-muted">
-            최초 비밀번호 설정 시 이메일로 발송된 로그인 코드 필요.
+            <br />
+            최초 비밀번호 설정 시 로그인 코드 필요.
           </p>
           <div>
             <label className="block text-sm font-medium text-rsvd-text" htmlFor="setup-code">
@@ -242,10 +247,15 @@ export function LoginForm() {
             <button
               type="button"
               disabled={pending}
+              aria-busy={pendingAction === "request-code"}
               onClick={handleRequestCodeLogin}
-              className="inline-flex h-11 items-center justify-center rounded-full bg-rsvd-brand px-3 text-sm font-medium text-rsvd-on-brand transition hover:bg-rsvd-brand-strong disabled:bg-rsvd-disabled-bg disabled:text-rsvd-disabled-text"
+              className="inline-flex h-11 items-center justify-center rounded-full bg-rsvd-brand px-3 text-sm font-medium text-rsvd-on-brand transition hover:bg-rsvd-brand-strong disabled:pointer-events-none"
             >
-              로그인 코드
+              {pendingAction === "request-code" ? (
+                <ButtonSpinner />
+              ) : (
+                "로그인 코드"
+              )}
             </button>
             <button
               type="button"
@@ -335,5 +345,14 @@ export function LoginForm() {
         ) : null}
       </div>
     </div>
+  );
+}
+
+function ButtonSpinner() {
+  return (
+    <span
+      aria-hidden="true"
+      className="inline-block h-5 w-5 animate-spin rounded-full border-2 border-rsvd-on-brand border-t-transparent"
+    />
   );
 }
