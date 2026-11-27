@@ -67,7 +67,7 @@ export function SpaceImageCarousel({
         <Link
           href="/space"
           aria-label="공간 리스트로 돌아가기"
-          className="pointer-events-auto inline-flex h-10 w-10 items-center justify-center text-[2.125rem] font-thin leading-none text-rsvd-on-brand opacity-75 drop-shadow"
+          className="pointer-events-auto inline-flex h-[2.25rem] w-[2.25rem] items-center justify-center text-[1.9125rem] font-thin leading-none text-rsvd-on-brand opacity-75 drop-shadow"
         >
           ←
         </Link>
@@ -76,7 +76,7 @@ export function SpaceImageCarousel({
           <a
             href={phoneHref}
             aria-label={`${spaceName}에 전화하기`}
-            className="pointer-events-auto inline-flex h-10 w-10 items-center justify-center text-rsvd-on-brand opacity-75 drop-shadow"
+            className="pointer-events-auto inline-flex h-[2.375rem] w-[2.375rem] items-center justify-center text-rsvd-on-brand opacity-75 drop-shadow"
           >
             <PhoneIcon />
           </a>
@@ -85,7 +85,7 @@ export function SpaceImageCarousel({
             type="button"
             disabled
             aria-label="연락처 없음"
-            className="pointer-events-auto inline-flex h-10 w-10 items-center justify-center text-rsvd-on-brand/50"
+            className="pointer-events-auto inline-flex h-[2.375rem] w-[2.375rem] items-center justify-center text-rsvd-on-brand/50"
           >
             <PhoneIcon />
           </button>
@@ -113,7 +113,7 @@ function PhoneIcon() {
     <svg
       aria-hidden="true"
       viewBox="0 0 24 24"
-      className="h-10 w-10"
+      className="h-[2.375rem] w-[2.375rem]"
       fill="none"
       stroke="currentColor"
       strokeWidth="1"
