@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/components/auth/auth-context";
 import { useReservationChat } from "@/components/reservation-chat/reservation-chat-context";
 import { isValidEmail, type LoginStep } from "@/domain/auth";
@@ -9,6 +9,7 @@ import { consumeAuthIntent } from "@/lib/auth-intent";
 import { routes } from "@/lib/routes";
 
 const CODE_PLACEHOLDER = "이메일 발송된 6자리 숫자";
+const ERROR_DISMISS_MS = 5000;
 
 export function LoginForm() {
   const router = useRouter();
@@ -28,6 +29,34 @@ export function LoginForm() {
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [pendingAction, setPendingAction] = useState<"request-code" | null>(null);
+  const errorTimerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (errorTimerRef.current !== null) {
+        window.clearTimeout(errorTimerRef.current);
+      }
+    };
+  }, []);
+
+  function clearError() {
+    if (errorTimerRef.current !== null) {
+      window.clearTimeout(errorTimerRef.current);
+      errorTimerRef.current = null;
+    }
+    setError(null);
+  }
+
+  function showError(message: string) {
+    if (errorTimerRef.current !== null) {
+      window.clearTimeout(errorTimerRef.current);
+    }
+    setError(message);
+    errorTimerRef.current = window.setTimeout(() => {
+      setError(null);
+      errorTimerRef.current = null;
+    }, ERROR_DISMISS_MS);
+  }
 
   function finishLogin() {
     const intent = consumeAuthIntent();
@@ -44,9 +73,9 @@ export function LoginForm() {
   }
 
   async function handleRequestCodeLogin() {
-    setError(null);
+    clearError();
     if (!isValidEmail(email)) {
-      setError("올바른 이메일을 입력해 주세요.");
+      showError("올바른 이메일을 입력해 주세요.");
       return;
     }
 
@@ -57,7 +86,7 @@ export function LoginForm() {
     setPendingAction(null);
 
     if (!result.ok) {
-      setError(result.error);
+      showError(result.error);
       return;
     }
 
@@ -66,9 +95,9 @@ export function LoginForm() {
   }
 
   async function handleChoosePassword() {
-    setError(null);
+    clearError();
     if (!isValidEmail(email)) {
-      setError("올바른 이메일을 입력해 주세요.");
+      showError("올바른 이메일을 입력해 주세요.");
       return;
     }
 
@@ -83,7 +112,7 @@ export function LoginForm() {
     setPending(false);
 
     if (!result.ok) {
-      setError(result.error);
+      showError(result.error);
       return;
     }
 
@@ -93,13 +122,13 @@ export function LoginForm() {
   }
 
   async function handleVerifyCode() {
-    setError(null);
+    clearError();
     setPending(true);
     const result = await loginByCode(email, code);
     setPending(false);
 
     if (!result.ok) {
-      setError(result.error);
+      showError(result.error);
       return;
     }
 
@@ -107,13 +136,13 @@ export function LoginForm() {
   }
 
   async function handlePasswordLogin() {
-    setError(null);
+    clearError();
     setPending(true);
     const result = await loginByPassword(email, password);
     setPending(false);
 
     if (!result.ok) {
-      setError(result.error);
+      showError(result.error);
       return;
     }
 
@@ -121,13 +150,13 @@ export function LoginForm() {
   }
 
   async function handlePasswordSetup() {
-    setError(null);
+    clearError();
     setPending(true);
     const result = await setupPassword(email, code, password);
     setPending(false);
 
     if (!result.ok) {
-      setError(result.error);
+      showError(result.error);
       return;
     }
 
@@ -209,7 +238,7 @@ export function LoginForm() {
                 value={code}
                 disabled={pending}
                 onChange={(event) => setCode(event.target.value.replace(/\D/g, "").slice(0, 6))}
-                placeholder="최초 비밀번호 설정 시 이메일 발송된 6자리 숫자 입력"
+                placeholder="최초 설정 시 이메일 발송된 6자리 숫자 입력"
                 className="auth-input mt-2 w-full rounded-2xl border border-rsvd-border bg-rsvd-surface px-3.5 py-3 text-sm text-rsvd-text placeholder:text-rsvd-text-muted"
               />
             </div>
@@ -233,7 +262,7 @@ export function LoginForm() {
 
       </div>
 
-      <div className="shrink-0 border-t border-rsvd-border bg-rsvd-surface px-4 pt-3 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+      <div className="shrink-0 bg-rsvd-surface px-4 pt-3 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
         <div className="flex flex-col gap-3">
           {error ? (
             <p className="text-sm text-rsvd-danger" role="alert">
@@ -287,7 +316,7 @@ export function LoginForm() {
                 onClick={() => {
                   setStep("email");
                   setCode("");
-                  setError(null);
+                  clearError();
                 }}
                 className="inline-flex h-11 items-center justify-center rounded-full border border-rsvd-border bg-rsvd-surface px-3 text-sm font-medium text-rsvd-text transition hover:bg-rsvd-bg"
               >
@@ -312,7 +341,7 @@ export function LoginForm() {
                 onClick={() => {
                   setStep("email");
                   setPassword("");
-                  setError(null);
+                  clearError();
                 }}
                 className="inline-flex h-11 items-center justify-center rounded-full border border-rsvd-border bg-rsvd-surface px-3 text-sm font-medium text-rsvd-text transition hover:bg-rsvd-bg"
               >
@@ -338,7 +367,7 @@ export function LoginForm() {
                   setStep("email");
                   setCode("");
                   setPassword("");
-                  setError(null);
+                  clearError();
                 }}
                 className="inline-flex h-11 items-center justify-center rounded-full border border-rsvd-border bg-rsvd-surface px-3 text-sm font-medium text-rsvd-text transition hover:bg-rsvd-bg"
               >
