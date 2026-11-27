@@ -85,7 +85,7 @@ export function AdminHoursEditor({ space }: AdminHoursEditorProps) {
     <div>
       <div className="mb-6 flex items-center justify-between gap-4">
         <h1 className="text-lg font-medium text-rsvd-text">
-          시간설정{" "}
+          영업 시간{" "}
           <span className="font-normal text-rsvd-text-muted">/ {space.name}</span>
         </h1>
         <Link

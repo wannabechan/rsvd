@@ -23,16 +23,23 @@ export function AdminExceptionsList({ space }: AdminExceptionsListProps) {
   const [exceptions, setExceptions] = useState<ExceptionDateRange[]>(
     space.exceptions,
   );
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
-  function removeException(id: string) {
-    setExceptions((current) => current.filter((item) => item.id !== id));
+  function confirmDelete() {
+    if (!pendingDeleteId) {
+      return;
+    }
+    setExceptions((current) =>
+      current.filter((item) => item.id !== pendingDeleteId),
+    );
+    setPendingDeleteId(null);
   }
 
   return (
     <div>
       <div className="mb-6 flex items-center justify-between gap-4">
         <h1 className="text-lg font-medium text-rsvd-text">
-          날짜설정{" "}
+          예외 날짜{" "}
           <span className="font-normal text-rsvd-text-muted">/ {space.name}</span>
         </h1>
         <Link
@@ -96,7 +103,7 @@ export function AdminExceptionsList({ space }: AdminExceptionsListProps) {
                       <button
                         type="button"
                         aria-label="예외 날짜 삭제"
-                        onClick={() => removeException(item.id)}
+                        onClick={() => setPendingDeleteId(item.id)}
                         className="inline-flex h-8 w-8 items-center justify-center rounded-lg hover:bg-rsvd-bg hover:text-rsvd-danger"
                       >
                         <IconTrash />
@@ -119,6 +126,40 @@ export function AdminExceptionsList({ space }: AdminExceptionsListProps) {
           <IconPlus />
         </Link>
       </div>
+
+      {pendingDeleteId ? (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-rsvd-text/40 px-6"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="exception-delete-title"
+        >
+          <div className="w-full max-w-sm rounded-3xl border border-rsvd-border bg-rsvd-surface p-5 shadow-sm">
+            <p
+              id="exception-delete-title"
+              className="text-center text-sm font-medium text-rsvd-text"
+            >
+              삭제하시겠습니까?
+            </p>
+            <div className="mt-5 grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setPendingDeleteId(null)}
+                className="inline-flex h-11 items-center justify-center rounded-full border border-rsvd-border bg-rsvd-surface text-sm font-medium text-rsvd-text transition hover:bg-rsvd-bg"
+              >
+                취소
+              </button>
+              <button
+                type="button"
+                onClick={confirmDelete}
+                className="inline-flex h-11 items-center justify-center rounded-full bg-rsvd-brand text-sm font-medium text-rsvd-on-brand transition hover:bg-rsvd-brand-strong"
+              >
+                확인
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

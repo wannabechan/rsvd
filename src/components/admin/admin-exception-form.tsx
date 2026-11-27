@@ -37,7 +37,7 @@ export function AdminExceptionForm({
           href={routes.adminSpaceExceptions(space.id)}
           className="text-sm text-rsvd-text-muted transition hover:text-rsvd-brand"
         >
-          ← 날짜설정
+          ← 예외 날짜
         </Link>
       </div>
 

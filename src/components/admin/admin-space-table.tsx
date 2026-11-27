@@ -6,7 +6,6 @@ import {
   IconCalendar,
   IconClock,
   IconEdit,
-  IconPerson,
   IconPlus,
 } from "@/components/admin/admin-icons";
 import {
@@ -121,32 +120,25 @@ export function AdminSpaceTable({ initialSpaces }: AdminSpaceTableProps) {
                     <div className="flex items-center gap-1.5 text-rsvd-text-muted">
                       <Link
                         href={routes.adminSpaceEdit(space.id)}
-                        aria-label={`${space.name} 속성 수정`}
+                        aria-label={`${space.name} 매장 수정`}
                         className="inline-flex h-8 w-8 items-center justify-center rounded-lg hover:bg-rsvd-bg hover:text-rsvd-text"
                       >
                         <IconEdit />
                       </Link>
                       <Link
                         href={routes.adminSpaceHours(space.id)}
-                        aria-label={`${space.name} 영업시간`}
+                        aria-label={`${space.name} 영업 시간`}
                         className="inline-flex h-8 w-8 items-center justify-center rounded-lg hover:bg-rsvd-bg hover:text-rsvd-text"
                       >
                         <IconClock />
                       </Link>
                       <Link
                         href={routes.adminSpaceExceptions(space.id)}
-                        aria-label={`${space.name} 예외영업일`}
+                        aria-label={`${space.name} 예외 날짜`}
                         className="inline-flex h-8 w-8 items-center justify-center rounded-lg hover:bg-rsvd-bg hover:text-rsvd-text"
                       >
                         <IconCalendar />
                       </Link>
-                      <button
-                        type="button"
-                        aria-label={`${space.name} 관리자계정`}
-                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg hover:bg-rsvd-bg hover:text-rsvd-text"
-                      >
-                        <IconPerson />
-                      </button>
                     </div>
                   </td>
                 </tr>

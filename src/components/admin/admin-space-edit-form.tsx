@@ -103,7 +103,7 @@ export function AdminSpaceEditForm({ mode, space }: AdminSpaceEditFormProps) {
     <div>
       <div className="mb-6 flex items-center justify-between gap-4">
         <h1 className="text-lg font-medium text-rsvd-text">
-          {mode === "create" ? "매장 추가" : "속성 수정"}
+          {mode === "create" ? "매장 추가" : "매장 수정"}
           {mode === "edit" ? (
             <span className="font-normal text-rsvd-text-muted">
               {" "}
