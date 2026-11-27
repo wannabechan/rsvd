@@ -2,8 +2,11 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/components/auth/auth-context";
 import { useReservationChat } from "@/components/reservation-chat/reservation-chat-context";
-import type { SpaceItem } from "@/data/spaces";
+import { displayLikeCount, type SpaceItem } from "@/domain/space";
+import { saveAuthIntent } from "@/lib/auth-intent";
+import { routes } from "@/lib/routes";
 
 const LIKE_ICON_SIZE_CLASS = "h-[1.05rem] w-[1.05rem]";
 const MAX_RESERVER_AVATARS = 7;
@@ -14,12 +17,26 @@ type SpaceCardProps = {
 
 export function SpaceCard({ space }: SpaceCardProps) {
   const router = useRouter();
+  const { isLoggedIn, isReady } = useAuth();
   const { startChat } = useReservationChat();
-  const detailHref = `/space/${space.id}`;
+  const detailHref = routes.spaceDetail(space.id);
   const thumbnail = space.images[0] ?? "";
   const recentReservers = space.recentReservers.slice(0, MAX_RESERVER_AVATARS);
 
   function openReservationChat() {
+    if (!isReady) {
+      return;
+    }
+    if (!isLoggedIn) {
+      saveAuthIntent({
+        type: "open-chat",
+        spaceId: space.id,
+        spaceName: space.name,
+      });
+      router.push(routes.login);
+      return;
+    }
+
     startChat({ spaceId: space.id, spaceName: space.name });
     router.push(detailHref);
   }
@@ -91,7 +108,7 @@ export function SpaceCard({ space }: SpaceCardProps) {
             <HeartIcon />
           </span>
           <span className="translate-y-[2px] text-[0.72rem]">
-            {Math.max(space.totalLikeCount, 1)}
+            {displayLikeCount(space.totalLikeCount)}
           </span>
         </div>
       </div>

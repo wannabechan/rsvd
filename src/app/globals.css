@@ -70,3 +70,10 @@ body {
   outline: none;
   outline-offset: 0;
 }
+
+.auth-input:focus,
+.auth-input:focus-visible {
+  outline: none;
+  outline-offset: 0;
+  border-color: var(--rsvd-brand);
+}

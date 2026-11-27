@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useReservationChat } from "@/components/reservation-chat/reservation-chat-context";
+import { routes } from "@/lib/routes";
 
 const SWAP_INTERVAL_MS = 5000;
 const DISSOLVE_MS = 700;
@@ -41,7 +42,7 @@ export function HeaderLogo() {
 
   return (
     <Link
-      href="/space"
+      href={routes.spaceList}
       className="relative inline-flex shrink-0 items-center"
       style={{ height: SYMBOL_HEIGHT, width: LOGO_SLOT_WIDTH }}
       aria-label={

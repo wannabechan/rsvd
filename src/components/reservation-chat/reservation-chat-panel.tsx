@@ -2,17 +2,14 @@
 
 import { useEffect, useRef, useState } from "react";
 import { ReservationDateCalendar } from "@/components/reservation-chat/reservation-date-calendar";
-import type { SpaceItem } from "@/data/spaces";
-
-type ChatRole = "system" | "restaurant" | "guest";
-
-type ChatMessage = {
-  id: string;
-  role: ChatRole;
-  text: string;
-  createdAt: Date;
-  showDatePicker?: boolean;
-};
+import {
+  createGuestMessage,
+  createReservationCancelMessage,
+  createReservationStartMessage,
+  speakerLabelFor,
+  type ChatMessage,
+} from "@/domain/reservation-chat";
+import type { SpaceItem } from "@/domain/space";
 
 type ReservationChatPanelProps = {
   space: SpaceItem;
@@ -41,16 +38,7 @@ export function ReservationChatPanel({ space }: ReservationChatPanelProps) {
 
     setIsReservationActive(true);
     setSelectedDate(null);
-    setMessages((current) => [
-      ...current,
-      {
-        id: `reservation-${Date.now()}`,
-        role: "system",
-        text: `안녕하세요. ${space.name} 예약을 진행합니다. 먼저 예약 희망일을 선택하세요.`,
-        createdAt: new Date(),
-        showDatePicker: true,
-      },
-    ]);
+    setMessages((current) => [...current, createReservationStartMessage(space.name)]);
   }
 
   function cancelReservation() {
@@ -64,12 +52,7 @@ export function ReservationChatPanel({ space }: ReservationChatPanelProps) {
       ...current.map((message) =>
         message.showDatePicker ? { ...message, showDatePicker: false } : message,
       ),
-      {
-        id: `reservation-cancel-${Date.now()}`,
-        role: "system",
-        text: `${space.name} 예약 진행이 중단되었습니다.`,
-        createdAt: new Date(),
-      },
+      createReservationCancelMessage(space.name),
     ]);
   }
 
@@ -79,15 +62,7 @@ export function ReservationChatPanel({ space }: ReservationChatPanelProps) {
       return;
     }
 
-    setMessages((current) => [
-      ...current,
-      {
-        id: `guest-${Date.now()}`,
-        role: "guest",
-        text,
-        createdAt: new Date(),
-      },
-    ]);
+    setMessages((current) => [...current, createGuestMessage(text)]);
     setDraft("");
   }
 
@@ -182,8 +157,7 @@ function ChatBubble({
   onSelectDate: (dateKey: string) => void;
 }) {
   const isGuest = message.role === "guest";
-  const speakerLabel =
-    message.role === "system" ? "rsvd." : message.role === "restaurant" ? spaceName : null;
+  const speakerLabel = speakerLabelFor(message.role, spaceName);
   const timeLabel = formatMessageTime(message.createdAt);
 
   return (

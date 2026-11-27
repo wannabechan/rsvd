@@ -1,9 +1,13 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/components/auth/auth-context";
 import { useReservationChat } from "@/components/reservation-chat/reservation-chat-context";
 import { ReservationChatPanel } from "@/components/reservation-chat/reservation-chat-panel";
 import { SpaceImageCarousel } from "@/components/space/space-image-carousel";
-import type { SpaceItem } from "@/data/spaces";
+import { displayLikeCount, toTelHref, type SpaceItem } from "@/domain/space";
+import { saveAuthIntent } from "@/lib/auth-intent";
+import { routes } from "@/lib/routes";
 
 const DETAIL_LIKE_ICON_CLASS = "h-[1.875rem] w-[1.875rem]";
 const MAX_DETAIL_RESERVER_AVATARS = 7;
@@ -13,8 +17,10 @@ type SpaceDetailProps = {
 };
 
 export function SpaceDetail({ space }: SpaceDetailProps) {
+  const router = useRouter();
+  const { isLoggedIn, isReady } = useAuth();
   const { activeChat, startChat } = useReservationChat();
-  const phoneHref = normalizePhoneHref(space.contact);
+  const phoneHref = toTelHref(space.contact);
   const recentReservers = space.recentReservers.slice(0, MAX_DETAIL_RESERVER_AVATARS);
   const isChatOpen = activeChat?.spaceId === space.id;
 
@@ -42,7 +48,7 @@ export function SpaceDetail({ space }: SpaceDetailProps) {
               <HeartIcon />
             </span>
             <span className="translate-y-[4px] text-[1.05rem] font-medium">
-              {Math.max(space.totalLikeCount, 1)}
+              {displayLikeCount(space.totalLikeCount)}
             </span>
           </div>
           <button
@@ -50,6 +56,18 @@ export function SpaceDetail({ space }: SpaceDetailProps) {
             aria-label={`${space.name} 메신저 예약`}
             className="inline-flex h-[2.8875rem] w-[2.8875rem] shrink-0 translate-x-[3px] items-center justify-center rounded-full transition hover:bg-rsvd-tint"
             onClick={() => {
+              if (!isReady) {
+                return;
+              }
+              if (!isLoggedIn) {
+                saveAuthIntent({
+                  type: "open-chat",
+                  spaceId: space.id,
+                  spaceName: space.name,
+                });
+                router.push(routes.login);
+                return;
+              }
               startChat({ spaceId: space.id, spaceName: space.name });
             }}
           >
@@ -93,11 +111,6 @@ export function SpaceDetail({ space }: SpaceDetailProps) {
       ) : null}
     </article>
   );
-}
-
-function normalizePhoneHref(contact: string) {
-  const digits = contact.replace(/\D/g, "");
-  return digits ? `tel:${digits}` : "";
 }
 
 function HeartIcon() {

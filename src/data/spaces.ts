@@ -1,21 +1,6 @@
-export type SpaceReserver = {
-  id: string;
-  imageUrl: string;
-};
+import type { SpaceItem, SpaceReserver } from "@/domain/space";
 
-export type SpaceItem = {
-  id: string;
-  name: string;
-  address: string;
-  tagline: string;
-  description: string;
-  images: string[];
-  contact: string;
-  onlineLink: string;
-  totalLikeCount: number;
-  recentReservers: SpaceReserver[];
-  notice: string[];
-};
+export type { SpaceItem, SpaceReserver } from "@/domain/space";
 
 const AVATARS = [
   "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=160&q=80",

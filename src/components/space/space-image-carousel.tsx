@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { routes } from "@/lib/routes";
 
 type SpaceImageCarouselProps = {
   images: string[];
@@ -65,7 +66,7 @@ export function SpaceImageCarousel({
 
       <div className="pointer-events-none absolute inset-x-0 top-3 flex h-10 items-center justify-between px-3">
         <Link
-          href="/space"
+          href={routes.spaceList}
           aria-label="공간 리스트로 돌아가기"
           className="pointer-events-auto inline-flex h-[2.25rem] w-[2.25rem] items-center justify-center text-[1.9125rem] font-thin leading-none text-rsvd-on-brand opacity-75 drop-shadow"
         >

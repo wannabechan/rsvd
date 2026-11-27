@@ -1,0 +1,29 @@
+---
+description: Web-first structure that stays ready for App Store / Play release
+alwaysApply: true
+---
+
+# RSVD Mobile Readiness
+
+**Remember on every change:** this product will ship to the **Apple App Store and Google Play** after web 1차 검증. Prefer structures and APIs that stay portable to a native shell.
+
+Source of truth: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
+
+## Direction
+
+- Build and validate on **web** first (Next.js mobile shell).
+- After 1차 검증, ship **iOS/Android** (prefer Capacitor/WebView shell sharing the same routes; avoid premature RN monorepo).
+- When choosing between a web-only shortcut and a portable approach, choose the portable one unless the user explicitly wants a temporary hack.
+
+## Always
+
+- Put types, pure helpers, and product copy in `src/domain/` (no React/Next/DOM).
+- Put path builders in `src/lib/routes.ts` and use them for navigation / future deep links.
+- Keep `src/app/` pages thin; UI in `src/components/`; sample/API data in `src/data/`.
+- Touch-first mobile shell: max width ~480px, `dvh` viewport, adequate tap targets.
+
+## Never
+
+- Embed business rules only in JSX (e.g. like-count minimum, reservation system copy).
+- Hardcode `/space/...` strings when `routes` helpers exist.
+- Add web-only APIs inside `src/domain/`.

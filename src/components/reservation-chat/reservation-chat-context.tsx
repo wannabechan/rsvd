@@ -11,6 +11,7 @@ import {
   type ReactNode,
 } from "react";
 import { usePathname } from "next/navigation";
+import { isSpaceDetailPath } from "@/lib/routes";
 
 export type ActiveReservationChat = {
   spaceId: string;
@@ -47,9 +48,7 @@ export function ReservationChatProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    const targetPath = `/space/${activeChat.spaceId}`;
-
-    if (pathname === targetPath) {
+    if (isSpaceDetailPath(pathname, activeChat.spaceId)) {
       pendingSpaceIdRef.current = null;
       return;
     }
