@@ -18,6 +18,7 @@ import {
 } from "@/domain/admin-space";
 import {
   DEFAULT_PLATFORM_USER_GRADE,
+  platformUserGradeRank,
   type AdminUser,
   type PlatformUserGrade,
 } from "@/domain/admin-user";
@@ -493,11 +494,10 @@ function onboardGradeForEmail(email: string): PlatformUserGrade {
 
 function sortCatalogUsers(users: AdminUser[]): AdminUser[] {
   return [...users].sort((a, b) => {
-    if (a.grade === "admin" && b.grade !== "admin") {
-      return -1;
-    }
-    if (b.grade === "admin" && a.grade !== "admin") {
-      return 1;
+    const gradeCompared =
+      platformUserGradeRank(a.grade) - platformUserGradeRank(b.grade);
+    if (gradeCompared !== 0) {
+      return gradeCompared;
     }
     const aJoined = Date.parse(a.joinedAt) || 0;
     const bJoined = Date.parse(b.joinedAt) || 0;

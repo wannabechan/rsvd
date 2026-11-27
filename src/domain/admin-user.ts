@@ -48,6 +48,12 @@ export const ADMIN_USER_SORT_KEYS = [
 export type AdminUserSortKey = (typeof ADMIN_USER_SORT_KEYS)[number];
 export type AdminUserSortDir = "asc" | "desc";
 
+/** Rank for grade sort: admin → manager → user1 → user2 → user3 → sample. */
+export function platformUserGradeRank(grade: string): number {
+  const index = (PLATFORM_USER_GRADES as readonly string[]).indexOf(grade);
+  return index >= 0 ? index : PLATFORM_USER_GRADES.length;
+}
+
 export function filterAdminUsers(
   users: readonly AdminUser[],
   query: string,
@@ -82,6 +88,12 @@ export function compareAdminUsers(
     const bMs = Date.parse(b.joinedAt) || 0;
     if (aMs !== bMs) {
       return (aMs - bMs) * sign;
+    }
+  } else if (key === "grade") {
+    const compared =
+      platformUserGradeRank(a.grade) - platformUserGradeRank(b.grade);
+    if (compared !== 0) {
+      return compared * sign;
     }
   } else {
     const left = String(a[key] ?? "").toLowerCase();
