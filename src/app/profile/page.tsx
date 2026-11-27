@@ -8,8 +8,7 @@ import { UserAvatar } from "@/components/auth/user-avatar";
 import { PhoneVerifyModal } from "@/components/profile/phone-verify-modal";
 import {
   defaultNickname,
-  isValidPhone,
-  normalizePhone,
+  formatPhoneDisplay,
   NICKNAME_MAX_LENGTH,
 } from "@/domain/auth";
 import { prepareAvatarWebp } from "@/lib/prepare-avatar-image";
@@ -46,7 +45,6 @@ export default function ProfilePage() {
   const [pendingPreviewUrl, setPendingPreviewUrl] = useState<string | null>(null);
   const [confirmKind, setConfirmKind] = useState<ConfirmKind>(null);
   const [phoneVerifyOpen, setPhoneVerifyOpen] = useState(false);
-  const [phoneInput, setPhoneInput] = useState("");
   const [phonePendingClear, setPhonePendingClear] = useState(false);
   const [savingPhoneClear, setSavingPhoneClear] = useState(false);
 
@@ -59,16 +57,11 @@ export default function ProfilePage() {
   useEffect(() => {
     if (user) {
       setNickname(user.nickname);
+      if (!user.phone) {
+        setPhonePendingClear(false);
+      }
     }
   }, [user]);
-
-  useEffect(() => {
-    if (!user) {
-      return;
-    }
-    setPhonePendingClear(false);
-    setPhoneInput(user.phone ?? "");
-  }, [user?.phone]);
 
   useEffect(() => {
     return () => {
@@ -89,9 +82,8 @@ export default function ProfilePage() {
   const previewUser = pendingPreviewUrl
     ? { ...user, avatarUrl: pendingPreviewUrl }
     : user;
-  const phoneFieldValue = phonePendingClear ? "" : phoneInput;
-  const canVerifyPhone = !phonePendingClear && isValidPhone(phoneInput);
-  const canDeletePhone = phonePendingClear || Boolean(user.phone);
+  const phoneDisplay =
+    phonePendingClear || !user.phone ? "" : formatPhoneDisplay(user.phone);
   const nicknameDefault = defaultNickname(user.email);
 
   async function handleSaveNickname() {
@@ -116,7 +108,6 @@ export default function ProfilePage() {
       return;
     }
     setPhonePendingClear(false);
-    setPhoneInput("");
   }
 
   async function handleAvatarSelected(file: File | null) {
@@ -268,33 +259,27 @@ export default function ProfilePage() {
           </label>
           <input
             id="profile-phone"
-            type="tel"
-            inputMode="numeric"
-            autoComplete="tel"
-            value={phoneFieldValue}
+            type="text"
+            readOnly
+            value={phoneDisplay}
             placeholder={
               phoneVerifyOpen
                 ? "연락처를 입력하세요."
                 : "연락처를 인증하세요"
             }
-            onChange={(event) => {
-              if (phonePendingClear) {
-                setPhonePendingClear(false);
-              }
-              setPhoneInput(normalizePhone(event.target.value));
-            }}
             className="auth-input min-w-0 flex-1 rounded-2xl border border-rsvd-border bg-rsvd-surface px-3.5 py-3 text-sm text-rsvd-text placeholder:text-rsvd-text-muted"
           />
           <button
             type="button"
-            disabled={savingPhoneClear || !canDeletePhone}
+            disabled={
+              savingPhoneClear || (!phonePendingClear && !user.phone)
+            }
             onClick={() => {
               if (phonePendingClear) {
                 void handleSavePhoneClear();
                 return;
               }
               setPhonePendingClear(true);
-              setPhoneInput("");
             }}
             className={
               phonePendingClear ? PROFILE_ACTION_PRIMARY : PROFILE_ACTION_SECONDARY
@@ -304,8 +289,11 @@ export default function ProfilePage() {
           </button>
           <button
             type="button"
-            disabled={savingPhoneClear || !canVerifyPhone}
-            onClick={() => setPhoneVerifyOpen(true)}
+            disabled={savingPhoneClear}
+            onClick={() => {
+              setPhonePendingClear(false);
+              setPhoneVerifyOpen(true);
+            }}
             className={PROFILE_ACTION_PRIMARY}
           >
             인증
@@ -382,7 +370,6 @@ export default function ProfilePage() {
 
       {phoneVerifyOpen ? (
         <PhoneVerifyModal
-          initialPhone={phoneInput}
           onClose={() => setPhoneVerifyOpen(false)}
           onVerified={() => {
             setPhonePendingClear(false);
