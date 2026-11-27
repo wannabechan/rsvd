@@ -42,8 +42,8 @@ function buildLoginCodeHtml(code: string, logoUrl: string) {
     <p style="margin:0 0 20px;">로그인 코드입니다.</p>
     <p style="margin:0 0 20px;font-size:24px;font-weight:600;letter-spacing:0.12em;line-height:1.3;">${code}</p>
     <p style="margin:0 0 8px;">이 코드는 10분 동안 유효합니다.</p>
-    <p style="margin:0 0 28px;">본인이 요청하지 않았다면 무시해 주세요.</p>
-    <img src="${logoUrl}" alt="rsvd" width="300" style="display:block;width:300px;max-width:100%;height:auto;border:0;" />
+    <p style="margin:0 0 28px;">본인 요청이 아니라면 무시하세요.</p>
+    <img src="${logoUrl}" alt="rsvd" width="100" style="display:block;width:100px;max-width:100%;height:auto;border:0;" />
   </body>
 </html>`;
 }
@@ -56,16 +56,16 @@ function buildLoginCodeText(code: string) {
     code,
     "",
     "이 코드는 10분 동안 유효합니다.",
-    "본인이 요청하지 않았다면 무시해 주세요.",
+    "본인 요청이 아니라면 무시하세요.",
   ].join("\n");
 }
 
 export async function sendLoginCodeEmail(to: string, code: string) {
   const { auth, sender } = getSenderAuth();
   const gmail = google.gmail({ version: "v1", auth });
-  const logoUrl = `${getAppOrigin()}${brandLogos.main}`;
+  const logoUrl = `${getAppOrigin()}${brandLogos.symbol}`;
 
-  const subject = "애정하는 단골 예약 rsvd. 로그인 코드 확인";
+  const subject = "rsvd. 로그인 코드 확인";
   const textBody = buildLoginCodeText(code);
   const htmlBody = buildLoginCodeHtml(code, logoUrl);
   const boundary = `rsvd_boundary_${Date.now()}`;

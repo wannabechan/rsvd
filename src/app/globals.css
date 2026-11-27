@@ -77,3 +77,11 @@ body {
   outline-offset: 0;
   border-color: var(--rsvd-brand);
 }
+
+.auth-input-email:-webkit-autofill,
+.auth-input-email:-webkit-autofill:hover,
+.auth-input-email:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px var(--rsvd-tint) inset;
+  box-shadow: 0 0 0 1000px var(--rsvd-tint) inset;
+  -webkit-text-fill-color: var(--rsvd-text);
+}

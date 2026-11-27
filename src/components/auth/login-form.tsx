@@ -134,78 +134,35 @@ export function LoginForm() {
     finishLogin();
   }
 
+  const emailFilled = email.trim().length > 0;
+
   return (
-    <div className="flex flex-1 flex-col px-4 pb-8 pt-8">
-      <label className="block text-sm font-medium text-rsvd-text" htmlFor="login-email">
-        이메일 로그인
-      </label>
-      <input
-        id="login-email"
-        type="email"
-        autoComplete="email"
-        inputMode="email"
-        value={email}
-        disabled={step !== "email" || pending}
-        onChange={(event) => setEmail(event.target.value)}
-        placeholder="name@example.com"
-        className="auth-input mt-2 w-full rounded-2xl border border-rsvd-border bg-rsvd-surface px-3.5 py-3 text-sm text-rsvd-text placeholder:text-rsvd-text-muted disabled:bg-rsvd-bg disabled:text-rsvd-text-muted"
-      />
-      {step === "email" ? (
-        <p className="mt-3 text-sm text-rsvd-text-muted">
-          이메일 입력 후, 아래 중 한 가지를 선택하세요.
-        </p>
-      ) : null}
+    <div className="flex min-h-0 flex-1 flex-col">
+      <div className="min-h-0 flex-1 overflow-y-auto px-4 pt-8 pb-4">
+        <label className="block text-sm font-medium text-rsvd-text" htmlFor="login-email">
+          이메일 로그인
+        </label>
+        <input
+          id="login-email"
+          type="email"
+          autoComplete="email"
+          inputMode="email"
+          value={email}
+          disabled={step !== "email" || pending}
+          onChange={(event) => setEmail(event.target.value)}
+          placeholder="name@example.com"
+          className={`auth-input auth-input-email mt-2 w-full rounded-2xl border border-rsvd-border px-3.5 py-3 text-sm text-rsvd-text placeholder:text-rsvd-text-muted disabled:text-rsvd-text-muted ${
+            emailFilled ? "bg-rsvd-tint disabled:bg-rsvd-tint" : "bg-rsvd-surface disabled:bg-rsvd-bg"
+          }`}
+        />
 
-      {step === "code" ? (
-        <div className="mt-5">
-          <label className="block text-sm font-medium text-rsvd-text" htmlFor="login-code">
-            로그인 코드
-          </label>
-          <input
-            id="login-code"
-            type="text"
-            inputMode="numeric"
-            autoComplete="one-time-code"
-            maxLength={6}
-            value={code}
-            disabled={pending}
-            onChange={(event) => setCode(event.target.value.replace(/\D/g, "").slice(0, 6))}
-            placeholder={CODE_PLACEHOLDER}
-            className="auth-input mt-2 w-full rounded-2xl border border-rsvd-border bg-rsvd-surface px-3.5 py-3 text-sm text-rsvd-text placeholder:text-rsvd-text-muted"
-          />
-        </div>
-      ) : null}
-
-      {step === "password" ? (
-        <div className="mt-5">
-          <label className="block text-sm font-medium text-rsvd-text" htmlFor="login-password">
-            비밀번호
-          </label>
-          <input
-            id="login-password"
-            type="password"
-            autoComplete="current-password"
-            value={password}
-            disabled={pending}
-            onChange={(event) => setPassword(event.target.value)}
-            placeholder="비밀번호 입력"
-            className="auth-input mt-2 w-full rounded-2xl border border-rsvd-border bg-rsvd-surface px-3.5 py-3 text-sm text-rsvd-text placeholder:text-rsvd-text-muted"
-          />
-        </div>
-      ) : null}
-
-      {step === "password-setup" ? (
-        <div className="mt-5 space-y-4">
-          <p className="text-sm text-rsvd-text-muted">
-            <br />
-            최초 비밀번호 설정 시 로그인 코드 필요.
-          </p>
-          <div>
-            <label className="block text-sm font-medium text-rsvd-text" htmlFor="setup-code">
+        {step === "code" ? (
+          <div className="mt-5">
+            <label className="block text-sm font-medium text-rsvd-text" htmlFor="login-code">
               로그인 코드
             </label>
             <input
-              id="setup-code"
+              id="login-code"
               type="text"
               inputMode="numeric"
               autoComplete="one-time-code"
@@ -217,132 +174,179 @@ export function LoginForm() {
               className="auth-input mt-2 w-full rounded-2xl border border-rsvd-border bg-rsvd-surface px-3.5 py-3 text-sm text-rsvd-text placeholder:text-rsvd-text-muted"
             />
           </div>
-          <div>
-            <label className="block text-sm font-medium text-rsvd-text" htmlFor="setup-password">
-              새 비밀번호
-            </label>
-            <input
-              id="setup-password"
-              type="password"
-              autoComplete="new-password"
-              value={password}
-              disabled={pending}
-              onChange={(event) => setPassword(event.target.value)}
-              placeholder="6자 이상"
-              className="auth-input mt-2 w-full rounded-2xl border border-rsvd-border bg-rsvd-surface px-3.5 py-3 text-sm text-rsvd-text placeholder:text-rsvd-text-muted"
-            />
-          </div>
-        </div>
-      ) : null}
-
-      {error ? (
-        <p className="mt-3 text-sm text-rsvd-danger" role="alert">
-          {error}
-        </p>
-      ) : null}
-
-      <div className="mt-auto flex flex-col gap-3 pt-10">
-        {step === "email" ? (
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              type="button"
-              disabled={pending}
-              aria-busy={pendingAction === "request-code"}
-              onClick={handleRequestCodeLogin}
-              className="inline-flex h-11 items-center justify-center rounded-full bg-rsvd-brand px-3 text-sm font-medium text-rsvd-on-brand transition hover:bg-rsvd-brand-strong disabled:pointer-events-none"
-            >
-              {pendingAction === "request-code" ? (
-                <ButtonSpinner />
-              ) : (
-                "로그인 코드"
-              )}
-            </button>
-            <button
-              type="button"
-              disabled={pending}
-              onClick={handleChoosePassword}
-              className="inline-flex h-11 items-center justify-center rounded-full border border-rsvd-brand bg-rsvd-surface px-3 text-sm font-medium text-rsvd-brand transition hover:bg-rsvd-tint disabled:border-rsvd-border disabled:text-rsvd-disabled-text"
-            >
-              내 비밀번호
-            </button>
-          </div>
-        ) : null}
-
-        {step === "code" ? (
-          <>
-            <button
-              type="button"
-              disabled={pending || code.length !== 6}
-              onClick={handleVerifyCode}
-              className="inline-flex h-11 items-center justify-center rounded-full bg-rsvd-brand px-3 text-sm font-medium text-rsvd-on-brand transition hover:bg-rsvd-brand-strong disabled:bg-rsvd-disabled-bg disabled:text-rsvd-disabled-text"
-            >
-              코드로 로그인
-            </button>
-            <button
-              type="button"
-              disabled={pending}
-              onClick={() => {
-                setStep("email");
-                setCode("");
-                setError(null);
-              }}
-              className="inline-flex h-11 items-center justify-center rounded-full border border-rsvd-border bg-rsvd-surface px-3 text-sm font-medium text-rsvd-text transition hover:bg-rsvd-bg"
-            >
-              이메일 다시 입력
-            </button>
-          </>
         ) : null}
 
         {step === "password" ? (
-          <>
-            <button
-              type="button"
-              disabled={pending || !password}
-              onClick={handlePasswordLogin}
-              className="inline-flex h-11 items-center justify-center rounded-full bg-rsvd-brand px-3 text-sm font-medium text-rsvd-on-brand transition hover:bg-rsvd-brand-strong disabled:bg-rsvd-disabled-bg disabled:text-rsvd-disabled-text"
-            >
-              비밀번호로 로그인
-            </button>
-            <button
-              type="button"
+          <div className="mt-5">
+            <label className="block text-sm font-medium text-rsvd-text" htmlFor="login-password">
+              비밀번호
+            </label>
+            <input
+              id="login-password"
+              type="password"
+              autoComplete="current-password"
+              value={password}
               disabled={pending}
-              onClick={() => {
-                setStep("email");
-                setPassword("");
-                setError(null);
-              }}
-              className="inline-flex h-11 items-center justify-center rounded-full border border-rsvd-border bg-rsvd-surface px-3 text-sm font-medium text-rsvd-text transition hover:bg-rsvd-bg"
-            >
-              이메일 다시 입력
-            </button>
-          </>
+              onChange={(event) => setPassword(event.target.value)}
+              placeholder="비밀번호 입력"
+              className="auth-input mt-2 w-full rounded-2xl border border-rsvd-border bg-rsvd-surface px-3.5 py-3 text-sm text-rsvd-text placeholder:text-rsvd-text-muted"
+            />
+          </div>
         ) : null}
 
         {step === "password-setup" ? (
-          <>
-            <button
-              type="button"
-              disabled={pending || code.length !== 6 || !password}
-              onClick={handlePasswordSetup}
-              className="inline-flex h-11 items-center justify-center rounded-full bg-rsvd-brand px-3 text-sm font-medium text-rsvd-on-brand transition hover:bg-rsvd-brand-strong disabled:bg-rsvd-disabled-bg disabled:text-rsvd-disabled-text"
-            >
-              비밀번호 설정 후 로그인
-            </button>
-            <button
-              type="button"
-              disabled={pending}
-              onClick={() => {
-                setStep("email");
-                setCode("");
-                setPassword("");
-                setError(null);
-              }}
-              className="inline-flex h-11 items-center justify-center rounded-full border border-rsvd-border bg-rsvd-surface px-3 text-sm font-medium text-rsvd-text transition hover:bg-rsvd-bg"
-            >
-              이메일 다시 입력
-            </button>
-          </>
+          <div className="mt-5 space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-rsvd-text" htmlFor="setup-code">
+                로그인 코드
+              </label>
+              <input
+                id="setup-code"
+                type="text"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                maxLength={6}
+                value={code}
+                disabled={pending}
+                onChange={(event) => setCode(event.target.value.replace(/\D/g, "").slice(0, 6))}
+                placeholder="최초 비밀번호 설정 시 이메일 발송된 6자리 숫자 입력"
+                className="auth-input mt-2 w-full rounded-2xl border border-rsvd-border bg-rsvd-surface px-3.5 py-3 text-sm text-rsvd-text placeholder:text-rsvd-text-muted"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-rsvd-text" htmlFor="setup-password">
+                새 비밀번호
+              </label>
+              <input
+                id="setup-password"
+                type="password"
+                autoComplete="new-password"
+                value={password}
+                disabled={pending}
+                onChange={(event) => setPassword(event.target.value)}
+                placeholder="6자 이상"
+                className="auth-input mt-2 w-full rounded-2xl border border-rsvd-border bg-rsvd-surface px-3.5 py-3 text-sm text-rsvd-text placeholder:text-rsvd-text-muted"
+              />
+            </div>
+          </div>
         ) : null}
+
+      </div>
+
+      <div className="shrink-0 border-t border-rsvd-border bg-rsvd-surface px-4 pt-3 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+        <div className="flex flex-col gap-3">
+          {error ? (
+            <p className="text-sm text-rsvd-danger" role="alert">
+              {error}
+            </p>
+          ) : null}
+          {step === "email" ? (
+            <>
+              <p className="text-sm text-rsvd-text-muted">
+                이메일 입력 후, 아래 중 한 가지를 선택하세요.
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  disabled={pending}
+                  aria-busy={pendingAction === "request-code"}
+                  onClick={handleRequestCodeLogin}
+                  className="inline-flex h-11 items-center justify-center rounded-full bg-rsvd-brand px-3 text-sm font-medium text-rsvd-on-brand transition hover:bg-rsvd-brand-strong disabled:pointer-events-none"
+                >
+                  {pendingAction === "request-code" ? (
+                    <ButtonSpinner />
+                  ) : (
+                    "로그인 코드"
+                  )}
+                </button>
+                <button
+                  type="button"
+                  disabled={pending}
+                  onClick={handleChoosePassword}
+                  className="inline-flex h-11 items-center justify-center rounded-full border border-rsvd-brand bg-rsvd-surface px-3 text-sm font-medium text-rsvd-brand transition hover:bg-rsvd-tint disabled:border-rsvd-border disabled:text-rsvd-disabled-text"
+                >
+                  내 비밀번호
+                </button>
+              </div>
+            </>
+          ) : null}
+
+          {step === "code" ? (
+            <>
+              <button
+                type="button"
+                disabled={pending || code.length !== 6}
+                onClick={handleVerifyCode}
+                className="inline-flex h-11 items-center justify-center rounded-full bg-rsvd-brand px-3 text-sm font-medium text-rsvd-on-brand transition hover:bg-rsvd-brand-strong disabled:bg-rsvd-disabled-bg disabled:text-rsvd-disabled-text"
+              >
+                코드로 로그인
+              </button>
+              <button
+                type="button"
+                disabled={pending}
+                onClick={() => {
+                  setStep("email");
+                  setCode("");
+                  setError(null);
+                }}
+                className="inline-flex h-11 items-center justify-center rounded-full border border-rsvd-border bg-rsvd-surface px-3 text-sm font-medium text-rsvd-text transition hover:bg-rsvd-bg"
+              >
+                이메일 다시 입력
+              </button>
+            </>
+          ) : null}
+
+          {step === "password" ? (
+            <>
+              <button
+                type="button"
+                disabled={pending || !password}
+                onClick={handlePasswordLogin}
+                className="inline-flex h-11 items-center justify-center rounded-full bg-rsvd-brand px-3 text-sm font-medium text-rsvd-on-brand transition hover:bg-rsvd-brand-strong disabled:bg-rsvd-disabled-bg disabled:text-rsvd-disabled-text"
+              >
+                비밀번호로 로그인
+              </button>
+              <button
+                type="button"
+                disabled={pending}
+                onClick={() => {
+                  setStep("email");
+                  setPassword("");
+                  setError(null);
+                }}
+                className="inline-flex h-11 items-center justify-center rounded-full border border-rsvd-border bg-rsvd-surface px-3 text-sm font-medium text-rsvd-text transition hover:bg-rsvd-bg"
+              >
+                이메일 다시 입력
+              </button>
+            </>
+          ) : null}
+
+          {step === "password-setup" ? (
+            <>
+              <button
+                type="button"
+                disabled={pending || code.length !== 6 || !password}
+                onClick={handlePasswordSetup}
+                className="inline-flex h-11 items-center justify-center rounded-full bg-rsvd-brand px-3 text-sm font-medium text-rsvd-on-brand transition hover:bg-rsvd-brand-strong disabled:bg-rsvd-disabled-bg disabled:text-rsvd-disabled-text"
+              >
+                비밀번호 설정 후 로그인
+              </button>
+              <button
+                type="button"
+                disabled={pending}
+                onClick={() => {
+                  setStep("email");
+                  setCode("");
+                  setPassword("");
+                  setError(null);
+                }}
+                className="inline-flex h-11 items-center justify-center rounded-full border border-rsvd-border bg-rsvd-surface px-3 text-sm font-medium text-rsvd-text transition hover:bg-rsvd-bg"
+              >
+                이메일 다시 입력
+              </button>
+            </>
+          ) : null}
+        </div>
       </div>
     </div>
   );
