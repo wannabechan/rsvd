@@ -3,6 +3,9 @@
  * Keep free of React/Next/DOM so native shells can reuse the same rules.
  */
 
+/** Highest grade when email matches server ADMIN_EMAIL. */
+export type UserRole = "admin" | "member";
+
 export type AuthUser = {
   id: string;
   email: string;
@@ -10,6 +13,7 @@ export type AuthUser = {
   nickname: string;
   /** Public avatar image URL, or null for letter+tone fallback. */
   avatarUrl: string | null;
+  role: UserRole;
 };
 
 export type UserProfile = {
@@ -74,7 +78,21 @@ export function avatarPublicPath(email: string, version: number): string {
   return `/api/profile/avatar?e=${encodeURIComponent(normalizeEmail(email))}&v=${version}`;
 }
 
-export function authUserFromProfile(email: string, profile: UserProfile): AuthUser {
+export function isAdminEmailAddress(
+  email: string,
+  adminEmail: string | null | undefined,
+): boolean {
+  if (!adminEmail?.trim()) {
+    return false;
+  }
+  return normalizeEmail(email) === normalizeEmail(adminEmail);
+}
+
+export function authUserFromProfile(
+  email: string,
+  profile: UserProfile,
+  role: UserRole = "member",
+): AuthUser {
   const normalized = normalizeEmail(email);
   return {
     id: userIdFromEmail(normalized),
@@ -83,6 +101,7 @@ export function authUserFromProfile(email: string, profile: UserProfile): AuthUs
     avatarUrl: profile.hasAvatar
       ? avatarPublicPath(normalized, profile.avatarVersion)
       : null,
+    role,
   };
 }
 

@@ -34,7 +34,8 @@ vercel env pull .env.local
 | `AUTH_SECRET` | OTP 쿠키 서명 |
 | `GMAIL_REFRESH_TOKEN` / `GMAIL_SENDER` / `GOOGLE_CLIENT_*` | 로그인 코드 메일 |
 | `NEXT_PUBLIC_APP_URL` | OAuth·앱 URL |
-| Redis URL + Token | 비밀번호 해시 저장 |
+| `ADMIN_EMAIL` | 이 이메일로 로그인하면 `role: admin` (최고 등급) |
+| Redis URL + Token | 비밀번호·프로필 저장 |
 
 ## 3) API
 

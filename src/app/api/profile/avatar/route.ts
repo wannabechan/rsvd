@@ -4,6 +4,7 @@ import {
   isValidEmail,
   normalizeEmail,
 } from "@/domain/auth";
+import { resolveUserRole } from "@/lib/admin";
 import {
   clearAvatar,
   getAvatarWebpBytes,
@@ -106,7 +107,7 @@ export async function POST(request: Request) {
     const profile = await saveAvatarWebp(email, buffer);
     return NextResponse.json({
       ok: true,
-      user: authUserFromProfile(email, profile),
+      user: authUserFromProfile(email, profile, resolveUserRole(email)),
     });
   } catch (error) {
     console.error("avatar POST failed", error);
@@ -139,7 +140,7 @@ export async function DELETE(request: Request) {
     const profile = await clearAvatar(email);
     return NextResponse.json({
       ok: true,
-      user: authUserFromProfile(email, profile),
+      user: authUserFromProfile(email, profile, resolveUserRole(email)),
     });
   } catch (error) {
     console.error("avatar DELETE failed", error);

@@ -222,7 +222,15 @@ export default function ProfilePage() {
         </p>
       ) : null}
 
-      <div className="mt-auto pt-10">
+      <div className="mt-auto flex items-center gap-4 pt-10">
+        {user.role === "admin" ? (
+          <button
+            type="button"
+            className="px-0 text-left text-xs font-normal text-rsvd-text-muted"
+          >
+            *관리자모드
+          </button>
+        ) : null}
         <button
           type="button"
           onClick={() => {

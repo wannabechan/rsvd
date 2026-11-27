@@ -52,6 +52,7 @@ function normalizeSessionUser(value: unknown): AuthUser | null {
         ? raw.nickname.trim()
         : defaultNickname(email),
     avatarUrl: typeof raw.avatarUrl === "string" ? raw.avatarUrl : null,
+    role: raw.role === "admin" ? "admin" : "member",
   };
 }
 

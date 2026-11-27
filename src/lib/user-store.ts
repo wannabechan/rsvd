@@ -13,6 +13,7 @@ import {
   type AuthUser,
   type UserProfile,
 } from "@/domain/auth";
+import { resolveUserRole } from "@/lib/admin";
 
 const PASSWORD_KEY_PREFIX = "rsvd:user:password:";
 const PROFILE_KEY_PREFIX = "rsvd:user:profile:";
@@ -120,7 +121,7 @@ export async function ensureUserProfile(email: string): Promise<UserProfile> {
 
 export async function buildAuthUser(email: string): Promise<AuthUser> {
   const profile = await ensureUserProfile(email);
-  return authUserFromProfile(email, profile);
+  return authUserFromProfile(email, profile, resolveUserRole(email));
 }
 
 export async function updateNickname(

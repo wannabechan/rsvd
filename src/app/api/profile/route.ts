@@ -5,6 +5,7 @@ import {
   isValidNickname,
   normalizeEmail,
 } from "@/domain/auth";
+import { resolveUserRole } from "@/lib/admin";
 import {
   getUserProfile,
   isUserStoreConfigured,
@@ -33,7 +34,7 @@ export async function GET(request: Request) {
     const profile = await getUserProfile(email);
     return NextResponse.json({
       ok: true,
-      user: authUserFromProfile(email, profile),
+      user: authUserFromProfile(email, profile, resolveUserRole(email)),
     });
   } catch (error) {
     console.error("profile GET failed", error);
@@ -76,7 +77,7 @@ export async function POST(request: Request) {
     const profile = await updateNickname(email, nickname);
     return NextResponse.json({
       ok: true,
-      user: authUserFromProfile(email, profile),
+      user: authUserFromProfile(email, profile, resolveUserRole(email)),
     });
   } catch (error) {
     console.error("profile POST failed", error);
