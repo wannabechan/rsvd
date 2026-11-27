@@ -20,12 +20,15 @@ export function AdminShell({ children }: { children: ReactNode }) {
       <div className="mx-auto grid min-h-dvh w-full max-w-[1400px] grid-cols-5">
         <aside className="col-span-1 min-w-[11rem] border-r border-rsvd-border bg-rsvd-surface">
           <div className="border-b border-rsvd-border px-4 py-5">
-            <Link
-              href={routes.profile}
-              className="text-sm font-medium text-rsvd-brand"
-            >
-              관리자모드
-            </Link>
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-sm font-medium text-rsvd-brand">관리자모드</p>
+              <Link
+                href={routes.spaceList}
+                className="shrink-0 text-xs font-normal text-rsvd-text-muted transition hover:text-rsvd-text"
+              >
+                나가기
+              </Link>
+            </div>
           </div>
           <nav className="flex flex-col gap-1 p-3">
             {NAV_ITEMS.map((item) => {
