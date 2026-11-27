@@ -65,7 +65,7 @@ export function SpaceCard({ space }: SpaceCardProps) {
         </button>
       </div>
 
-      <p className="truncate text-[0.84rem] font-normal text-rsvd-text">{space.address}</p>
+      <p className="-mt-[2px] truncate text-[0.84rem] font-normal text-rsvd-text">{space.address}</p>
 
       <div className="flex min-w-0 items-center justify-between gap-2 pt-1">
         {recentReservers.length > 0 ? (

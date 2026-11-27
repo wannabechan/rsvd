@@ -6,7 +6,7 @@ export default function SpacePage() {
   return (
     <>
       <div className="px-4 pb-24 pt-4">
-        <div className="grid grid-cols-2 gap-x-3 gap-y-6">
+        <div className="grid grid-cols-2 gap-x-3 gap-y-[26px]">
           {SAMPLE_SPACES.map((space) => (
             <SpaceCard key={space.id} space={space} />
           ))}
