@@ -21,7 +21,11 @@ import {
   type AdminUser,
   type PlatformUserGrade,
 } from "@/domain/admin-user";
-import { normalizeEmail, userIdFromEmail } from "@/domain/auth";
+import {
+  defaultNickname,
+  normalizeEmail,
+  userIdFromEmail,
+} from "@/domain/auth";
 import {
   spaceRegularsToAvatarStack,
   type SpaceItem,
@@ -43,6 +47,8 @@ const SEEDED_KEY = "rsvd:catalog:seeded:v6";
 const HOURS_CLEARED_KEY = "rsvd:catalog:hours-cleared:v1";
 /** One-time migrate remote gallery URLs into stored WebP assets. */
 const IMAGES_STORED_KEY = "rsvd:catalog:images-stored:v1";
+const PROFILE_KEY_PREFIX = "rsvd:user:profile:";
+const PASSWORD_KEY_PREFIX = "rsvd:user:password:";
 
 function mulberry32(seed: number) {
   return function next() {
@@ -465,10 +471,12 @@ export async function updateCatalogSpaceDayHours(
 }
 
 export async function listCatalogUsers(): Promise<AdminUser[]> {
-  await ensureAdminCatalogSeeded();
   if (!isRedisConfigured()) {
     return buildSeedSampleUsers(15);
   }
+  // Avoid ensureAdminCatalogSeeded here — image migration can block/fail user listing.
+  await ensureUsersCatalogReady();
+  await backfillCatalogUsersFromAuthStore();
   const users = await getRedis().get<AdminUser[]>(USERS_KEY);
   return sortCatalogUsers(users ?? []);
 }
@@ -500,6 +508,78 @@ function sortCatalogUsers(users: AdminUser[]): AdminUser[] {
   });
 }
 
+/** Ensure users list exists without running space image migrations. */
+async function ensureUsersCatalogReady(): Promise<void> {
+  if (!isRedisConfigured()) {
+    return;
+  }
+  const redis = getRedis();
+  const existing = await redis.get<AdminUser[]>(USERS_KEY);
+  if (existing) {
+    return;
+  }
+  const seeded = await redis.get<string>(SEEDED_KEY);
+  if (!seeded) {
+    await ensureAdminCatalogSeeded();
+    return;
+  }
+  await redis.set(USERS_KEY, buildSeedSampleUsers(15));
+}
+
+type StoredAuthProfile = {
+  nickname?: string;
+  phone?: string | null;
+};
+
+/**
+ * Merge Redis auth profiles/passwords into the admin user list.
+ * Fixes accounts onboarded before catalog sync (or when sync was blocked).
+ */
+async function backfillCatalogUsersFromAuthStore(): Promise<void> {
+  if (!isRedisConfigured()) {
+    return;
+  }
+  const redis = getRedis();
+  const profileKeys =
+    ((await redis.keys(`${PROFILE_KEY_PREFIX}*`)) as string[] | null) ?? [];
+  const passwordKeys =
+    ((await redis.keys(`${PASSWORD_KEY_PREFIX}*`)) as string[] | null) ?? [];
+
+  const emails = new Set<string>();
+  for (const key of profileKeys) {
+    const email = normalizeEmail(key.slice(PROFILE_KEY_PREFIX.length));
+    if (email) {
+      emails.add(email);
+    }
+  }
+  for (const key of passwordKeys) {
+    const email = normalizeEmail(key.slice(PASSWORD_KEY_PREFIX.length));
+    if (email) {
+      emails.add(email);
+    }
+  }
+  if (emails.size === 0) {
+    return;
+  }
+
+  for (const email of emails) {
+    const stored = await redis.get<StoredAuthProfile>(
+      `${PROFILE_KEY_PREFIX}${email}`,
+    );
+    await syncOnboardedCatalogUser({
+      email,
+      nickname:
+        typeof stored?.nickname === "string" && stored.nickname.trim()
+          ? stored.nickname
+          : defaultNickname(email),
+      phone:
+        typeof stored?.phone === "string" && stored.phone
+          ? stored.phone
+          : null,
+    });
+  }
+}
+
 /**
  * Ensure an onboarded auth account appears in the admin user list.
  * New accounts default to user3; ADMIN_EMAIL accounts use admin.
@@ -512,7 +592,7 @@ export async function syncOnboardedCatalogUser(input: {
   if (!isRedisConfigured()) {
     return;
   }
-  await ensureAdminCatalogSeeded();
+  await ensureUsersCatalogReady();
 
   const redis = getRedis();
   const email = normalizeEmail(input.email);
