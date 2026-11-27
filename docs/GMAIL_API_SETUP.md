@@ -34,9 +34,20 @@
 5. **`ALLOW_GMAIL_OAUTH_SETUP` 을 `false`로 바꾸거나 삭제** 후 재배포  
    (토큰 발급 URL을 열어두면 안 됨)
 
-## 4) 이후
+## 4) 로그인 코드 실발송에 필요한 환경변수
 
-로그인 코드 발송 API가 refresh token으로 access token을 갱신해 Gmail API로 메일을 보냅니다.
+| Key | Value |
+| --- | --- |
+| `GMAIL_REFRESH_TOKEN` | 동의로 받은 refresh token |
+| `GMAIL_SENDER` | 동의한 발송 Google 계정 |
+| `AUTH_SECRET` | OTP 서명용 임의 문자열 (길수록 좋음) |
+
+`AUTH_SECRET`이 없으면 `GOOGLE_CLIENT_SECRET`을 대신 사용합니다.
+
+로그인 코드 API:
+- `POST /api/auth/request-code` — Gmail로 6자리 발송
+- `POST /api/auth/verify-code` — 코드 검증 후 로그인
+- `POST /api/auth/setup-password` — 최초 비밀번호 설정 시 코드 검증
 
 ## (선택) 로컬 스크립트
 

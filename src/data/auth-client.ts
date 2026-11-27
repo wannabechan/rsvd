@@ -1,11 +1,10 @@
 /**
- * Sample auth adapter. Swap for a real API later without changing UI/domain contracts.
- * In sample mode, login codes are fixed so local testing works without email delivery.
+ * Browser auth adapter. Login codes go through server APIs (Gmail).
+ * Password unlock state remains local until a user DB is introduced.
  */
 
 import {
   isValidEmail,
-  isValidLoginCode,
   isValidPassword,
   normalizeEmail,
   userIdFromEmail,
@@ -16,10 +15,8 @@ const SESSION_KEY = "rsvd:auth-session";
 const PASSWORD_UNLOCK_KEY = "rsvd:password-unlocked";
 const PASSWORD_STORE_KEY = "rsvd:password-store";
 
-/** Sample-only code so QA works without a mailer. */
-export const SAMPLE_LOGIN_CODE = "123456";
-
 type PasswordStore = Record<string, string>;
+type ApiResult<T> = { ok: true } & T | { ok: false; error: string };
 
 function readJson<T>(key: string, fallback: T): T {
   if (typeof window === "undefined") {
@@ -79,42 +76,46 @@ function readPassword(email: string): string | null {
   return store[normalizeEmail(email)] ?? null;
 }
 
-function delay(ms = 450) {
-  return new Promise((resolve) => {
-    window.setTimeout(resolve, ms);
-  });
+async function postJson<T>(url: string, body: unknown): Promise<ApiResult<T>> {
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "same-origin",
+      body: JSON.stringify(body),
+    });
+    const data = (await response.json()) as ApiResult<T>;
+    if (!response.ok && !("error" in data)) {
+      return { ok: false, error: "요청에 실패했습니다. 잠시 후 다시 시도해 주세요." };
+    }
+    return data;
+  } catch {
+    return { ok: false, error: "네트워크 오류가 발생했습니다." };
+  }
 }
 
-export async function requestLoginCode(email: string): Promise<{ ok: true } | { ok: false; error: string }> {
-  await delay();
+export async function requestLoginCode(
+  email: string,
+): Promise<{ ok: true } | { ok: false; error: string }> {
   if (!isValidEmail(email)) {
     return { ok: false, error: "올바른 이메일을 입력해 주세요." };
   }
-  // Sample: pretend the mail was sent. Real API would deliver SAMPLE_LOGIN_CODE equivalent.
-  return { ok: true };
+  return postJson("/api/auth/request-code", { email });
 }
 
 export async function loginWithCode(
   email: string,
   code: string,
 ): Promise<{ ok: true; user: AuthUser } | { ok: false; error: string }> {
-  await delay();
-  if (!isValidEmail(email)) {
-    return { ok: false, error: "올바른 이메일을 입력해 주세요." };
+  const result = await postJson<{ user: AuthUser }>("/api/auth/verify-code", {
+    email,
+    code,
+  });
+  if (!result.ok) {
+    return result;
   }
-  if (!isValidLoginCode(code)) {
-    return { ok: false, error: "6자리 숫자 코드를 입력해 주세요." };
-  }
-  if (code.trim() !== SAMPLE_LOGIN_CODE) {
-    return { ok: false, error: "로그인 코드가 올바르지 않습니다." };
-  }
-
-  const user: AuthUser = {
-    id: userIdFromEmail(email),
-    email: normalizeEmail(email),
-  };
-  writeStoredSession(user);
-  return { ok: true, user };
+  writeStoredSession(result.user);
+  return result;
 }
 
 export async function setupPasswordLogin(
@@ -122,36 +123,29 @@ export async function setupPasswordLogin(
   code: string,
   password: string,
 ): Promise<{ ok: true; user: AuthUser } | { ok: false; error: string }> {
-  await delay();
-  if (!isValidEmail(email)) {
-    return { ok: false, error: "올바른 이메일을 입력해 주세요." };
-  }
-  if (!isValidLoginCode(code)) {
-    return { ok: false, error: "6자리 숫자 코드를 입력해 주세요." };
-  }
-  if (code.trim() !== SAMPLE_LOGIN_CODE) {
-    return { ok: false, error: "로그인 코드가 올바르지 않습니다." };
-  }
   if (!isValidPassword(password)) {
     return { ok: false, error: "비밀번호는 6자 이상이어야 합니다." };
   }
 
+  const result = await postJson<{ user: AuthUser }>("/api/auth/setup-password", {
+    email,
+    code,
+    password,
+  });
+  if (!result.ok) {
+    return result;
+  }
+
   savePassword(email, password.trim());
   markPasswordUnlocked(email);
-
-  const user: AuthUser = {
-    id: userIdFromEmail(email),
-    email: normalizeEmail(email),
-  };
-  writeStoredSession(user);
-  return { ok: true, user };
+  writeStoredSession(result.user);
+  return result;
 }
 
 export async function loginWithPassword(
   email: string,
   password: string,
 ): Promise<{ ok: true; user: AuthUser } | { ok: false; error: string }> {
-  await delay();
   if (!isValidEmail(email)) {
     return { ok: false, error: "올바른 이메일을 입력해 주세요." };
   }

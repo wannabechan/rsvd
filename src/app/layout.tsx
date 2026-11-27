@@ -1,10 +1,19 @@
 import type { Metadata } from "next";
 import { SiteShell } from "@/components/layout/site-shell";
+import { brandFavicons } from "@/lib/brand-assets";
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: "rsvd",
   description: "Restaurant reservation",
+  icons: {
+    icon: [
+      { url: brandFavicons[32], sizes: "32x32", type: "image/png" },
+      { url: brandFavicons[192], sizes: "192x192", type: "image/png" },
+      { url: brandFavicons[512], sizes: "512x512", type: "image/png" },
+    ],
+    apple: [{ url: brandFavicons[180], sizes: "180x180", type: "image/png" }],
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

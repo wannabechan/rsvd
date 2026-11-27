@@ -4,10 +4,11 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useAuth } from "@/components/auth/auth-context";
 import { useReservationChat } from "@/components/reservation-chat/reservation-chat-context";
-import { SAMPLE_LOGIN_CODE } from "@/data/auth-client";
 import { isValidEmail, type LoginStep } from "@/domain/auth";
 import { consumeAuthIntent } from "@/lib/auth-intent";
 import { routes } from "@/lib/routes";
+
+const CODE_PLACEHOLDER = "이메일 발송된 6자리 숫자";
 
 export function LoginForm() {
   const router = useRouter();
@@ -26,7 +27,6 @@ export function LoginForm() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
-  const [codeSentHint, setCodeSentHint] = useState(false);
 
   function finishLogin() {
     const intent = consumeAuthIntent();
@@ -59,7 +59,6 @@ export function LoginForm() {
     }
 
     setCode("");
-    setCodeSentHint(true);
     setStep("code");
   }
 
@@ -87,7 +86,6 @@ export function LoginForm() {
 
     setCode("");
     setPassword("");
-    setCodeSentHint(true);
     setStep("password-setup");
   }
 
@@ -137,7 +135,7 @@ export function LoginForm() {
     <div className="flex flex-1 flex-col px-4 pb-8 pt-8">
       <h1 className="text-xl font-medium text-rsvd-text">로그인</h1>
       <p className="mt-2 text-sm text-rsvd-text-muted">
-        이메일로 로그인 코드 또는 비밀번호를 이용해 주세요.
+        이메일 입력 후, 로그인 코드 또는 비밀번호 사용.
       </p>
 
       <label className="mt-8 block text-sm font-medium text-rsvd-text" htmlFor="login-email">
@@ -169,8 +167,8 @@ export function LoginForm() {
             value={code}
             disabled={pending}
             onChange={(event) => setCode(event.target.value.replace(/\D/g, "").slice(0, 6))}
-            placeholder="6자리 숫자"
-            className="auth-input mt-2 w-full rounded-2xl border border-rsvd-border bg-rsvd-surface px-3.5 py-3 text-sm tracking-[0.2em] text-rsvd-text placeholder:tracking-normal placeholder:text-rsvd-text-muted"
+            placeholder={CODE_PLACEHOLDER}
+            className="auth-input mt-2 w-full rounded-2xl border border-rsvd-border bg-rsvd-surface px-3.5 py-3 text-sm text-rsvd-text placeholder:text-rsvd-text-muted"
           />
         </div>
       ) : null}
@@ -196,7 +194,7 @@ export function LoginForm() {
       {step === "password-setup" ? (
         <div className="mt-5 space-y-4">
           <p className="text-sm text-rsvd-text-muted">
-            최초 비밀번호 로그인 시 계정 도용 방지를 위해 이메일 로그인 코드 확인이 필요합니다.
+            최초 비밀번호 설정 시 이메일로 발송된 로그인 코드 필요.
           </p>
           <div>
             <label className="block text-sm font-medium text-rsvd-text" htmlFor="setup-code">
@@ -211,8 +209,8 @@ export function LoginForm() {
               value={code}
               disabled={pending}
               onChange={(event) => setCode(event.target.value.replace(/\D/g, "").slice(0, 6))}
-              placeholder="6자리 숫자"
-              className="auth-input mt-2 w-full rounded-2xl border border-rsvd-border bg-rsvd-surface px-3.5 py-3 text-sm tracking-[0.2em] text-rsvd-text placeholder:tracking-normal placeholder:text-rsvd-text-muted"
+              placeholder={CODE_PLACEHOLDER}
+              className="auth-input mt-2 w-full rounded-2xl border border-rsvd-border bg-rsvd-surface px-3.5 py-3 text-sm text-rsvd-text placeholder:text-rsvd-text-muted"
             />
           </div>
           <div>
@@ -231,12 +229,6 @@ export function LoginForm() {
             />
           </div>
         </div>
-      ) : null}
-
-      {codeSentHint && (step === "code" || step === "password-setup") ? (
-        <p className="mt-3 text-xs text-rsvd-text-muted">
-          샘플 환경: 이메일로 코드를 보냈다고 가정합니다. 테스트 코드는 {SAMPLE_LOGIN_CODE} 입니다.
-        </p>
       ) : null}
 
       {error ? (
@@ -284,7 +276,6 @@ export function LoginForm() {
                 setStep("email");
                 setCode("");
                 setError(null);
-                setCodeSentHint(false);
               }}
               className="inline-flex h-11 items-center justify-center rounded-full border border-rsvd-border bg-rsvd-surface px-3 text-sm font-medium text-rsvd-text transition hover:bg-rsvd-bg"
             >
@@ -336,7 +327,6 @@ export function LoginForm() {
                 setCode("");
                 setPassword("");
                 setError(null);
-                setCodeSentHint(false);
               }}
               className="inline-flex h-11 items-center justify-center rounded-full border border-rsvd-border bg-rsvd-surface px-3 text-sm font-medium text-rsvd-text transition hover:bg-rsvd-bg"
             >
