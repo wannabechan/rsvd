@@ -1,21 +1,17 @@
 /**
- * Browser auth adapter. Login codes go through server APIs (Gmail).
- * Password unlock state remains local until a user DB is introduced.
+ * Browser auth adapter. Codes and passwords go through server APIs.
+ * Session stays in localStorage until a shared session cookie is introduced.
  */
 
 import {
   isValidEmail,
   isValidPassword,
   normalizeEmail,
-  userIdFromEmail,
   type AuthUser,
 } from "@/domain/auth";
 
 const SESSION_KEY = "rsvd:auth-session";
-const PASSWORD_UNLOCK_KEY = "rsvd:password-unlocked";
-const PASSWORD_STORE_KEY = "rsvd:password-store";
 
-type PasswordStore = Record<string, string>;
 type ApiResult<T> = { ok: true } & T | { ok: false; error: string };
 
 function readJson<T>(key: string, fallback: T): T {
@@ -50,30 +46,6 @@ export function writeStoredSession(user: AuthUser | null) {
     return;
   }
   writeJson(SESSION_KEY, user);
-}
-
-export function hasPasswordLogin(email: string): boolean {
-  const unlocked = readJson<string[]>(PASSWORD_UNLOCK_KEY, []);
-  return unlocked.includes(normalizeEmail(email));
-}
-
-function markPasswordUnlocked(email: string) {
-  const normalized = normalizeEmail(email);
-  const unlocked = readJson<string[]>(PASSWORD_UNLOCK_KEY, []);
-  if (!unlocked.includes(normalized)) {
-    writeJson(PASSWORD_UNLOCK_KEY, [...unlocked, normalized]);
-  }
-}
-
-function savePassword(email: string, password: string) {
-  const store = readJson<PasswordStore>(PASSWORD_STORE_KEY, {});
-  store[normalizeEmail(email)] = password;
-  writeJson(PASSWORD_STORE_KEY, store);
-}
-
-function readPassword(email: string): string | null {
-  const store = readJson<PasswordStore>(PASSWORD_STORE_KEY, {});
-  return store[normalizeEmail(email)] ?? null;
 }
 
 async function postJson<T>(url: string, body: unknown): Promise<ApiResult<T>> {
@@ -118,6 +90,17 @@ export async function loginWithCode(
   return result;
 }
 
+export async function checkPasswordLogin(
+  email: string,
+): Promise<{ ok: true; hasPassword: boolean } | { ok: false; error: string }> {
+  if (!isValidEmail(email)) {
+    return { ok: false, error: "올바른 이메일을 입력해 주세요." };
+  }
+  return postJson<{ hasPassword: boolean }>("/api/auth/password-status", {
+    email: normalizeEmail(email),
+  });
+}
+
 export async function setupPasswordLogin(
   email: string,
   code: string,
@@ -136,8 +119,6 @@ export async function setupPasswordLogin(
     return result;
   }
 
-  savePassword(email, password.trim());
-  markPasswordUnlocked(email);
   writeStoredSession(result.user);
   return result;
 }
@@ -149,22 +130,18 @@ export async function loginWithPassword(
   if (!isValidEmail(email)) {
     return { ok: false, error: "올바른 이메일을 입력해 주세요." };
   }
-  if (!hasPasswordLogin(email)) {
-    return { ok: false, error: "비밀번호 로그인을 먼저 설정해 주세요." };
-  }
   if (!isValidPassword(password)) {
     return { ok: false, error: "비밀번호는 6자 이상이어야 합니다." };
   }
 
-  const saved = readPassword(email);
-  if (!saved || saved !== password.trim()) {
-    return { ok: false, error: "비밀번호가 올바르지 않습니다." };
+  const result = await postJson<{ user: AuthUser }>("/api/auth/login-password", {
+    email: normalizeEmail(email),
+    password,
+  });
+  if (!result.ok) {
+    return result;
   }
 
-  const user: AuthUser = {
-    id: userIdFromEmail(email),
-    email: normalizeEmail(email),
-  };
-  writeStoredSession(user);
-  return { ok: true, user };
+  writeStoredSession(result.user);
+  return result;
 }

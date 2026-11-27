@@ -17,6 +17,12 @@ Preferred near-term native path: **Capacitor (or equivalent) WebView shell** aro
 | UI | `src/components/` | Web (and later native-webview) presentation. |
 | App router | `src/app/` | Next.js routes only — keep thin. |
 
+## Auth on web (Vercel)
+
+- Login codes: Gmail API + signed OTP cookie — [GMAIL_API_SETUP.md](./GMAIL_API_SETUP.md)
+- Password hashes: Upstash Redis on Vercel — [VERCEL_AUTH_STORE.md](./VERCEL_AUTH_STORE.md)
+- Browser `localStorage` holds only the current session user, not password credentials.
+
 ## Deep links
 
 Use `src/lib/routes.ts` for all in-app paths (`/space`, `/space/:id`, …). The same paths should become Universal Links / App Links when native shells ship.

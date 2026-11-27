@@ -17,7 +17,7 @@ export function LoginForm() {
     loginByCode,
     loginByPassword,
     setupPassword,
-    canUsePasswordLogin,
+    checkCanUsePasswordLogin,
   } = useAuth();
 
   const [step, setStep] = useState<LoginStep>("email");
@@ -106,13 +106,21 @@ export function LoginForm() {
       return;
     }
 
-    if (canUsePasswordLogin(email)) {
+    setPending(true);
+    const status = await checkCanUsePasswordLogin(email);
+    if (!status.ok) {
+      setPending(false);
+      showError(status.error);
+      return;
+    }
+
+    if (status.hasPassword) {
+      setPending(false);
       setPassword("");
       setStep("password");
       return;
     }
 
-    setPending(true);
     const result = await requestCode(email);
     setPending(false);
 

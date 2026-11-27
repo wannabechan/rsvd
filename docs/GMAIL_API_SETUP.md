@@ -47,7 +47,9 @@
 로그인 코드 API:
 - `POST /api/auth/request-code` — Gmail로 6자리 발송
 - `POST /api/auth/verify-code` — 코드 검증 후 로그인
-- `POST /api/auth/setup-password` — 최초 비밀번호 설정 시 코드 검증
+- `POST /api/auth/setup-password` — 최초 비밀번호 설정 시 코드 검증 + Redis 저장
+
+비밀번호 로그인·저장소(Upstash Redis) 연결은 [VERCEL_AUTH_STORE.md](./VERCEL_AUTH_STORE.md) 참고.
 
 ## (선택) 로컬 스크립트
 

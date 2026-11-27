@@ -12,9 +12,22 @@ import {
   otpCookieOptions,
   verifyOtpCookieValue,
 } from "@/lib/otp";
+import { hashPassword } from "@/lib/password-hash";
+import { isUserStoreConfigured, setPasswordHash } from "@/lib/user-store";
 
 export async function POST(request: Request) {
   try {
+    if (!isUserStoreConfigured()) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error:
+            "비밀번호 저장소가 아직 연결되지 않았습니다. Vercel Upstash Redis 설정을 확인해 주세요.",
+        },
+        { status: 503 },
+      );
+    }
+
     const body = (await request.json()) as {
       email?: string;
       code?: string;
@@ -48,6 +61,9 @@ export async function POST(request: Request) {
     if (!verified.ok) {
       return NextResponse.json({ ok: false, error: verified.error }, { status: 401 });
     }
+
+    const passwordHash = await hashPassword(password);
+    await setPasswordHash(email, passwordHash);
 
     const user = {
       id: userIdFromEmail(email),

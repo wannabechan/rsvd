@@ -10,7 +10,7 @@ import {
   type ReactNode,
 } from "react";
 import {
-  hasPasswordLogin,
+  checkPasswordLogin,
   loginWithCode,
   loginWithPassword,
   readStoredSession,
@@ -39,7 +39,9 @@ type AuthContextValue = {
     code: string,
     password: string,
   ) => Promise<{ ok: true; user: AuthUser } | { ok: false; error: string }>;
-  canUsePasswordLogin: (email: string) => boolean;
+  checkCanUsePasswordLogin: (
+    email: string,
+  ) => Promise<{ ok: true; hasPassword: boolean } | { ok: false; error: string }>;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -87,7 +89,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [],
   );
 
-  const canUsePasswordLogin = useCallback((email: string) => hasPasswordLogin(email), []);
+  const checkCanUsePasswordLogin = useCallback(
+    async (email: string) => checkPasswordLogin(email),
+    [],
+  );
 
   const value = useMemo(
     () => ({
@@ -99,7 +104,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       loginByCode,
       loginByPassword,
       setupPassword,
-      canUsePasswordLogin,
+      checkCanUsePasswordLogin,
     }),
     [
       user,
@@ -109,7 +114,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       loginByCode,
       loginByPassword,
       setupPassword,
-      canUsePasswordLogin,
+      checkCanUsePasswordLogin,
     ],
   );
 
