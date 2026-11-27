@@ -304,7 +304,7 @@ export default function ProfilePage() {
             }}
             className={PROFILE_ACTION_PRIMARY}
           >
-            인증
+            {hasRegisteredPhone ? "변경" : "인증"}
           </button>
         </div>
       </section>

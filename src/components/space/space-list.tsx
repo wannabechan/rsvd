@@ -62,7 +62,7 @@ export function SpaceList({ spaces }: SpaceListProps) {
               <SpaceGrid spaces={myLikedSpaces} />
             </div>
           ) : (
-            <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-rsvd-text-muted">
+            <p className="mt-3 whitespace-pre-line text-[1.1375rem] leading-relaxed text-rsvd-text-muted">
               {MY_LIKED_SPACES_EMPTY_MESSAGE}
             </p>
           )}

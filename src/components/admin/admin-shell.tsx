@@ -21,10 +21,12 @@ export function AdminShell({ children }: { children: ReactNode }) {
         <aside className="col-span-1 min-w-[11rem] border-r border-rsvd-border bg-rsvd-surface">
           <div className="border-b border-rsvd-border px-4 py-5">
             <div className="flex items-center justify-between gap-2">
-              <p className="text-sm font-medium text-rsvd-brand">관리자모드</p>
+              <p className="text-sm font-medium leading-none text-rsvd-brand">
+                관리자모드
+              </p>
               <Link
                 href={routes.spaceList}
-                className="shrink-0 text-xs font-normal text-rsvd-text-muted transition hover:text-rsvd-text"
+                className="shrink-0 text-xs font-normal leading-none text-rsvd-text-muted transition hover:text-rsvd-text"
               >
                 나가기
               </Link>
