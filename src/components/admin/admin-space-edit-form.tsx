@@ -12,7 +12,6 @@ import {
   adminSpaceRegularCount,
   adminSpaceReservationCount,
   inviteHandleFromSpaceName,
-  isCandidateOnboardingDraft,
   noticesToEditableText,
   SPACE_HERO_IMAGE_MAX,
   SPACE_INVITE_CHANNEL_DEFAULT,
@@ -64,10 +63,11 @@ export function AdminSpaceEditForm({ mode, space }: AdminSpaceEditFormProps) {
   const [saving, setSaving] = useState(false);
 
   const lockAdminEmail = Boolean(space.createdFromCandidate);
-  const onboardingDraft = isCandidateOnboardingDraft({
-    active,
-    createdFromCandidate: space.createdFromCandidate,
-  });
+  const inviteChannel = space.inviteChannel || SPACE_INVITE_CHANNEL_DEFAULT;
+  const inviteHandle =
+    space.inviteHandle ||
+    (mode === "create" ? inviteHandleFromSpaceName(name) : "") ||
+    "";
 
   function clearFieldError(key: AdminSpaceRequiredFieldKey) {
     setFieldErrors((current) => {
@@ -86,16 +86,18 @@ export function AdminSpaceEditForm({ mode, space }: AdminSpaceEditFormProps) {
       address,
       contact,
       adminEmail,
+      inviteChannel,
+      inviteHandle,
       notices: noticesText,
       heroImage: heroImages[0] ?? "",
+      bookingBufferDays,
+      maxBookingDays,
+      minPartySize,
+      maxPartySize,
     };
   }
 
   function showRequiredFieldErrors(): boolean {
-    if (onboardingDraft) {
-      setFieldErrors({});
-      return false;
-    }
     const missing = adminSpaceMissingRequiredFields(requiredFieldValues());
     if (missing.length === 0) {
       setFieldErrors({});
@@ -259,22 +261,26 @@ export function AdminSpaceEditForm({ mode, space }: AdminSpaceEditFormProps) {
         </div>
 
         <div className="grid gap-5 sm:grid-cols-2">
-          <Field label="초대채널">
+          <Field
+            id={fieldDomId("inviteChannel")}
+            label="초대채널"
+            error={fieldErrors.inviteChannel}
+          >
             <input
-              value={space.inviteChannel || SPACE_INVITE_CHANNEL_DEFAULT}
+              value={inviteChannel}
               readOnly
               tabIndex={-1}
               aria-readonly="true"
               className="auth-input w-full rounded-xl border border-rsvd-border bg-rsvd-bg px-3.5 py-2.5 text-sm text-rsvd-text"
             />
           </Field>
-          <Field label="초대아이디">
+          <Field
+            id={fieldDomId("inviteHandle")}
+            label="초대아이디"
+            error={fieldErrors.inviteHandle}
+          >
             <input
-              value={
-                space.inviteHandle ||
-                (mode === "create" ? inviteHandleFromSpaceName(name) : "") ||
-                ""
-              }
+              value={inviteHandle}
               readOnly
               tabIndex={-1}
               aria-readonly="true"
@@ -302,7 +308,7 @@ export function AdminSpaceEditForm({ mode, space }: AdminSpaceEditFormProps) {
 
         <div id={fieldDomId("heroImage")}>
           <AdminSpaceImageField
-            label={onboardingDraft ? "대표 이미지" : "대표 이미지 (필수)"}
+            label="대표 이미지 (필수)"
             urls={heroImages}
             maxCount={SPACE_HERO_IMAGE_MAX}
             onChange={(urls) => {
@@ -330,39 +336,67 @@ export function AdminSpaceEditForm({ mode, space }: AdminSpaceEditFormProps) {
         />
 
         <div className="grid gap-5 sm:grid-cols-2">
-          <Field label="몇일 전까지 예약 가능?">
+          <Field
+            id={fieldDomId("bookingBufferDays")}
+            label="몇일 전까지 예약 가능?"
+            error={fieldErrors.bookingBufferDays}
+          >
             <input
               type="number"
               min={0}
               value={bookingBufferDays}
-              onChange={(event) => setBookingBufferDays(event.target.value)}
+              onChange={(event) => {
+                clearFieldError("bookingBufferDays");
+                setBookingBufferDays(event.target.value);
+              }}
               className="auth-input w-full rounded-xl border border-rsvd-border bg-rsvd-surface px-3.5 py-2.5 text-sm text-rsvd-text"
             />
           </Field>
-          <Field label="몇일 후까지 예약 가능?">
+          <Field
+            id={fieldDomId("maxBookingDays")}
+            label="몇일 후까지 예약 가능?"
+            error={fieldErrors.maxBookingDays}
+          >
             <input
               type="number"
               min={0}
               value={maxBookingDays}
-              onChange={(event) => setMaxBookingDays(event.target.value)}
+              onChange={(event) => {
+                clearFieldError("maxBookingDays");
+                setMaxBookingDays(event.target.value);
+              }}
               className="auth-input w-full rounded-xl border border-rsvd-border bg-rsvd-surface px-3.5 py-2.5 text-sm text-rsvd-text"
             />
           </Field>
-          <Field label="예약 가능 최소 인원?">
+          <Field
+            id={fieldDomId("minPartySize")}
+            label="예약 가능 최소 인원?"
+            error={fieldErrors.minPartySize}
+          >
             <input
               type="number"
               min={1}
               value={minPartySize}
-              onChange={(event) => setMinPartySize(event.target.value)}
+              onChange={(event) => {
+                clearFieldError("minPartySize");
+                setMinPartySize(event.target.value);
+              }}
               className="auth-input w-full rounded-xl border border-rsvd-border bg-rsvd-surface px-3.5 py-2.5 text-sm text-rsvd-text"
             />
           </Field>
-          <Field label="예약 가능 최대 인원?">
+          <Field
+            id={fieldDomId("maxPartySize")}
+            label="예약 가능 최대 인원?"
+            error={fieldErrors.maxPartySize}
+          >
             <input
               type="number"
               min={1}
               value={maxPartySize}
-              onChange={(event) => setMaxPartySize(event.target.value)}
+              onChange={(event) => {
+                clearFieldError("maxPartySize");
+                setMaxPartySize(event.target.value);
+              }}
               className="auth-input w-full rounded-xl border border-rsvd-border bg-rsvd-surface px-3.5 py-2.5 text-sm text-rsvd-text"
             />
           </Field>

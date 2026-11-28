@@ -8,10 +8,10 @@ import { buildSeedSampleUsers } from "@/data/admin-users";
 import { sampleAvatarForUserId } from "@/data/spaces";
 import {
   adminSpaceRequiredFieldsError,
+  adminSpaceRequiredFieldValuesFromEditable,
   adminSpaceReservationCount,
   createEmptyWeekSchedule,
   inviteHandleFromSpaceName,
-  isCandidateOnboardingDraft,
   normalizeNoticesText,
   normalizeSpaceCreatedAt,
   SPACE_INVITE_CHANNEL_DEFAULT,
@@ -408,22 +408,19 @@ export async function updateCatalogSpace(
   }
 
   const normalized = normalizeImageFields(fields);
-  const draftPreview = {
-    active: normalized.active,
-    createdFromCandidate: current.createdFromCandidate,
-  };
-  if (!isCandidateOnboardingDraft(draftPreview)) {
-    const requiredError = adminSpaceRequiredFieldsError({
-      name: normalized.name,
-      address: normalized.address,
-      contact: normalized.contact,
-      adminEmail: normalized.adminEmail,
-      notices: normalized.notices,
-      heroImage: normalized.heroImage,
-    });
-    if (requiredError) {
-      throw new Error(`incomplete:${requiredError}`);
-    }
+  const adminEmail = current.createdFromCandidate
+    ? current.adminEmail
+    : normalized.adminEmail;
+  const requiredError = adminSpaceRequiredFieldsError(
+    adminSpaceRequiredFieldValuesFromEditable({
+      ...normalized,
+      adminEmail,
+      inviteChannel: current.inviteChannel,
+      inviteHandle: current.inviteHandle,
+    }),
+  );
+  if (requiredError) {
+    throw new Error(`incomplete:${requiredError}`);
   }
 
   const next = syncAdminSpaceStats({
@@ -431,9 +428,7 @@ export async function updateCatalogSpace(
     ...normalized,
     id: current.id,
     // Invite + candidate provenance stay immutable after create.
-    adminEmail: current.createdFromCandidate
-      ? current.adminEmail
-      : normalized.adminEmail,
+    adminEmail,
     inviteChannel: current.inviteChannel,
     inviteHandle: current.inviteHandle,
     createdFromCandidate: current.createdFromCandidate,
@@ -471,14 +466,22 @@ export async function updateCatalogSpaceActive(
   }
 
   if (active) {
-    const requiredError = adminSpaceRequiredFieldsError({
-      name: current.name,
-      address: current.address,
-      contact: current.contact,
-      adminEmail: current.adminEmail,
-      notices: current.notices,
-      heroImage: current.heroImage,
-    });
+    const requiredError = adminSpaceRequiredFieldsError(
+      adminSpaceRequiredFieldValuesFromEditable({
+        name: current.name,
+        address: current.address,
+        contact: current.contact,
+        adminEmail: current.adminEmail,
+        inviteChannel: current.inviteChannel,
+        inviteHandle: current.inviteHandle,
+        notices: current.notices,
+        heroImage: current.heroImage,
+        bookingBufferDays: current.bookingBufferDays,
+        maxBookingDays: current.maxBookingDays,
+        minPartySize: current.minPartySize,
+        maxPartySize: current.maxPartySize,
+      }),
+    );
     if (requiredError) {
       return { ok: false, reason: "incomplete", error: requiredError };
     }

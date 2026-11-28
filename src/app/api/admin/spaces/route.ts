@@ -1,6 +1,11 @@
 import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
-import { adminSpaceRequiredFieldsError } from "@/domain/admin-space";
+import {
+  adminSpaceRequiredFieldsError,
+  adminSpaceRequiredFieldValuesFromEditable,
+  inviteHandleFromSpaceName,
+  SPACE_INVITE_CHANNEL_DEFAULT,
+} from "@/domain/admin-space";
 import {
   createCatalogSpace,
   type AdminSpaceEditableFields,
@@ -73,7 +78,13 @@ export async function POST(request: Request) {
       active: body.active !== false,
     };
 
-    const requiredError = adminSpaceRequiredFieldsError(fields);
+    const requiredError = adminSpaceRequiredFieldsError(
+      adminSpaceRequiredFieldValuesFromEditable({
+        ...fields,
+        inviteChannel: SPACE_INVITE_CHANNEL_DEFAULT,
+        inviteHandle: inviteHandleFromSpaceName(fields.name),
+      }),
+    );
     if (requiredError) {
       return NextResponse.json(
         { ok: false, error: requiredError },

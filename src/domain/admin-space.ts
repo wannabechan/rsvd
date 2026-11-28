@@ -127,13 +127,20 @@ export function isCandidateOnboardingDraft(
   return Boolean(space.createdFromCandidate) && space.active === false;
 }
 
+/** Form order; menu/other images are never required. */
 export const ADMIN_SPACE_REQUIRED_FIELD_KEYS = [
   "name",
   "address",
   "contact",
   "adminEmail",
+  "inviteChannel",
+  "inviteHandle",
   "notices",
   "heroImage",
+  "bookingBufferDays",
+  "maxBookingDays",
+  "minPartySize",
+  "maxPartySize",
 ] as const;
 
 export type AdminSpaceRequiredFieldKey =
@@ -141,13 +148,20 @@ export type AdminSpaceRequiredFieldKey =
 
 export const ADMIN_SPACE_REQUIRED_FIELD_MESSAGE = "필수 입력 사항입니다.";
 
-type AdminSpaceRequiredFieldValues = {
+export type AdminSpaceRequiredFieldValues = {
   name: string;
   address: string;
   contact: string;
   adminEmail: string;
+  inviteChannel: string;
+  inviteHandle: string;
   notices: string;
   heroImage: string;
+  /** Raw input strings (or String(number) from API). */
+  bookingBufferDays: string;
+  maxBookingDays: string;
+  minPartySize: string;
+  maxPartySize: string;
 };
 
 function isAdminSpaceRequiredFieldFilled(
@@ -156,6 +170,22 @@ function isAdminSpaceRequiredFieldFilled(
 ): boolean {
   if (key === "notices") {
     return Boolean(normalizeNoticesText(fields.notices).trim());
+  }
+  if (key === "bookingBufferDays" || key === "maxBookingDays") {
+    const raw = fields[key].trim();
+    if (!raw) {
+      return false;
+    }
+    const n = Number(raw);
+    return Number.isFinite(n) && n >= 0;
+  }
+  if (key === "minPartySize" || key === "maxPartySize") {
+    const raw = fields[key].trim();
+    if (!raw) {
+      return false;
+    }
+    const n = Number(raw);
+    return Number.isFinite(n) && n >= 1;
   }
   return Boolean(fields[key].trim());
 }
@@ -178,6 +208,37 @@ export function adminSpaceRequiredFieldsError(
     return null;
   }
   return ADMIN_SPACE_REQUIRED_FIELD_MESSAGE;
+}
+
+/** Map editable API/catalog numbers into required-field string bag. */
+export function adminSpaceRequiredFieldValuesFromEditable(fields: {
+  name: string;
+  address: string;
+  contact: string;
+  adminEmail: string;
+  inviteChannel?: string;
+  inviteHandle?: string;
+  notices: string;
+  heroImage: string;
+  bookingBufferDays: number;
+  maxBookingDays: number;
+  minPartySize: number;
+  maxPartySize: number;
+}): AdminSpaceRequiredFieldValues {
+  return {
+    name: fields.name,
+    address: fields.address,
+    contact: fields.contact,
+    adminEmail: fields.adminEmail,
+    inviteChannel: fields.inviteChannel ?? "",
+    inviteHandle: fields.inviteHandle ?? "",
+    notices: fields.notices,
+    heroImage: fields.heroImage,
+    bookingBufferDays: String(fields.bookingBufferDays),
+    maxBookingDays: String(fields.maxBookingDays),
+    minPartySize: String(fields.minPartySize),
+    maxPartySize: String(fields.maxPartySize),
+  };
 }
 
 /** 단골수 from stored regularMembers (fallback: regularUserIds). */
