@@ -2,14 +2,20 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useState } from "react";
+import { IconNotice } from "@/components/admin/admin-icons";
 import { useAuth } from "@/components/auth/auth-context";
 import { useLoginBoot } from "@/components/auth/login-boot-context";
 import { UserAvatar } from "@/components/auth/user-avatar";
 import { HeaderLogo } from "@/components/layout/header-logo";
+import { OwnerVerifyModal } from "@/components/profile/owner-verify-modal";
 import { useReservationChat } from "@/components/reservation-chat/reservation-chat-context";
 import { routes } from "@/lib/routes";
 
 const HEADER_ICON_CLASS = "h-[1.65rem] w-[1.65rem]";
+/** Same type style as header nickname beside the avatar. */
+const PROFILE_MODE_LINK_CLASS =
+  "inline-flex h-10 items-center px-0 text-sm font-normal text-rsvd-text transition hover:text-rsvd-brand";
 
 export function SiteHeader() {
   const router = useRouter();
@@ -18,6 +24,10 @@ export function SiteHeader() {
   const { user, isLoggedIn } = useAuth();
   const { activeChat, endChat } = useReservationChat();
   const onProfile = pathname === routes.profile;
+  const needsOwnerVerify = Boolean(
+    isLoggedIn && user?.canOwnerVerify && !user?.ownerVerified,
+  );
+  const [ownerVerifyOpen, setOwnerVerifyOpen] = useState(false);
 
   function openInitialLogin() {
     // Bump remounts LoginForm to the email step even if /login was cached.
@@ -39,8 +49,53 @@ export function SiteHeader() {
     <header className="relative z-50 shrink-0">
       {/* Fixed action row (h-10) + py-4 keeps header height identical across modes. */}
       <div className="flex h-[4.5rem] w-full items-center justify-between border-b border-rsvd-border bg-rsvd-surface px-4">
-        <div className="flex h-10 items-center">
-          <HeaderLogo />
+        <div className="flex h-10 min-w-0 items-center">
+          {onProfile ? (
+            <div className="flex h-10 min-w-0 items-center gap-3">
+              {user?.role === "admin" ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    router.push(routes.admin);
+                  }}
+                  className={PROFILE_MODE_LINK_CLASS}
+                >
+                  *관리자모드
+                </button>
+              ) : null}
+              {user?.ownerVerified ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    // 사장님모드 — host dashboard wired later.
+                  }}
+                  className={PROFILE_MODE_LINK_CLASS}
+                >
+                  *사장님모드
+                </button>
+              ) : user?.canOwnerVerify ? (
+                <button
+                  type="button"
+                  onClick={() => setOwnerVerifyOpen(true)}
+                  className={PROFILE_MODE_LINK_CLASS}
+                >
+                  *사장님인증
+                </button>
+              ) : null}
+            </div>
+          ) : needsOwnerVerify ? (
+            <button
+              type="button"
+              onClick={() => setOwnerVerifyOpen(true)}
+              className="owner-verify-notice inline-flex h-10 min-w-0 max-w-full items-center gap-1.5 text-left text-sm font-normal text-rsvd-text"
+              aria-label="사장님 인증을 진행하세요."
+            >
+              <IconNotice className="h-4 w-4 shrink-0" />
+              <span className="min-w-0 truncate">사장님 인증을 진행하세요.</span>
+            </button>
+          ) : (
+            <HeaderLogo />
+          )}
         </div>
 
         <nav className="ml-auto flex h-10 min-w-0 items-center">
@@ -84,6 +139,13 @@ export function SiteHeader() {
           )}
         </nav>
       </div>
+
+      {ownerVerifyOpen ? (
+        <OwnerVerifyModal
+          onClose={() => setOwnerVerifyOpen(false)}
+          onVerified={() => setOwnerVerifyOpen(false)}
+        />
+      ) : null}
     </header>
   );
 }

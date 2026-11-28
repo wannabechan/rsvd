@@ -6,7 +6,6 @@ import { useAuth } from "@/components/auth/auth-context";
 import { useLoginBoot } from "@/components/auth/login-boot-context";
 import { UserAvatar } from "@/components/auth/user-avatar";
 import { InterestRegionPickerModal } from "@/components/profile/interest-region-picker-modal";
-import { OwnerVerifyModal } from "@/components/profile/owner-verify-modal";
 import { PhoneVerifyModal } from "@/components/profile/phone-verify-modal";
 import {
   defaultNickname,
@@ -60,7 +59,6 @@ export default function ProfilePage() {
   const [phonePendingClear, setPhonePendingClear] = useState(false);
   const [savingPhoneClear, setSavingPhoneClear] = useState(false);
   const [regionPickerOpen, setRegionPickerOpen] = useState(false);
-  const [ownerVerifyOpen, setOwnerVerifyOpen] = useState(false);
 
   useEffect(() => {
     if (isReady && !isLoggedIn && !loggingOutRef.current) {
@@ -204,7 +202,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col px-4 pt-10 pb-6">
+    <div className="profile-page-enter flex min-h-0 flex-1 flex-col px-4 pt-10 pb-6">
       <section aria-labelledby="profile-avatar-heading">
         <h2 id="profile-avatar-heading" className="text-sm font-medium text-rsvd-text">
           프로필 이미지
@@ -412,36 +410,6 @@ export default function ProfilePage() {
       ) : null}
 
       <div className="mt-auto flex items-center gap-4 pt-10">
-        {user.role === "admin" ? (
-          <button
-            type="button"
-            onClick={() => {
-              router.push(routes.admin);
-            }}
-            className="px-0 text-left text-xs font-normal text-rsvd-text-muted"
-          >
-            *관리자모드
-          </button>
-        ) : null}
-        {user.ownerVerified ? (
-          <button
-            type="button"
-            onClick={() => {
-              // 사장님모드 — host dashboard wired later.
-            }}
-            className="px-0 text-left text-xs font-normal text-rsvd-text-muted"
-          >
-            *사장님모드
-          </button>
-        ) : user.canOwnerVerify ? (
-          <button
-            type="button"
-            onClick={() => setOwnerVerifyOpen(true)}
-            className="px-0 text-left text-xs font-normal text-rsvd-text-muted"
-          >
-            *사장님인증
-          </button>
-        ) : null}
         <button
           type="button"
           onClick={() => {
@@ -504,13 +472,6 @@ export default function ProfilePage() {
             );
             setRegionPickerOpen(false);
           }}
-        />
-      ) : null}
-
-      {ownerVerifyOpen ? (
-        <OwnerVerifyModal
-          onClose={() => setOwnerVerifyOpen(false)}
-          onVerified={() => setOwnerVerifyOpen(false)}
         />
       ) : null}
     </div>

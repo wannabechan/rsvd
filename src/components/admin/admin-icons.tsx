@@ -90,3 +90,18 @@ export function IconLock({ className = "h-4 w-4" }: IconProps) {
     </svg>
   );
 }
+
+/** Notice / alert — same line weight as 설정 column icons. */
+export function IconNotice({ className = "h-4 w-4" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden>
+      <path
+        d="M6.5 16.5V10a5.5 5.5 0 0 1 11 0v6.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path d="M4.5 16.5h15" strokeLinecap="round" />
+      <path d="M10 19.5a2 2 0 0 0 4 0" strokeLinecap="round" />
+    </svg>
+  );
+}
