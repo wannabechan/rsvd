@@ -22,6 +22,8 @@ export async function resolveAuthUser(email: string): Promise<AuthUser> {
       nickname: defaultNickname(normalized),
       phone: null,
       interestRegions: [],
+      ownerVerified: false,
+      canOwnerVerify: false,
       avatarUrl: null,
       role,
     };

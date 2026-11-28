@@ -1,20 +1,19 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import {
-  authUserFromProfile,
   isValidEmail,
   isValidLoginCode,
   isValidPhone,
   normalizeEmail,
   normalizePhone,
 } from "@/domain/auth";
-import { resolveUserRole } from "@/lib/admin";
 import {
   PHONE_OTP_COOKIE,
   phoneOtpCookieOptions,
   verifyPhoneOtpCookieValue,
 } from "@/lib/phone-otp";
 import {
+  buildAuthUser,
   isUserStoreConfigured,
   updatePhone,
 } from "@/lib/user-store";
@@ -70,10 +69,11 @@ export async function POST(request: Request) {
       );
     }
 
-    const profile = await updatePhone(email, phone);
+    await updatePhone(email, phone);
+    const user = await buildAuthUser(email);
     const response = NextResponse.json({
       ok: true,
-      user: authUserFromProfile(email, profile, resolveUserRole(email)),
+      user,
     });
     response.cookies.set(PHONE_OTP_COOKIE, "", {
       ...phoneOtpCookieOptions(0),

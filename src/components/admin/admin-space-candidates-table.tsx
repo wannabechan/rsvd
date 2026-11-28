@@ -81,6 +81,7 @@ export function AdminSpaceCandidatesTable({
   const [handle, setHandle] = useState("");
   const [savingAdd, setSavingAdd] = useState(false);
   const [savingTable, setSavingTable] = useState(false);
+  const [generatingCodeId, setGeneratingCodeId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [matchCandidateId, setMatchCandidateId] = useState<string | null>(null);
   const [nowMs, setNowMs] = useState(() => Date.now());
@@ -91,7 +92,7 @@ export function AdminSpaceCandidatesTable({
   }, [initialCandidates]);
 
   useEffect(() => {
-    const id = window.setInterval(() => setNowMs(Date.now()), 15_000);
+    const id = window.setInterval(() => setNowMs(Date.now()), 1_000);
     return () => window.clearInterval(id);
   }, []);
 
@@ -242,15 +243,71 @@ export function AdminSpaceCandidatesTable({
     }
   }
 
-  function handleGenerateCode(candidateId: string) {
+  async function handleGenerateCode(candidateId: string) {
     const saved = savedCandidates.find((row) => row.id === candidateId);
     if (!saved || !candidateHasSavedEmail(saved)) {
       return;
     }
-    setDraft(candidateId, {
-      verifyCode: createVerifyCode(),
-      verifyCodeExpiresAt: createVerifyCodeExpiresAt(),
-    });
+    const current = mergeCandidate(saved, drafts[candidateId]);
+    if (isVerifyCodeActive(current, Date.now())) {
+      return;
+    }
+
+    const verifyCode = createVerifyCode();
+    const verifyCodeExpiresAt = createVerifyCodeExpiresAt();
+    setError(null);
+    setGeneratingCodeId(candidateId);
+    try {
+      const response = await fetch("/api/admin/space-candidates", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({
+          updates: [
+            {
+              id: candidateId,
+              email: saved.email,
+              verifyCode,
+              verifyCodeExpiresAt,
+            },
+          ],
+        }),
+      });
+      const data = (await response.json()) as {
+        ok: boolean;
+        error?: string;
+        candidates?: AdminSpaceCandidate[];
+      };
+      if (!response.ok || !data.ok || !data.candidates) {
+        setError(data.error ?? "인증코드 저장에 실패했습니다.");
+        setGeneratingCodeId(null);
+        return;
+      }
+      const nextSaved = data.candidates.map((row) => withFreshVerifyCode(row));
+      setSavedCandidates(nextSaved);
+      setDrafts((currentDrafts) => {
+        const draft = currentDrafts[candidateId];
+        if (!draft) {
+          return currentDrafts;
+        }
+        const persisted =
+          nextSaved.find((row) => row.id === candidateId) ?? saved;
+        const baseline = draftFromCandidate(persisted);
+        // Keep only pending email edits; verify code is already persisted.
+        if (draft.email !== baseline.email) {
+          return {
+            ...currentDrafts,
+            [candidateId]: { ...baseline, email: draft.email },
+          };
+        }
+        const { [candidateId]: _removed, ...rest } = currentDrafts;
+        return rest;
+      });
+      setGeneratingCodeId(null);
+    } catch {
+      setError("네트워크 오류가 발생했습니다.");
+      setGeneratingCodeId(null);
+    }
   }
 
   return (
@@ -358,8 +415,12 @@ export function AdminSpaceCandidatesTable({
                         <button
                           type="button"
                           aria-label="인증코드 생성"
-                          disabled={!emailSaved}
-                          onClick={() => handleGenerateCode(item.id)}
+                          disabled={
+                            !emailSaved || generatingCodeId === item.id
+                          }
+                          onClick={() => {
+                            void handleGenerateCode(item.id);
+                          }}
                           className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-rsvd-text-muted transition hover:bg-rsvd-bg hover:text-rsvd-text disabled:cursor-not-allowed disabled:text-rsvd-disabled-text disabled:hover:bg-transparent disabled:hover:text-rsvd-disabled-text"
                         >
                           <IconLock />

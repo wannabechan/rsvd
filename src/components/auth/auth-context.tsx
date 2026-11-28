@@ -23,6 +23,7 @@ import {
   saveNickname as saveNicknameRequest,
   setupPasswordLogin,
   uploadAvatar as uploadAvatarRequest,
+  verifyOwnerCode as verifyOwnerCodeRequest,
   verifyPhoneCode as verifyPhoneCodeRequest,
   writeStoredSession,
 } from "@/data/auth-client";
@@ -52,6 +53,9 @@ type AuthContextValue = {
     code: string,
   ) => Promise<{ ok: true; user: AuthUser } | { ok: false; error: string }>;
   clearPhone: () => Promise<{ ok: true; user: AuthUser } | { ok: false; error: string }>;
+  verifyOwner: (
+    code: string,
+  ) => Promise<{ ok: true; user: AuthUser } | { ok: false; error: string }>;
   requestCode: (email: string) => Promise<{ ok: true } | { ok: false; error: string }>;
   loginByCode: (
     email: string,
@@ -198,6 +202,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return result;
   }, [user]);
 
+  const verifyOwner = useCallback(
+    async (code: string) => {
+      if (!user) {
+        return { ok: false as const, error: "로그인이 필요합니다." };
+      }
+      const result = await verifyOwnerCodeRequest(user.email, code);
+      if (result.ok) {
+        setUser(result.user);
+      }
+      return result;
+    },
+    [user],
+  );
+
   const requestCode = useCallback(async (email: string) => requestLoginCode(email), []);
 
   const loginByCode = useCallback(async (email: string, code: string) => {
@@ -246,6 +264,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       requestPhoneCode,
       verifyPhone,
       clearPhone,
+      verifyOwner,
       requestCode,
       loginByCode,
       loginByPassword,
@@ -264,6 +283,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       requestPhoneCode,
       verifyPhone,
       clearPhone,
+      verifyOwner,
       requestCode,
       loginByCode,
       loginByPassword,

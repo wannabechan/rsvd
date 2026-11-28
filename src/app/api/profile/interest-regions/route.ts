@@ -1,12 +1,11 @@
 import { NextResponse } from "next/server";
 import {
-  authUserFromProfile,
   isValidEmail,
   normalizeEmail,
 } from "@/domain/auth";
 import { normalizeInterestRegions } from "@/domain/interest-region";
-import { resolveUserRole } from "@/lib/admin";
 import {
+  buildAuthUser,
   isUserStoreConfigured,
   updateInterestRegions,
 } from "@/lib/user-store";
@@ -33,10 +32,11 @@ export async function POST(request: Request) {
     }
 
     const interestRegions = normalizeInterestRegions(body.interestRegions);
-    const profile = await updateInterestRegions(email, interestRegions);
+    await updateInterestRegions(email, interestRegions);
+    const user = await buildAuthUser(email);
     return NextResponse.json({
       ok: true,
-      user: authUserFromProfile(email, profile, resolveUserRole(email)),
+      user,
     });
   } catch (error) {
     console.error("interest-regions POST failed", error);

@@ -2,11 +2,13 @@
  * Admin space candidates store (Redis).
  */
 
+import { normalizeEmail } from "@/domain/auth";
 import {
   candidateHandlesMatch,
   candidateRequestCount,
   createSpaceCandidateId,
   isSpaceCandidateChannel,
+  isVerifyCodeActive,
   normalizeCandidateHandle,
   withFreshVerifyCode,
   type AdminSpaceCandidate,
@@ -209,4 +211,43 @@ function sortCandidates(
     }
     return a.handle.localeCompare(b.handle, "ko");
   });
+}
+
+/** True when this email is saved on any space-candidate row. */
+export async function isEmailMatchedSpaceCandidate(
+  email: string,
+): Promise<boolean> {
+  if (!isRedisConfigured()) {
+    return false;
+  }
+  const normalized = normalizeEmail(email);
+  if (!normalized) {
+    return false;
+  }
+  const rows = await listSpaceCandidates();
+  return rows.some((row) => normalizeEmail(row.email) === normalized);
+}
+
+/**
+ * True when email has an active (unexpired) candidate verify code that matches.
+ */
+export async function matchesActiveOwnerVerifyCode(
+  email: string,
+  code: string,
+): Promise<boolean> {
+  if (!isRedisConfigured()) {
+    return false;
+  }
+  const normalized = normalizeEmail(email);
+  const trimmed = code.trim();
+  if (!normalized || !/^\d{6}$/.test(trimmed)) {
+    return false;
+  }
+  const rows = await listSpaceCandidates();
+  return rows.some(
+    (row) =>
+      normalizeEmail(row.email) === normalized &&
+      isVerifyCodeActive(row) &&
+      row.verifyCode.trim() === trimmed,
+  );
 }

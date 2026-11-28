@@ -6,6 +6,7 @@ import { useAuth } from "@/components/auth/auth-context";
 import { useLoginBoot } from "@/components/auth/login-boot-context";
 import { UserAvatar } from "@/components/auth/user-avatar";
 import { InterestRegionPickerModal } from "@/components/profile/interest-region-picker-modal";
+import { OwnerVerifyModal } from "@/components/profile/owner-verify-modal";
 import { PhoneVerifyModal } from "@/components/profile/phone-verify-modal";
 import {
   defaultNickname,
@@ -59,6 +60,7 @@ export default function ProfilePage() {
   const [phonePendingClear, setPhonePendingClear] = useState(false);
   const [savingPhoneClear, setSavingPhoneClear] = useState(false);
   const [regionPickerOpen, setRegionPickerOpen] = useState(false);
+  const [ownerVerifyOpen, setOwnerVerifyOpen] = useState(false);
 
   useEffect(() => {
     if (isReady && !isLoggedIn && !loggingOutRef.current) {
@@ -421,6 +423,25 @@ export default function ProfilePage() {
             *관리자모드
           </button>
         ) : null}
+        {user.ownerVerified ? (
+          <button
+            type="button"
+            onClick={() => {
+              // 사장님모드 — host dashboard wired later.
+            }}
+            className="px-0 text-left text-xs font-normal text-rsvd-text-muted"
+          >
+            *사장님모드
+          </button>
+        ) : user.canOwnerVerify ? (
+          <button
+            type="button"
+            onClick={() => setOwnerVerifyOpen(true)}
+            className="px-0 text-left text-xs font-normal text-rsvd-text-muted"
+          >
+            *사장님인증
+          </button>
+        ) : null}
         <button
           type="button"
           onClick={() => {
@@ -483,6 +504,13 @@ export default function ProfilePage() {
             );
             setRegionPickerOpen(false);
           }}
+        />
+      ) : null}
+
+      {ownerVerifyOpen ? (
+        <OwnerVerifyModal
+          onClose={() => setOwnerVerifyOpen(false)}
+          onVerified={() => setOwnerVerifyOpen(false)}
         />
       ) : null}
     </div>

@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server";
 import {
-  authUserFromProfile,
   isValidEmail,
   normalizeEmail,
 } from "@/domain/auth";
-import { resolveUserRole } from "@/lib/admin";
-import { clearPhone, isUserStoreConfigured } from "@/lib/user-store";
+import {
+  buildAuthUser,
+  clearPhone,
+  isUserStoreConfigured,
+} from "@/lib/user-store";
 
 export async function DELETE(request: Request) {
   try {
@@ -26,10 +28,11 @@ export async function DELETE(request: Request) {
       );
     }
 
-    const profile = await clearPhone(email);
+    await clearPhone(email);
+    const user = await buildAuthUser(email);
     return NextResponse.json({
       ok: true,
-      user: authUserFromProfile(email, profile, resolveUserRole(email)),
+      user,
     });
   } catch (error) {
     console.error("phone DELETE failed", error);

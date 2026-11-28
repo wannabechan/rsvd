@@ -60,6 +60,8 @@ function normalizeSessionUser(value: unknown): AuthUser | null {
         : defaultNickname(email),
     phone: phoneRaw && isValidPhone(phoneRaw) ? phoneRaw : null,
     interestRegions: normalizeInterestRegions(raw.interestRegions),
+    ownerVerified: Boolean(raw.ownerVerified),
+    canOwnerVerify: Boolean(raw.canOwnerVerify) || Boolean(raw.ownerVerified),
     avatarUrl: typeof raw.avatarUrl === "string" ? raw.avatarUrl : null,
     role: raw.role === "admin" ? "admin" : "member",
   };
@@ -241,6 +243,25 @@ export async function saveInterestRegions(
       interestRegions: normalizeInterestRegions(interestRegions),
     },
   );
+  if (!result.ok) {
+    return result;
+  }
+  const user = normalizeSessionUser(result.user);
+  if (!user) {
+    return { ok: false, error: "프로필 응답이 올바르지 않습니다." };
+  }
+  writeStoredSession(user);
+  return { ok: true, user };
+}
+
+export async function verifyOwnerCode(
+  email: string,
+  code: string,
+): Promise<{ ok: true; user: AuthUser } | { ok: false; error: string }> {
+  const result = await postJson<{ user: AuthUser }>("/api/profile/owner-verify", {
+    email: normalizeEmail(email),
+    code,
+  });
   if (!result.ok) {
     return result;
   }

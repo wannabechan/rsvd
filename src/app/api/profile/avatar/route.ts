@@ -1,11 +1,10 @@
 import { NextResponse } from "next/server";
 import {
-  authUserFromProfile,
   isValidEmail,
   normalizeEmail,
 } from "@/domain/auth";
-import { resolveUserRole } from "@/lib/admin";
 import {
+  buildAuthUser,
   clearAvatar,
   getAvatarWebpBytes,
   isUserStoreConfigured,
@@ -104,10 +103,11 @@ export async function POST(request: Request) {
       );
     }
 
-    const profile = await saveAvatarWebp(email, buffer);
+    await saveAvatarWebp(email, buffer);
+    const user = await buildAuthUser(email);
     return NextResponse.json({
       ok: true,
-      user: authUserFromProfile(email, profile, resolveUserRole(email)),
+      user,
     });
   } catch (error) {
     console.error("avatar POST failed", error);
@@ -137,10 +137,11 @@ export async function DELETE(request: Request) {
       );
     }
 
-    const profile = await clearAvatar(email);
+    await clearAvatar(email);
+    const user = await buildAuthUser(email);
     return NextResponse.json({
       ok: true,
-      user: authUserFromProfile(email, profile, resolveUserRole(email)),
+      user,
     });
   } catch (error) {
     console.error("avatar DELETE failed", error);

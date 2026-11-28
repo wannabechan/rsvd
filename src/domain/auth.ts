@@ -15,6 +15,10 @@ export type AuthUser = {
   phone: string | null;
   /** Interest regions labeled to 구 (or 시/군 leaf); max 5. */
   interestRegions: string[];
+  /** Completed 사장님 인증 with a space-candidate verify code. */
+  ownerVerified: boolean;
+  /** Email is matched on a space-candidate (eligible for 사장님인증). */
+  canOwnerVerify: boolean;
   /** Public avatar image URL, or null for letter+tone fallback. */
   avatarUrl: string | null;
   role: UserRole;
@@ -26,6 +30,8 @@ export type UserProfile = {
   phone: string | null;
   /** Interest regions labeled to 구 (or 시/군 leaf); max 5. */
   interestRegions: string[];
+  /** Completed 사장님 인증 with a space-candidate verify code. */
+  ownerVerified: boolean;
   /** When true, avatar bytes exist in the user store. */
   hasAvatar: boolean;
   /** Cache-busting version for avatar URL. */
@@ -127,8 +133,10 @@ export function authUserFromProfile(
   email: string,
   profile: UserProfile,
   role: UserRole = "member",
+  options?: { canOwnerVerify?: boolean },
 ): AuthUser {
   const normalized = normalizeEmail(email);
+  const ownerVerified = Boolean(profile.ownerVerified);
   return {
     id: userIdFromEmail(normalized),
     email: normalized,
@@ -137,6 +145,8 @@ export function authUserFromProfile(
     interestRegions: Array.isArray(profile.interestRegions)
       ? profile.interestRegions
       : [],
+    ownerVerified,
+    canOwnerVerify: Boolean(options?.canOwnerVerify) || ownerVerified,
     avatarUrl: profile.hasAvatar
       ? avatarPublicPath(normalized, profile.avatarVersion)
       : null,

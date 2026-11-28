@@ -13,6 +13,7 @@ import {
 } from "@/domain/auth";
 import { normalizeInterestRegions } from "@/domain/interest-region";
 import { syncOnboardedCatalogUser } from "@/lib/admin-catalog";
+import { isEmailMatchedSpaceCandidate } from "@/lib/admin-space-candidates";
 import { resolveUserRole } from "@/lib/admin";
 import { getRedis, isRedisConfigured } from "@/lib/redis";
 
@@ -24,6 +25,7 @@ type StoredProfile = {
   nickname: string;
   phone: string | null;
   interestRegions?: string[];
+  ownerVerified?: boolean;
   hasAvatar: boolean;
   avatarVersion: number;
 };
@@ -67,6 +69,7 @@ function toUserProfile(email: string, stored: StoredProfile | null): UserProfile
       nickname: defaultNickname(email),
       phone: null,
       interestRegions: [],
+      ownerVerified: false,
       hasAvatar: false,
       avatarVersion: 0,
     };
@@ -79,6 +82,7 @@ function toUserProfile(email: string, stored: StoredProfile | null): UserProfile
     nickname: stored.nickname || defaultNickname(email),
     phone: phone || null,
     interestRegions: normalizeInterestRegions(stored.interestRegions),
+    ownerVerified: Boolean(stored.ownerVerified),
     hasAvatar: Boolean(stored.hasAvatar),
     avatarVersion: Number(stored.avatarVersion) || 0,
   };
@@ -89,6 +93,7 @@ function toStoredProfile(profile: UserProfile): StoredProfile {
     nickname: profile.nickname,
     phone: profile.phone,
     interestRegions: normalizeInterestRegions(profile.interestRegions),
+    ownerVerified: Boolean(profile.ownerVerified),
     hasAvatar: profile.hasAvatar,
     avatarVersion: profile.avatarVersion,
   };
@@ -127,6 +132,7 @@ export async function ensureUserProfile(email: string): Promise<UserProfile> {
     nickname: defaultNickname(normalized),
     phone: null,
     interestRegions: [],
+    ownerVerified: false,
     hasAvatar: false,
     avatarVersion: 0,
   };
@@ -138,7 +144,23 @@ export async function ensureUserProfile(email: string): Promise<UserProfile> {
 
 export async function buildAuthUser(email: string): Promise<AuthUser> {
   const profile = await ensureUserProfile(email);
-  return authUserFromProfile(email, profile, resolveUserRole(email));
+  const canOwnerVerify = await isEmailMatchedSpaceCandidate(email);
+  return authUserFromProfile(email, profile, resolveUserRole(email), {
+    canOwnerVerify,
+  });
+}
+
+export async function markOwnerVerified(email: string): Promise<UserProfile> {
+  const normalized = normalizeEmail(email);
+  const current = await ensureUserProfile(normalized);
+  const next = toStoredProfile({
+    ...current,
+    ownerVerified: true,
+  });
+  await getRedis().set(profileKey(normalized), next);
+  const profile = toUserProfile(normalized, next);
+  await syncCatalogListing(normalized, profile);
+  return profile;
 }
 
 export async function updateNickname(

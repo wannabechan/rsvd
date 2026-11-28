@@ -1,13 +1,11 @@
 import { NextResponse } from "next/server";
 import {
-  authUserFromProfile,
   isValidEmail,
   isValidNickname,
   normalizeEmail,
 } from "@/domain/auth";
-import { resolveUserRole } from "@/lib/admin";
 import {
-  getUserProfile,
+  buildAuthUser,
   isUserStoreConfigured,
   updateNickname,
 } from "@/lib/user-store";
@@ -31,10 +29,10 @@ export async function GET(request: Request) {
       );
     }
 
-    const profile = await getUserProfile(email);
+    const user = await buildAuthUser(email);
     return NextResponse.json({
       ok: true,
-      user: authUserFromProfile(email, profile, resolveUserRole(email)),
+      user,
     });
   } catch (error) {
     console.error("profile GET failed", error);
@@ -74,10 +72,11 @@ export async function POST(request: Request) {
       );
     }
 
-    const profile = await updateNickname(email, nickname);
+    await updateNickname(email, nickname);
+    const user = await buildAuthUser(email);
     return NextResponse.json({
       ok: true,
-      user: authUserFromProfile(email, profile, resolveUserRole(email)),
+      user,
     });
   } catch (error) {
     console.error("profile POST failed", error);
