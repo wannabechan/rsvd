@@ -20,6 +20,9 @@ export type ActiveReservationChat = {
 
 type ReservationChatContextValue = {
   activeChat: ActiveReservationChat | null;
+  /** Current space-detail page target for header logo → start chat. */
+  detailSpace: ActiveReservationChat | null;
+  setDetailSpace: (space: ActiveReservationChat | null) => void;
   startChat: (chat: ActiveReservationChat) => void;
   endChat: () => void;
 };
@@ -31,6 +34,9 @@ const ReservationChatContext = createContext<ReservationChatContextValue | null>
 export function ReservationChatProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const [activeChat, setActiveChat] = useState<ActiveReservationChat | null>(null);
+  const [detailSpace, setDetailSpace] = useState<ActiveReservationChat | null>(
+    null,
+  );
   const pendingSpaceIdRef = useRef<string | null>(null);
 
   const startChat = useCallback((chat: ActiveReservationChat) => {
@@ -62,8 +68,8 @@ export function ReservationChatProvider({ children }: { children: ReactNode }) {
   }, [activeChat, pathname]);
 
   const value = useMemo(
-    () => ({ activeChat, startChat, endChat }),
-    [activeChat, startChat, endChat],
+    () => ({ activeChat, detailSpace, setDetailSpace, startChat, endChat }),
+    [activeChat, detailSpace, startChat, endChat],
   );
 
   return (

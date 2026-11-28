@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useAuth } from "@/components/auth/auth-context";
 import { useReservationChat } from "@/components/reservation-chat/reservation-chat-context";
 import { brandLogos } from "@/lib/brand-assets";
@@ -21,7 +21,7 @@ const START_CHAT_LABEL = "을 눌러 예약챗을 시작하세요.";
 export function HeaderLogo() {
   const pathname = usePathname();
   const { isLoggedIn } = useAuth();
-  const { activeChat } = useReservationChat();
+  const { activeChat, detailSpace, startChat } = useReservationChat();
   const [showSymbol, setShowSymbol] = useState(false);
   const isChatActive = Boolean(activeChat);
   const onSpaceDetail = isSpaceDetailPathname(pathname);
@@ -50,19 +50,13 @@ export function HeaderLogo() {
     };
   }, [pinSymbol, isLoggedIn]);
 
-  return (
-    <Link
-      href={routes.spaceList}
-      className="relative inline-flex shrink-0 items-center"
-      style={{ height: HEADER_SYMBOL_HEIGHT, width: HEADER_LOGO_SLOT_WIDTH }}
-      aria-label={
-        isChatActive
-          ? statusLabel
-          : displaySymbol
-            ? "예약챗 시작하기"
-            : "rsvd 홈"
-      }
-    >
+  const slotStyle = {
+    height: HEADER_SYMBOL_HEIGHT,
+    width: HEADER_LOGO_SLOT_WIDTH,
+  } as const;
+
+  const visuals: ReactNode = (
+    <>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={brandLogos.main}
@@ -105,6 +99,48 @@ export function HeaderLogo() {
       >
         {statusLabel}
       </span>
+    </>
+  );
+
+  // Space detail: same action as the messenger CTA (start reservation chat).
+  if (onSpaceDetail) {
+    return (
+      <button
+        type="button"
+        className="relative inline-flex shrink-0 items-center"
+        style={slotStyle}
+        aria-label={
+          isChatActive
+            ? statusLabel
+            : detailSpace
+              ? `${detailSpace.spaceName} 메신저 예약`
+              : "예약챗 시작하기"
+        }
+        onClick={() => {
+          if (detailSpace) {
+            startChat(detailSpace);
+          }
+        }}
+      >
+        {visuals}
+      </button>
+    );
+  }
+
+  return (
+    <Link
+      href={routes.spaceList}
+      className="relative inline-flex shrink-0 items-center"
+      style={slotStyle}
+      aria-label={
+        isChatActive
+          ? statusLabel
+          : displaySymbol
+            ? "예약챗 시작하기"
+            : "rsvd 홈"
+      }
+    >
+      {visuals}
     </Link>
   );
 }

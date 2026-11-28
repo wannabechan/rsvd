@@ -64,10 +64,6 @@ export function SiteHeader() {
 
   function handleProfileModeSelect(mode: ProfileHeaderMode) {
     setProfileMode(mode);
-    if (mode === "symbol") {
-      router.push(routes.spaceList);
-      return;
-    }
     if (mode === "setting") {
       if (pathname !== routes.profile) {
         router.push(routes.profile);
@@ -82,7 +78,7 @@ export function SiteHeader() {
       router.push(routes.admin);
       return;
     }
-    // calendar / manager — pages wired later.
+    // symbol / calendar / manager — pages wired later.
   }
 
   return (

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useAuth } from "@/components/auth/auth-context";
@@ -8,6 +9,7 @@ import { ReservationChatPanel } from "@/components/reservation-chat/reservation-
 import { SpaceImageCarousel } from "@/components/space/space-image-carousel";
 import { SpaceNoticeText } from "@/components/space/space-notice-text";
 import { displayLikeCount, toTelHref, type SpaceItem } from "@/domain/space";
+import { brandLogos } from "@/lib/brand-assets";
 import { routes } from "@/lib/routes";
 
 const DETAIL_LIKE_ICON_CLASS = "h-[1.875rem] w-[1.875rem]";
@@ -20,7 +22,7 @@ type SpaceDetailProps = {
 export function SpaceDetail({ space }: SpaceDetailProps) {
   const router = useRouter();
   const { isLoggedIn, isReady } = useAuth();
-  const { activeChat, startChat } = useReservationChat();
+  const { activeChat, startChat, setDetailSpace } = useReservationChat();
   const phoneHref = toTelHref(space.contact);
   const recentReservers = space.recentReservers.slice(0, MAX_DETAIL_RESERVER_AVATARS);
   const isChatOpen = activeChat?.spaceId === space.id;
@@ -34,6 +36,13 @@ export function SpaceDetail({ space }: SpaceDetailProps) {
     }
   }, [isReady, isLoggedIn, router]);
 
+  useEffect(() => {
+    setDetailSpace({ spaceId: space.id, spaceName: space.name });
+    return () => {
+      setDetailSpace(null);
+    };
+  }, [space.id, space.name, setDetailSpace]);
+
   if (!isReady || !isLoggedIn) {
     return (
       <div className="px-4 py-10">
@@ -44,6 +53,10 @@ export function SpaceDetail({ space }: SpaceDetailProps) {
 
   if (isChatOpen) {
     return <ReservationChatPanel space={space} />;
+  }
+
+  function openMessenger() {
+    startChat({ spaceId: space.id, spaceName: space.name });
   }
 
   return (
@@ -73,13 +86,11 @@ export function SpaceDetail({ space }: SpaceDetailProps) {
             type="button"
             aria-label={`${space.name} 메신저 예약`}
             className="messenger-attention inline-flex h-[2.8875rem] w-[2.8875rem] shrink-0 translate-x-[3px] items-center justify-center rounded-full transition hover:bg-rsvd-tint"
-            onClick={() => {
-              startChat({ spaceId: space.id, spaceName: space.name });
-            }}
+            onClick={openMessenger}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="/img/rsvd_logo_symbol.png"
+              src={brandLogos.symbol}
               alt=""
               width={800}
               height={800}
@@ -98,9 +109,9 @@ export function SpaceDetail({ space }: SpaceDetailProps) {
         />
       </section>
 
-      {recentReservers.length > 0 ? (
+      <div className="mt-5 flex items-center gap-1.5">
         <div
-          className="mt-5 flex flex-wrap items-center gap-1.5"
+          className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5"
           aria-label="단골 사용자"
         >
           {recentReservers.map((reserver) => (
@@ -113,7 +124,14 @@ export function SpaceDetail({ space }: SpaceDetailProps) {
             />
           ))}
         </div>
-      ) : null}
+        <Link
+          href={routes.spaceList}
+          aria-label="공간 리스트로 돌아가기"
+          className="inline-flex h-[2.25rem] w-[2.25rem] shrink-0 items-center justify-center text-[1.9125rem] font-thin leading-none text-rsvd-border"
+        >
+          ←
+        </Link>
+      </div>
     </article>
   );
 }

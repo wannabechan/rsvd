@@ -60,7 +60,7 @@ export function ProfileHeaderModes({
             onClick={() => {
               onSelect(mode);
             }}
-            className="relative inline-flex h-10 shrink-0 items-center justify-start"
+            className="relative inline-flex h-10 shrink-0 items-center justify-center"
             style={{ width: PROFILE_MODE_ICON_HEIGHT }}
           >
             {isSelected ? (
@@ -75,10 +75,11 @@ export function ProfileHeaderModes({
               alt=""
               width={800}
               height={800}
-              className="absolute top-1/2 left-0 w-auto"
+              className="absolute top-1/2 left-1/2 w-auto"
               style={{
                 height: PROFILE_MODE_ICON_HEIGHT,
-                transform: `translateY(calc(-50% + ${PROFILE_MODE_ICON_NUDGE_Y}))`,
+                // Center on the slot so non-square assets (manager/lock) align with the dot.
+                transform: `translate(-50%, calc(-50% + ${PROFILE_MODE_ICON_NUDGE_Y}))`,
               }}
               aria-hidden="true"
             />
