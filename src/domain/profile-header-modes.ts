@@ -6,6 +6,7 @@ import type { AuthUser } from "@/domain/auth";
  */
 export const PROFILE_HEADER_MODES = [
   "symbol",
+  "calendar",
   "setting",
   "lock",
   "manager",
@@ -18,6 +19,7 @@ export const DEFAULT_PROFILE_HEADER_MODE: ProfileHeaderMode = "setting";
 
 export const PROFILE_HEADER_MODE_LABEL: Record<ProfileHeaderMode, string> = {
   symbol: "홈",
+  calendar: "캘린더",
   setting: "프로필 설정",
   lock: "사장님인증",
   manager: "사장님페이지",
@@ -26,7 +28,7 @@ export const PROFILE_HEADER_MODE_LABEL: Record<ProfileHeaderMode, string> = {
 
 /**
  * Buttons shown on the profile header by privilege:
- * - below manager → symbol, setting
+ * - all users → symbol, calendar, setting
  * - manager before owner verify → + lock
  * - manager after owner verify → + manager
  * - admin → + admin
@@ -34,7 +36,7 @@ export const PROFILE_HEADER_MODE_LABEL: Record<ProfileHeaderMode, string> = {
 export function profileHeaderModesForUser(
   user: Pick<AuthUser, "role" | "canOwnerVerify" | "ownerVerified">,
 ): ProfileHeaderMode[] {
-  const base: ProfileHeaderMode[] = ["symbol", "setting"];
+  const base: ProfileHeaderMode[] = ["symbol", "calendar", "setting"];
   if (user.role === "admin") {
     return [...base, "admin"];
   }

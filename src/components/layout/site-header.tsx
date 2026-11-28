@@ -82,7 +82,7 @@ export function SiteHeader() {
       router.push(routes.admin);
       return;
     }
-    // manager — host dashboard wired later.
+    // calendar / manager — pages wired later.
   }
 
   return (

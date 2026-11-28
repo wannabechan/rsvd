@@ -13,6 +13,7 @@ import {
 
 const MODE_ICON: Record<ProfileHeaderMode, string> = {
   symbol: brandLogos.symbol,
+  calendar: brandLogos.symbolCalendar,
   setting: brandLogos.symbolSetting,
   lock: brandLogos.symbolLock,
   manager: brandLogos.symbolManager,
@@ -55,15 +56,19 @@ export function ProfileHeaderModes({
             className="relative inline-flex h-10 shrink-0 items-center justify-start"
             style={{ width: HEADER_SYMBOL_HEIGHT }}
           >
+            {isSelected ? (
+              <span
+                className="pointer-events-none absolute top-0 left-1/2 z-10 h-[5px] w-[5px] -translate-x-1/2 rounded-full bg-rsvd-brand"
+                aria-hidden="true"
+              />
+            ) : null}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={MODE_ICON[mode]}
               alt=""
               width={800}
               height={800}
-              className={`absolute top-1/2 left-0 w-auto transition-opacity ${
-                isSelected ? "opacity-100" : "opacity-50"
-              }`}
+              className="absolute top-1/2 left-0 w-auto"
               style={{
                 height: HEADER_SYMBOL_HEIGHT,
                 transform: `translateY(calc(-50% + ${HEADER_SYMBOL_NUDGE_Y}))`,
