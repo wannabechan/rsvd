@@ -72,7 +72,7 @@ export function SpaceDetail({ space }: SpaceDetailProps) {
           <button
             type="button"
             aria-label={`${space.name} 메신저 예약`}
-            className="inline-flex h-[2.8875rem] w-[2.8875rem] shrink-0 translate-x-[3px] items-center justify-center rounded-full transition hover:bg-rsvd-tint"
+            className="messenger-attention inline-flex h-[2.8875rem] w-[2.8875rem] shrink-0 translate-x-[3px] items-center justify-center rounded-full transition hover:bg-rsvd-tint"
             onClick={() => {
               startChat({ spaceId: space.id, spaceName: space.name });
             }}

@@ -143,8 +143,14 @@ body {
   animation: owner-verify-notice-blink 1.6s ease-in-out infinite;
 }
 
+/* Space detail messenger CTA under thumbnail */
+.messenger-attention {
+  animation: owner-verify-notice-blink 1.6s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .owner-verify-notice {
+  .owner-verify-notice,
+  .messenger-attention {
     animation: none;
   }
 }

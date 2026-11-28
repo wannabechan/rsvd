@@ -13,12 +13,10 @@ import {
 import { HeaderLogo } from "@/components/layout/header-logo";
 import { OwnerVerifyModal } from "@/components/profile/owner-verify-modal";
 import { useReservationChat } from "@/components/reservation-chat/reservation-chat-context";
-import { routes } from "@/lib/routes";
+import { brandLogos } from "@/lib/brand-assets";
+import { isSpaceDetailPathname, routes } from "@/lib/routes";
 
 const HEADER_ICON_CLASS = "h-[1.65rem] w-[1.65rem]";
-/** Same type style as header nickname beside the avatar. */
-const PROFILE_MODE_LINK_CLASS =
-  "inline-flex h-10 items-center px-0 text-sm font-normal text-rsvd-text transition hover:text-rsvd-brand";
 
 export function SiteHeader() {
   const router = useRouter();
@@ -27,6 +25,7 @@ export function SiteHeader() {
   const { user, isLoggedIn } = useAuth();
   const { activeChat, endChat } = useReservationChat();
   const onProfile = pathname === routes.profile;
+  const onSpaceDetail = isSpaceDetailPathname(pathname);
   const needsOwnerVerify = Boolean(
     isLoggedIn && user?.canOwnerVerify && !user?.ownerVerified,
   );
@@ -72,9 +71,17 @@ export function SiteHeader() {
                   onClick={() => {
                     router.push(routes.admin);
                   }}
-                  className={PROFILE_MODE_LINK_CLASS}
+                  aria-label="관리자페이지"
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-full transition hover:bg-rsvd-tint"
                 >
-                  {">>"} 관리자페이지
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={brandLogos.symbolAdmin}
+                    alt=""
+                    width={800}
+                    height={800}
+                    className="h-[2.075rem] w-[2.075rem]"
+                  />
                 </button>
               ) : null}
               {showOwnerPageLink ? (
@@ -83,17 +90,33 @@ export function SiteHeader() {
                   onClick={() => {
                     // 사장님페이지 — host dashboard wired later.
                   }}
-                  className={PROFILE_MODE_LINK_CLASS}
+                  aria-label="사장님페이지"
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-full transition hover:bg-rsvd-tint"
                 >
-                  {">>"} 사장님페이지
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={brandLogos.symbolManager}
+                    alt=""
+                    width={800}
+                    height={800}
+                    className="h-[2.075rem] w-[2.075rem]"
+                  />
                 </button>
               ) : showOwnerVerifyLink ? (
                 <button
                   type="button"
                   onClick={() => setOwnerVerifyOpen(true)}
-                  className={PROFILE_MODE_LINK_CLASS}
+                  aria-label="사장님인증"
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-full transition hover:bg-rsvd-tint"
                 >
-                  {">>"} 사장님인증
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={brandLogos.symbolLock}
+                    alt=""
+                    width={800}
+                    height={800}
+                    className="h-[2.075rem] w-[2.075rem]"
+                  />
                 </button>
               ) : null}
             </div>
@@ -137,13 +160,15 @@ export function SiteHeader() {
               aria-label="프로필"
               className="inline-flex h-10 max-w-[11rem] items-center gap-2 rounded-full"
             >
-              <span
-                className={`min-w-0 truncate text-sm font-normal text-rsvd-text ${
-                  hasPrivilegeAvatarRing(user) ? "-translate-x-[3px]" : ""
-                }`}
-              >
-                {user.nickname}
-              </span>
+              {!onSpaceDetail ? (
+                <span
+                  className={`min-w-0 truncate text-sm font-normal text-rsvd-text ${
+                    hasPrivilegeAvatarRing(user) ? "-translate-x-[3px]" : ""
+                  }`}
+                >
+                  {user.nickname}
+                </span>
+              ) : null}
               <UserAvatar user={user} />
             </Link>
           ) : (
