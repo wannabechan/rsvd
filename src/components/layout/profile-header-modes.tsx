@@ -11,6 +11,12 @@ import {
   type ProfileHeaderMode,
 } from "@/domain/profile-header-modes";
 
+/** Profile mode icons are 80% of the space-detail header symbol size. */
+const PROFILE_MODE_ICON_SCALE = 0.8;
+const PROFILE_MODE_ICON_HEIGHT = `calc(${HEADER_SYMBOL_HEIGHT} * ${PROFILE_MODE_ICON_SCALE})`;
+const PROFILE_MODE_ICON_GAP = `calc(19px * ${PROFILE_MODE_ICON_SCALE})`;
+const PROFILE_MODE_ICON_NUDGE_Y = `calc(${HEADER_SYMBOL_NUDGE_Y} * ${PROFILE_MODE_ICON_SCALE})`;
+
 const MODE_ICON: Record<ProfileHeaderMode, string> = {
   symbol: brandLogos.symbol,
   calendar: brandLogos.symbolCalendar,
@@ -37,7 +43,8 @@ export function ProfileHeaderModes({
 
   return (
     <div
-      className="flex h-10 min-w-0 items-center gap-[19px]"
+      className="flex h-10 min-w-0 items-center"
+      style={{ gap: PROFILE_MODE_ICON_GAP }}
       role="tablist"
       aria-label="프로필 모드"
     >
@@ -54,7 +61,7 @@ export function ProfileHeaderModes({
               onSelect(mode);
             }}
             className="relative inline-flex h-10 shrink-0 items-center justify-start"
-            style={{ width: HEADER_SYMBOL_HEIGHT }}
+            style={{ width: PROFILE_MODE_ICON_HEIGHT }}
           >
             {isSelected ? (
               <span
@@ -70,8 +77,8 @@ export function ProfileHeaderModes({
               height={800}
               className="absolute top-1/2 left-0 w-auto"
               style={{
-                height: HEADER_SYMBOL_HEIGHT,
-                transform: `translateY(calc(-50% + ${HEADER_SYMBOL_NUDGE_Y}))`,
+                height: PROFILE_MODE_ICON_HEIGHT,
+                transform: `translateY(calc(-50% + ${PROFILE_MODE_ICON_NUDGE_Y}))`,
               }}
               aria-hidden="true"
             />
