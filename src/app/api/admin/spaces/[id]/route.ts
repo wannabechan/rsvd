@@ -7,6 +7,16 @@ import {
 import { routes } from "@/lib/routes";
 import { isUserStoreConfigured } from "@/lib/user-store";
 
+function incompleteErrorMessage(error: unknown): string | null {
+  if (!(error instanceof Error)) {
+    return null;
+  }
+  if (!error.message.startsWith("incomplete:")) {
+    return null;
+  }
+  return error.message.slice("incomplete:".length) || "필수 항목을 입력해 주세요.";
+}
+
 type RouteContext = {
   params: Promise<{ id: string }>;
 };
@@ -64,27 +74,8 @@ export async function PUT(request: Request, context: RouteContext) {
     const body = (await request.json()) as Partial<AdminSpaceEditableFields>;
     const name = typeof body.name === "string" ? body.name.trim() : "";
     const address = typeof body.address === "string" ? body.address.trim() : "";
-    if (!name) {
-      return NextResponse.json(
-        { ok: false, error: "공간명칭을 입력해 주세요." },
-        { status: 400 },
-      );
-    }
-    if (!address) {
-      return NextResponse.json(
-        { ok: false, error: "주소를 입력해 주세요." },
-        { status: 400 },
-      );
-    }
-
     const heroImage =
       typeof body.heroImage === "string" ? body.heroImage.trim() : "";
-    if (!heroImage) {
-      return NextResponse.json(
-        { ok: false, error: "대표 이미지를 업로드해 주세요." },
-        { status: 400 },
-      );
-    }
 
     const fields: AdminSpaceEditableFields = {
       name,
@@ -125,6 +116,13 @@ export async function PUT(request: Request, context: RouteContext) {
 
       return NextResponse.json({ ok: true, space });
     } catch (error) {
+      const incomplete = incompleteErrorMessage(error);
+      if (incomplete) {
+        return NextResponse.json(
+          { ok: false, error: incomplete },
+          { status: 400 },
+        );
+      }
       if (error instanceof Error && error.message === "has-reservations") {
         return NextResponse.json(
           {

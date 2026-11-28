@@ -54,7 +54,9 @@ export async function POST(request: Request) {
     await markOwnerVerified(email);
     await setCatalogUserGrade(email, "manager");
     revalidatePath(routes.adminSpaceCandidates);
+    revalidatePath(routes.adminSpaces);
     revalidatePath(routes.adminUsers);
+    revalidatePath(routes.spaceList);
 
     const user = await buildAuthUser(email);
     return NextResponse.json({ ok: true, user });

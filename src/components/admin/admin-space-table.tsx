@@ -79,6 +79,7 @@ export function AdminSpaceTable({ initialSpaces }: AdminSpaceTableProps) {
       }
       if (!response.ok || !data.ok || !data.space) {
         setError(data.error ?? "활성 상태 저장에 실패했습니다.");
+        setDialog(null);
         setSaving(false);
         return;
       }

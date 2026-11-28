@@ -7,9 +7,11 @@ import { buildSeedAdminSpaces } from "@/data/admin-spaces";
 import { buildSeedSampleUsers } from "@/data/admin-users";
 import { sampleAvatarForUserId } from "@/data/spaces";
 import {
+  adminSpaceRequiredFieldsError,
   adminSpaceReservationCount,
   createEmptyWeekSchedule,
   inviteHandleFromSpaceName,
+  isCandidateOnboardingDraft,
   normalizeNoticesText,
   SPACE_INVITE_CHANNEL_DEFAULT,
   SPACE_MENU_IMAGES_MAX,
@@ -23,6 +25,7 @@ import {
 import {
   DEFAULT_PLATFORM_USER_GRADE,
   platformUserGradeRank,
+  preferHigherPrivilegeGrade,
   type AdminUser,
   type PlatformUserGrade,
 } from "@/domain/admin-user";
@@ -372,7 +375,11 @@ function normalizeImageFields(
 
 export type UpdateSpaceActiveResult =
   | { ok: true; space: AdminSpace }
-  | { ok: false; reason: "not-found" | "has-reservations" };
+  | {
+      ok: false;
+      reason: "not-found" | "has-reservations" | "incomplete";
+      error?: string;
+    };
 
 export async function updateCatalogSpace(
   id: string,
@@ -399,10 +406,36 @@ export async function updateCatalogSpace(
     throw new Error("has-reservations");
   }
 
+  const normalized = normalizeImageFields(fields);
+  const draftPreview = {
+    active: normalized.active,
+    createdFromCandidate: current.createdFromCandidate,
+  };
+  if (!isCandidateOnboardingDraft(draftPreview)) {
+    const requiredError = adminSpaceRequiredFieldsError({
+      name: normalized.name,
+      address: normalized.address,
+      contact: normalized.contact,
+      adminEmail: normalized.adminEmail,
+      notices: normalized.notices,
+      heroImage: normalized.heroImage,
+    });
+    if (requiredError) {
+      throw new Error(`incomplete:${requiredError}`);
+    }
+  }
+
   const next = syncAdminSpaceStats({
     ...current,
-    ...normalizeImageFields(fields),
+    ...normalized,
     id: current.id,
+    // Invite + candidate provenance stay immutable after create.
+    adminEmail: current.createdFromCandidate
+      ? current.adminEmail
+      : normalized.adminEmail,
+    inviteChannel: current.inviteChannel,
+    inviteHandle: current.inviteHandle,
+    createdFromCandidate: current.createdFromCandidate,
   });
   const updated = [...spaces];
   updated[index] = next;
@@ -435,6 +468,20 @@ export async function updateCatalogSpaceActive(
     return { ok: false, reason: "has-reservations" };
   }
 
+  if (active) {
+    const requiredError = adminSpaceRequiredFieldsError({
+      name: current.name,
+      address: current.address,
+      contact: current.contact,
+      adminEmail: current.adminEmail,
+      notices: current.notices,
+      heroImage: current.heroImage,
+    });
+    if (requiredError) {
+      return { ok: false, reason: "incomplete", error: requiredError };
+    }
+  }
+
   const next = syncAdminSpaceStats({
     ...current,
     active,
@@ -447,6 +494,11 @@ export async function updateCatalogSpaceActive(
 
 export async function createCatalogSpace(
   fields: AdminSpaceEditableFields,
+  options?: {
+    inviteChannel?: string;
+    inviteHandle?: string;
+    createdFromCandidate?: boolean;
+  },
 ): Promise<AdminSpace> {
   await ensureAdminCatalogSeeded();
   if (!isRedisConfigured()) {
@@ -459,11 +511,17 @@ export async function createCatalogSpace(
     .toString(36)
     .slice(2, 7)}`;
   const normalized = normalizeImageFields(fields);
+  const inviteChannel =
+    options?.inviteChannel?.trim() || SPACE_INVITE_CHANNEL_DEFAULT;
+  const inviteHandle =
+    options?.inviteHandle?.trim() ||
+    inviteHandleFromSpaceName(normalized.name);
   const created = syncAdminSpaceStats({
     id,
     ...normalized,
-    inviteChannel: SPACE_INVITE_CHANNEL_DEFAULT,
-    inviteHandle: inviteHandleFromSpaceName(normalized.name),
+    inviteChannel,
+    inviteHandle,
+    createdFromCandidate: Boolean(options?.createdFromCandidate),
     currentReservationCount: 0,
     totalReservationCount: 0,
     weeklyHours: createEmptyWeekSchedule(),
@@ -475,6 +533,68 @@ export async function createCatalogSpace(
   });
   await redis.set(SPACES_KEY, [...spaces, created]);
   return created;
+}
+
+/** Find an existing auto-created space for a completed candidate, or create one. */
+export async function ensureCatalogSpaceForCandidate(input: {
+  email: string;
+  channel: string;
+  handle: string;
+  spaceId?: string;
+}): Promise<AdminSpace> {
+  await ensureAdminCatalogSeeded();
+  if (!isRedisConfigured()) {
+    throw new Error("Catalog store is not configured.");
+  }
+
+  const redis = getRedis();
+  const spaces = (await redis.get<AdminSpace[]>(SPACES_KEY)) ?? [];
+  const email = input.email.trim().toLowerCase();
+  const channel = input.channel.trim();
+  const handle = input.handle.trim();
+
+  if (input.spaceId) {
+    const byId = spaces.find((space) => space.id === input.spaceId);
+    if (byId) {
+      return syncAdminSpaceStats(byId);
+    }
+  }
+
+  const existing = spaces.find((space) => {
+    const synced = syncAdminSpaceStats(space);
+    return (
+      synced.adminEmail.trim().toLowerCase() === email &&
+      synced.inviteChannel === channel &&
+      synced.inviteHandle.replace(/\s+/g, "").toLowerCase() ===
+        handle.replace(/\s+/g, "").toLowerCase()
+    );
+  });
+  if (existing) {
+    return syncAdminSpaceStats(existing);
+  }
+
+  return createCatalogSpace(
+    {
+      name: "",
+      address: "",
+      contact: "",
+      adminEmail: input.email.trim(),
+      notices: "",
+      heroImage: "",
+      menuImages: [],
+      otherImages: [],
+      bookingBufferDays: 0,
+      maxBookingDays: 30,
+      minPartySize: 1,
+      maxPartySize: 4,
+      active: false,
+    },
+    {
+      inviteChannel: channel,
+      inviteHandle: handle,
+      createdFromCandidate: true,
+    },
+  );
 }
 
 export async function updateCatalogSpaceDayHours(
@@ -572,11 +692,13 @@ async function ensureUsersCatalogReady(): Promise<void> {
 type StoredAuthProfile = {
   nickname?: string;
   phone?: string | null;
+  ownerVerified?: boolean;
 };
 
 /**
  * Merge Redis auth profiles/passwords into the admin user list.
  * Fixes accounts onboarded before catalog sync (or when sync was blocked).
+ * Also restores manager grade when ownerVerified is true but catalog still says user3.
  */
 async function backfillCatalogUsersFromAuthStore(): Promise<void> {
   if (!isRedisConfigured()) {
@@ -619,18 +741,20 @@ async function backfillCatalogUsersFromAuthStore(): Promise<void> {
         typeof stored?.phone === "string" && stored.phone
           ? stored.phone
           : null,
+      ownerVerified: Boolean(stored?.ownerVerified),
     });
   }
 }
 
 /**
  * Ensure an onboarded auth account appears in the admin user list.
- * New accounts default to user3; ADMIN_EMAIL accounts use admin.
+ * New accounts default to user3; ADMIN_EMAIL → admin; ownerVerified → ≥ manager.
  */
 export async function syncOnboardedCatalogUser(input: {
   email: string;
   nickname: string;
   phone: string | null;
+  ownerVerified?: boolean;
 }): Promise<void> {
   if (!isRedisConfigured()) {
     return;
@@ -647,14 +771,23 @@ export async function syncOnboardedCatalogUser(input: {
   const nickname = input.nickname.trim() || email;
   const phone = input.phone?.trim() || "";
 
+  let grade: PlatformUserGrade = desiredGrade;
   if (index >= 0) {
-    const current = users[index];
-    let grade = current.grade;
+    grade = users[index].grade;
     if (desiredGrade === "admin") {
       grade = "admin";
     } else if (grade === "sample") {
       grade = desiredGrade;
     }
+  }
+  if (desiredGrade === "admin") {
+    grade = "admin";
+  } else if (input.ownerVerified) {
+    grade = preferHigherPrivilegeGrade(grade, "manager");
+  }
+
+  if (index >= 0) {
+    const current = users[index];
     users[index] = {
       ...current,
       email,
@@ -669,14 +802,14 @@ export async function syncOnboardedCatalogUser(input: {
       joinedAt: new Date().toISOString(),
       nickname,
       phone,
-      grade: desiredGrade,
+      grade,
     });
   }
 
   await redis.set(USERS_KEY, users);
 }
 
-/** Promote (or set) an onboarded catalog user to the given grade. */
+/** Promote (or upsert) an onboarded catalog user to the given grade. */
 export async function setCatalogUserGrade(
   email: string,
   grade: PlatformUserGrade,
@@ -692,14 +825,26 @@ export async function setCatalogUserGrade(
   const index = users.findIndex(
     (user) => normalizeEmail(user.email) === normalized,
   );
+
   if (index < 0) {
-    return null;
+    const created: AdminUser = {
+      id: userIdFromEmail(normalized),
+      email: normalized,
+      joinedAt: new Date().toISOString(),
+      nickname: defaultNickname(normalized),
+      phone: "",
+      grade: onboardGradeForEmail(normalized) === "admin" ? "admin" : grade,
+    };
+    users.push(created);
+    await redis.set(USERS_KEY, users);
+    return created;
   }
 
   const current = users[index];
-  // Keep admin above manager promotions.
-  const nextGrade =
-    current.grade === "admin" || grade === "admin" ? "admin" : grade;
+  const nextGrade = preferHigherPrivilegeGrade(
+    current.grade === "admin" || grade === "admin" ? "admin" : grade,
+    current.grade,
+  );
   const next: AdminUser = {
     ...current,
     grade: nextGrade,

@@ -14,6 +14,7 @@ import {
   type AdminSpaceCandidate,
   type SpaceCandidateChannel,
 } from "@/domain/admin-space-candidate";
+import { ensureCatalogSpaceForCandidate } from "@/lib/admin-catalog";
 import { getRedis, isRedisConfigured } from "@/lib/redis";
 
 const CANDIDATES_KEY = "rsvd:catalog:space-candidates:v1";
@@ -29,6 +30,7 @@ function normalizeCandidate(row: AdminSpaceCandidate): AdminSpaceCandidate {
       typeof row.verifyCodeExpiresAt === "string" ? row.verifyCodeExpiresAt : "",
     requestCount: candidateRequestCount(row),
     registrationComplete: Boolean(row.registrationComplete),
+    spaceId: typeof row.spaceId === "string" ? row.spaceId : "",
   });
 }
 
@@ -98,6 +100,45 @@ async function reconcileOwnerVerifiedRows(
   return { rows: next, changed };
 }
 
+/**
+ * For registration-complete candidates, ensure a linked inactive catalog space.
+ * Idempotent via spaceId / invite+email match.
+ */
+async function ensureSpacesForCompletedCandidates(
+  rows: AdminSpaceCandidate[],
+): Promise<{ rows: AdminSpaceCandidate[]; changed: boolean }> {
+  let changed = false;
+  const next: AdminSpaceCandidate[] = [];
+
+  for (const row of rows) {
+    const normalized = normalizeCandidate(row);
+    if (!normalized.registrationComplete || !normalizeEmail(normalized.email)) {
+      next.push(normalized);
+      continue;
+    }
+
+    try {
+      const space = await ensureCatalogSpaceForCandidate({
+        email: normalized.email,
+        channel: normalized.channel,
+        handle: normalized.handle,
+        spaceId: normalized.spaceId || undefined,
+      });
+      if (normalized.spaceId !== space.id) {
+        changed = true;
+        next.push({ ...normalized, spaceId: space.id });
+      } else {
+        next.push(normalized);
+      }
+    } catch (error) {
+      console.error("ensure space for candidate failed", normalized.id, error);
+      next.push(normalized);
+    }
+  }
+
+  return { rows: next, changed };
+}
+
 export async function listSpaceCandidates(): Promise<AdminSpaceCandidate[]> {
   if (!isRedisConfigured()) {
     return [];
@@ -105,10 +146,11 @@ export async function listSpaceCandidates(): Promise<AdminSpaceCandidate[]> {
   const redis = getRedis();
   const rows = (await redis.get<AdminSpaceCandidate[]>(CANDIDATES_KEY)) ?? [];
   const reconciled = await reconcileOwnerVerifiedRows(rows);
-  if (reconciled.changed) {
-    await redis.set(CANDIDATES_KEY, reconciled.rows);
+  const ensured = await ensureSpacesForCompletedCandidates(reconciled.rows);
+  if (reconciled.changed || ensured.changed) {
+    await redis.set(CANDIDATES_KEY, ensured.rows);
   }
-  return sortCandidates(reconciled.rows.map(normalizeCandidate));
+  return sortCandidates(ensured.rows.map(normalizeCandidate));
 }
 
 export async function findSpaceCandidate(
@@ -161,6 +203,7 @@ export async function createSpaceCandidate(input: {
     verifyCodeExpiresAt: "",
     requestCount: 1,
     registrationComplete: false,
+    spaceId: "",
   };
 
   const redis = getRedis();
@@ -286,11 +329,11 @@ export async function updateSpaceCandidates(
 
   await redis.set(CANDIDATES_KEY, next);
   const reconciled = await reconcileOwnerVerifiedRows(next);
-  if (reconciled.changed) {
-    await redis.set(CANDIDATES_KEY, reconciled.rows);
-    return sortCandidates(reconciled.rows.map(normalizeCandidate));
+  const ensured = await ensureSpacesForCompletedCandidates(reconciled.rows);
+  if (reconciled.changed || ensured.changed) {
+    await redis.set(CANDIDATES_KEY, ensured.rows);
   }
-  return sortCandidates(next.map(normalizeCandidate));
+  return sortCandidates(ensured.rows.map(normalizeCandidate));
 }
 
 function sortCandidates(
@@ -382,6 +425,7 @@ export async function completeOwnerVerifyOnCandidates(
     return false;
   }
 
-  await redis.set(CANDIDATES_KEY, next);
+  const ensured = await ensureSpacesForCompletedCandidates(next);
+  await redis.set(CANDIDATES_KEY, ensured.rows);
   return true;
 }

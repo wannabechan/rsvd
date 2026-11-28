@@ -1,5 +1,6 @@
 import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
+import { adminSpaceRequiredFieldsError } from "@/domain/admin-space";
 import {
   createCatalogSpace,
   type AdminSpaceEditableFields,
@@ -52,27 +53,8 @@ export async function POST(request: Request) {
     const body = (await request.json()) as Partial<AdminSpaceEditableFields>;
     const name = typeof body.name === "string" ? body.name.trim() : "";
     const address = typeof body.address === "string" ? body.address.trim() : "";
-    if (!name) {
-      return NextResponse.json(
-        { ok: false, error: "공간명칭을 입력해 주세요." },
-        { status: 400 },
-      );
-    }
-    if (!address) {
-      return NextResponse.json(
-        { ok: false, error: "주소를 입력해 주세요." },
-        { status: 400 },
-      );
-    }
-
     const heroImage =
       typeof body.heroImage === "string" ? body.heroImage.trim() : "";
-    if (!heroImage) {
-      return NextResponse.json(
-        { ok: false, error: "대표 이미지를 업로드해 주세요." },
-        { status: 400 },
-      );
-    }
 
     const fields: AdminSpaceEditableFields = {
       name,
@@ -90,6 +72,14 @@ export async function POST(request: Request) {
       maxPartySize: Math.max(1, asNonNegInt(body.maxPartySize, 6)),
       active: body.active !== false,
     };
+
+    const requiredError = adminSpaceRequiredFieldsError(fields);
+    if (requiredError) {
+      return NextResponse.json(
+        { ok: false, error: requiredError },
+        { status: 400 },
+      );
+    }
 
     if (fields.minPartySize > fields.maxPartySize) {
       return NextResponse.json(

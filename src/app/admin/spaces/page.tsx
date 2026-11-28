@@ -2,6 +2,7 @@ import { connection } from "next/server";
 import { Suspense } from "react";
 import { AdminSpaceTable } from "@/components/admin/admin-space-table";
 import { listCatalogSpaces } from "@/lib/admin-catalog";
+import { listSpaceCandidates } from "@/lib/admin-space-candidates";
 
 export default function AdminSpacesPage() {
   return (
@@ -13,6 +14,8 @@ export default function AdminSpacesPage() {
 
 async function AdminSpacesContent() {
   await connection();
+  // Backfill inactive catalog spaces for registration-complete candidates.
+  await listSpaceCandidates();
   const spaces = await listCatalogSpaces();
   return <AdminSpaceTable initialSpaces={spaces} />;
 }

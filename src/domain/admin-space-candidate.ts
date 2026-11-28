@@ -24,9 +24,11 @@ export type AdminSpaceCandidate = {
   requestCount: number;
   /**
    * True when the candidate has been fully registered as a store.
-   * Manual toggle is disabled; flipped on by registration flow later.
+   * Manual toggle is disabled; flipped on by 사장님 인증.
    */
   registrationComplete: boolean;
+  /** Linked admin catalog space id once auto-created; empty until then. */
+  spaceId: string;
 };
 
 /** Verify codes stay valid for 3 days. */

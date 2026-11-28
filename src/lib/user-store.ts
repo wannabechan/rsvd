@@ -113,6 +113,7 @@ async function syncCatalogListing(
       email,
       nickname: profile.nickname,
       phone: profile.phone,
+      ownerVerified: Boolean(profile.ownerVerified),
     });
   } catch (error) {
     console.error("catalog user sync failed", email, error);

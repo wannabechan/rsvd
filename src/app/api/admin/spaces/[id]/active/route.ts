@@ -45,6 +45,16 @@ export async function PUT(request: Request, context: RouteContext) {
           { status: 409 },
         );
       }
+      if (result.reason === "incomplete") {
+        return NextResponse.json(
+          {
+            ok: false,
+            reason: "incomplete",
+            error: result.error ?? "필수 항목을 입력해 주세요.",
+          },
+          { status: 400 },
+        );
+      }
       return NextResponse.json(
         { ok: false, error: "공간을 찾을 수 없습니다." },
         { status: 404 },

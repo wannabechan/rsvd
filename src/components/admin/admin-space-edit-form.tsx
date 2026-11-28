@@ -8,12 +8,16 @@ import { AdminSpaceImageField } from "@/components/admin/admin-space-image-field
 import { ButtonSpinner } from "@/components/ui/button-spinner";
 import {
   adminSpaceRegularCount,
+  adminSpaceRequiredFieldsError,
   adminSpaceReservationCount,
   inviteHandleFromSpaceName,
+  isCandidateOnboardingDraft,
   noticesToEditableText,
   SPACE_HERO_IMAGE_MAX,
   SPACE_INVITE_CHANNEL_DEFAULT,
   SPACE_MENU_IMAGES_MAX,
+  SPACE_NAME_PLACEHOLDER,
+  SPACE_NOTICE_PLACEHOLDER,
   SPACE_OTHER_IMAGES_MAX,
   type AdminSpace,
 } from "@/domain/admin-space";
@@ -50,11 +54,27 @@ export function AdminSpaceEditForm({ mode, space }: AdminSpaceEditFormProps) {
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
+  const lockAdminEmail = Boolean(space.createdFromCandidate);
+  const onboardingDraft = isCandidateOnboardingDraft({
+    active,
+    createdFromCandidate: space.createdFromCandidate,
+  });
+
   async function handleSave() {
     setError(null);
-    if (!heroImages[0]) {
-      setError("대표 이미지를 업로드해 주세요.");
-      return;
+    if (!onboardingDraft) {
+      const requiredError = adminSpaceRequiredFieldsError({
+        name,
+        address,
+        contact,
+        adminEmail,
+        notices: noticesText,
+        heroImage: heroImages[0] ?? "",
+      });
+      if (requiredError) {
+        setError(requiredError);
+        return;
+      }
     }
     setSaving(true);
     try {
@@ -64,7 +84,7 @@ export function AdminSpaceEditForm({ mode, space }: AdminSpaceEditFormProps) {
         contact,
         adminEmail,
         notices: noticesText,
-        heroImage: heroImages[0],
+        heroImage: heroImages[0] ?? "",
         menuImages,
         otherImages,
         bookingBufferDays: Number(bookingBufferDays),
@@ -128,7 +148,8 @@ export function AdminSpaceEditForm({ mode, space }: AdminSpaceEditFormProps) {
           <input
             value={name}
             onChange={(event) => setName(event.target.value)}
-            className="auth-input w-full rounded-xl border border-rsvd-border bg-rsvd-surface px-3.5 py-2.5 text-sm text-rsvd-text"
+            placeholder={SPACE_NAME_PLACEHOLDER}
+            className="auth-input w-full rounded-xl border border-rsvd-border bg-rsvd-surface px-3.5 py-2.5 text-sm text-rsvd-text placeholder:text-rsvd-text-muted"
           />
         </Field>
 
@@ -151,8 +172,13 @@ export function AdminSpaceEditForm({ mode, space }: AdminSpaceEditFormProps) {
             <input
               type="email"
               value={adminEmail}
+              readOnly={lockAdminEmail}
+              tabIndex={lockAdminEmail ? -1 : undefined}
+              aria-readonly={lockAdminEmail || undefined}
               onChange={(event) => setAdminEmail(event.target.value)}
-              className="auth-input w-full rounded-xl border border-rsvd-border bg-rsvd-surface px-3.5 py-2.5 text-sm text-rsvd-text"
+              className={`auth-input w-full rounded-xl border border-rsvd-border px-3.5 py-2.5 text-sm text-rsvd-text ${
+                lockAdminEmail ? "bg-rsvd-bg" : "bg-rsvd-surface"
+              }`}
             />
           </Field>
         </div>
@@ -170,7 +196,9 @@ export function AdminSpaceEditForm({ mode, space }: AdminSpaceEditFormProps) {
           <Field label="초대아이디">
             <input
               value={
-                space.inviteHandle || inviteHandleFromSpaceName(name) || ""
+                space.inviteHandle ||
+                (mode === "create" ? inviteHandleFromSpaceName(name) : "") ||
+                ""
               }
               readOnly
               tabIndex={-1}
@@ -185,12 +213,13 @@ export function AdminSpaceEditForm({ mode, space }: AdminSpaceEditFormProps) {
             value={noticesText}
             onChange={(event) => setNoticesText(event.target.value)}
             rows={6}
-            className="auth-input w-full whitespace-pre-wrap rounded-xl border border-rsvd-border bg-rsvd-surface px-3.5 py-2.5 text-sm text-rsvd-text"
+            placeholder={SPACE_NOTICE_PLACEHOLDER}
+            className="auth-input w-full whitespace-pre-wrap rounded-xl border border-rsvd-border bg-rsvd-surface px-3.5 py-2.5 text-sm text-rsvd-text placeholder:text-rsvd-text-muted"
           />
         </Field>
 
         <AdminSpaceImageField
-          label="대표 이미지 (필수)"
+          label={onboardingDraft ? "대표 이미지" : "대표 이미지 (필수)"}
           urls={heroImages}
           maxCount={SPACE_HERO_IMAGE_MAX}
           onChange={setHeroImages}
@@ -209,7 +238,7 @@ export function AdminSpaceEditForm({ mode, space }: AdminSpaceEditFormProps) {
         />
 
         <div className="grid gap-5 sm:grid-cols-2">
-          <Field label="예약여유일">
+          <Field label="몇일 전까지 예약 가능?">
             <input
               type="number"
               min={0}
@@ -218,7 +247,7 @@ export function AdminSpaceEditForm({ mode, space }: AdminSpaceEditFormProps) {
               className="auth-input w-full rounded-xl border border-rsvd-border bg-rsvd-surface px-3.5 py-2.5 text-sm text-rsvd-text"
             />
           </Field>
-          <Field label="최대예약가능일">
+          <Field label="몇일 후까지 예약 가능?">
             <input
               type="number"
               min={0}
@@ -227,7 +256,7 @@ export function AdminSpaceEditForm({ mode, space }: AdminSpaceEditFormProps) {
               className="auth-input w-full rounded-xl border border-rsvd-border bg-rsvd-surface px-3.5 py-2.5 text-sm text-rsvd-text"
             />
           </Field>
-          <Field label="최소 인원">
+          <Field label="예약 가능 최소 인원?">
             <input
               type="number"
               min={1}
@@ -236,7 +265,7 @@ export function AdminSpaceEditForm({ mode, space }: AdminSpaceEditFormProps) {
               className="auth-input w-full rounded-xl border border-rsvd-border bg-rsvd-surface px-3.5 py-2.5 text-sm text-rsvd-text"
             />
           </Field>
-          <Field label="최대 인원">
+          <Field label="예약 가능 최대 인원?">
             <input
               type="number"
               min={1}
@@ -295,7 +324,18 @@ export function AdminSpaceEditForm({ mode, space }: AdminSpaceEditFormProps) {
           <button
             type="button"
             disabled={
-              saving || !name.trim() || !address.trim() || heroImages.length === 0
+              saving ||
+              (!onboardingDraft &&
+                Boolean(
+                  adminSpaceRequiredFieldsError({
+                    name,
+                    address,
+                    contact,
+                    adminEmail,
+                    notices: noticesText,
+                    heroImage: heroImages[0] ?? "",
+                  }),
+                ))
             }
             aria-busy={saving}
             onClick={() => {

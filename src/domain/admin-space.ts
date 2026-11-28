@@ -108,7 +108,52 @@ export type AdminSpace = {
   lastReservedAt: string;
   /** ISO timestamp of most recent like/단골 승인; empty when none. */
   lastLikedAt: string;
+  /**
+   * True when created from a completed 매장후보 (사장님 인증).
+   * Inactive drafts may omit otherwise-required fields until activated.
+   */
+  createdFromCandidate: boolean;
 };
+
+export const SPACE_NAME_PLACEHOLDER = "매장 이름을 적어주세요.";
+export const SPACE_NOTICE_PLACEHOLDER = "손님들께 알려드릴 사항을 적어주세요.";
+
+/** Auto-created candidate store still inactive — required-field waiver. */
+export function isCandidateOnboardingDraft(
+  space: Pick<AdminSpace, "active" | "createdFromCandidate">,
+): boolean {
+  return Boolean(space.createdFromCandidate) && space.active === false;
+}
+
+/** Required fields except menu/other images. Returns Korean error or null. */
+export function adminSpaceRequiredFieldsError(fields: {
+  name: string;
+  address: string;
+  contact: string;
+  adminEmail: string;
+  notices: string;
+  heroImage: string;
+}): string | null {
+  if (!fields.name.trim()) {
+    return "공간명칭을 입력해 주세요.";
+  }
+  if (!fields.address.trim()) {
+    return "주소를 입력해 주세요.";
+  }
+  if (!fields.contact.trim()) {
+    return "연락처를 입력해 주세요.";
+  }
+  if (!fields.adminEmail.trim()) {
+    return "관리자 이메일을 입력해 주세요.";
+  }
+  if (!normalizeNoticesText(fields.notices).trim()) {
+    return "공지사항을 입력해 주세요.";
+  }
+  if (!fields.heroImage.trim()) {
+    return "대표 이미지를 업로드해 주세요.";
+  }
+  return null;
+}
 
 /** 단골수 from stored regularMembers (fallback: regularUserIds). */
 export function adminSpaceRegularCount(space: AdminSpace): number {
@@ -131,6 +176,7 @@ export function adminSpaceReservationCount(space: AdminSpace): number {
 export function syncAdminSpaceStats(space: AdminSpace): AdminSpace {
   const withInvite = withInviteFields(space);
   const notices = normalizeNoticesText(withInvite.notices);
+  const createdFromCandidate = Boolean(withInvite.createdFromCandidate);
   const members = Array.isArray(withInvite.regularMembers)
     ? withInvite.regularMembers
     : [];
@@ -138,6 +184,7 @@ export function syncAdminSpaceStats(space: AdminSpace): AdminSpace {
     return {
       ...withInvite,
       notices,
+      createdFromCandidate,
       regularUserIds: withInvite.regularUserIds ?? [],
       regularMembers: withInvite.regularMembers ?? [],
       currentReservationCount: adminSpaceReservationCount(withInvite),
@@ -146,6 +193,7 @@ export function syncAdminSpaceStats(space: AdminSpace): AdminSpace {
   return {
     ...withInvite,
     notices,
+    createdFromCandidate,
     regularMembers: members,
     regularUserIds: members.map((member) => member.userId),
     currentReservationCount: adminSpaceReservationCount(withInvite),
@@ -285,6 +333,7 @@ export function createBlankAdminSpace(): AdminSpace {
     maxBookingDays: 30,
     minPartySize: 1,
     maxPartySize: 6,
+    createdFromCandidate: false,
     currentReservationCount: 0,
     totalReservationCount: 0,
     active: true,

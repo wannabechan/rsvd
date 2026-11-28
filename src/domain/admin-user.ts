@@ -54,6 +54,14 @@ export function platformUserGradeRank(grade: string): number {
   return index >= 0 ? index : PLATFORM_USER_GRADES.length;
 }
 
+/** Keep the more privileged grade (lower rank wins). */
+export function preferHigherPrivilegeGrade(
+  a: PlatformUserGrade,
+  b: PlatformUserGrade,
+): PlatformUserGrade {
+  return platformUserGradeRank(a) <= platformUserGradeRank(b) ? a : b;
+}
+
 export function filterAdminUsers(
   users: readonly AdminUser[],
   query: string,

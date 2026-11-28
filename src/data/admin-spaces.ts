@@ -30,6 +30,7 @@ export function buildSeedAdminSpaces(): AdminSpace[] {
       currentReservationCount: 0,
       totalReservationCount: space.totalReservationCount ?? 0,
       active: true,
+      createdFromCandidate: false,
       weeklyHours: createEmptyWeekSchedule(),
       exceptions:
         index === 0
