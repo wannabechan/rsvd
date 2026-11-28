@@ -6,7 +6,10 @@ import { useState } from "react";
 import { IconNotice } from "@/components/admin/admin-icons";
 import { useAuth } from "@/components/auth/auth-context";
 import { useLoginBoot } from "@/components/auth/login-boot-context";
-import { UserAvatar } from "@/components/auth/user-avatar";
+import {
+  hasPrivilegeAvatarRing,
+  UserAvatar,
+} from "@/components/auth/user-avatar";
 import { HeaderLogo } from "@/components/layout/header-logo";
 import { OwnerVerifyModal } from "@/components/profile/owner-verify-modal";
 import { useReservationChat } from "@/components/reservation-chat/reservation-chat-context";
@@ -134,7 +137,11 @@ export function SiteHeader() {
               aria-label="프로필"
               className="inline-flex h-10 max-w-[11rem] items-center gap-2 rounded-full"
             >
-              <span className="min-w-0 truncate text-sm font-normal text-rsvd-text">
+              <span
+                className={`min-w-0 truncate text-sm font-normal text-rsvd-text ${
+                  hasPrivilegeAvatarRing(user) ? "-translate-x-[3px]" : ""
+                }`}
+              >
                 {user.nickname}
               </span>
               <UserAvatar user={user} />

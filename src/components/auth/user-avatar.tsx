@@ -8,15 +8,22 @@ type UserAvatarProps = {
   textClassName?: string;
 };
 
+/** admin / manager (ownerVerified) get a privilege ring in the header avatar. */
+export function hasPrivilegeAvatarRing(
+  user: Pick<AuthUser, "role" | "ownerVerified">,
+): boolean {
+  return user.role === "admin" || user.ownerVerified;
+}
+
 /** admin → success ring; manager(ownerVerified) → accent; others → none. */
 function privilegeRingClass(
   user: Pick<AuthUser, "role" | "ownerVerified">,
 ): string {
   if (user.role === "admin") {
-    return "ring-2 ring-rsvd-success";
+    return "ring-[3px] ring-rsvd-success";
   }
   if (user.ownerVerified) {
-    return "ring-2 ring-rsvd-accent";
+    return "ring-[3px] ring-rsvd-accent";
   }
   return "";
 }
