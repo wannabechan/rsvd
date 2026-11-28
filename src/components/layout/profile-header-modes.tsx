@@ -36,7 +36,7 @@ export function ProfileHeaderModes({
 
   return (
     <div
-      className="flex h-10 min-w-0 items-center gap-1"
+      className="flex h-10 min-w-0 items-center gap-[9px]"
       role="tablist"
       aria-label="프로필 모드"
     >
