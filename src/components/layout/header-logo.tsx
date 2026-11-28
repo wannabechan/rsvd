@@ -25,7 +25,7 @@ export function HeaderLogo() {
   // Space detail + active chat pin the symbol; idle dissolve only when logged out.
   const pinSymbol = isChatActive || onSpaceDetail;
   const displaySymbol = pinSymbol || (!isLoggedIn && showSymbol);
-  const statusLabel = isChatActive
+  const statusLabel = activeChat
     ? `${activeChat.spaceName} 예약챗 진행중`
     : START_CHAT_LABEL;
   const showStatusLabel = displaySymbol;
