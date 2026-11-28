@@ -14,13 +14,81 @@ export type AdminSpaceCandidate = {
   handle: string;
   /** ISO timestamp when the candidate row was created. */
   appliedAt: string;
-  /** Reserved for later matching — empty for now. */
+  /** Matched platform user email (empty until admin matches). */
   email: string;
-  /** Reserved for later matching — empty for now. */
+  /** 6-digit verification code while active; empty when none / expired. */
   verifyCode: string;
+  /** ISO expiry for verifyCode; empty when none. */
+  verifyCodeExpiresAt: string;
   /** How many invite/request submissions for this channel+handle. */
   requestCount: number;
 };
+
+/** Verify codes stay valid for 3 days. */
+export const VERIFY_CODE_TTL_MS = 3 * 24 * 60 * 60 * 1000;
+
+export function createVerifyCode(): string {
+  const n = Math.floor(Math.random() * 1_000_000);
+  return String(n).padStart(6, "0");
+}
+
+export function createVerifyCodeExpiresAt(nowMs = Date.now()): string {
+  return new Date(nowMs + VERIFY_CODE_TTL_MS).toISOString();
+}
+
+/** Remaining time as total hours:minutes (e.g. 71:05). */
+export function formatVerifyCountdown(remainingMs: number): string {
+  const clamped = Math.max(0, remainingMs);
+  const totalMinutes = Math.floor(clamped / 60_000);
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+}
+
+export function verifyCodeRemainingMs(
+  expiresAt: string,
+  nowMs = Date.now(),
+): number {
+  const ends = Date.parse(expiresAt);
+  if (!Number.isFinite(ends)) {
+    return 0;
+  }
+  return Math.max(0, ends - nowMs);
+}
+
+export function isVerifyCodeActive(
+  candidate: Pick<AdminSpaceCandidate, "verifyCode" | "verifyCodeExpiresAt">,
+  nowMs = Date.now(),
+): boolean {
+  if (!candidate.verifyCode.trim() || !candidate.verifyCodeExpiresAt.trim()) {
+    return false;
+  }
+  return verifyCodeRemainingMs(candidate.verifyCodeExpiresAt, nowMs) > 0;
+}
+
+/** Drop expired codes so list/save paths stay clean. */
+export function withFreshVerifyCode(
+  candidate: AdminSpaceCandidate,
+  nowMs = Date.now(),
+): AdminSpaceCandidate {
+  if (!candidate.verifyCode && !candidate.verifyCodeExpiresAt) {
+    return candidate;
+  }
+  if (isVerifyCodeActive(candidate, nowMs)) {
+    return candidate;
+  }
+  return {
+    ...candidate,
+    verifyCode: "",
+    verifyCodeExpiresAt: "",
+  };
+}
+
+export function candidateHasSavedEmail(
+  candidate: Pick<AdminSpaceCandidate, "email">,
+): boolean {
+  return candidate.email.trim().length > 0;
+}
 
 export function formatCandidateAppliedAt(appliedAt: string): string {
   if (/^\d{4}-\d{2}-\d{2}/.test(appliedAt)) {

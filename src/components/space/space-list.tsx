@@ -53,7 +53,7 @@ export function SpaceList({ spaces }: SpaceListProps) {
         <section aria-labelledby="my-liked-spaces-heading">
           <h2
             id="my-liked-spaces-heading"
-            className="text-sm font-medium text-rsvd-text"
+            className="mt-[3px] text-sm font-medium text-rsvd-text"
           >
             내가 애정하는 단골 매장
           </h2>

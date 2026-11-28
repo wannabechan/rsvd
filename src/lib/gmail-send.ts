@@ -43,7 +43,7 @@ function buildLoginCodeHtml(code: string, logoUrl: string) {
     <p style="margin:0 0 20px;font-size:24px;font-weight:600;letter-spacing:0.12em;line-height:1.3;">${code}</p>
     <p style="margin:0 0 8px;">이 코드는 10분 동안 유효합니다.</p>
     <p style="margin:0 0 28px;">본인 요청이 아니라면 무시하세요.</p>
-    <p style="margin:0 0 16px;">&nbsp;</p>
+    <div style="height:30px;line-height:30px;font-size:30px;">&nbsp;</div>
     <img src="${logoUrl}" alt="rsvd" width="100" style="display:block;width:100px;max-width:100%;height:auto;border:0;" />
   </body>
 </html>`;

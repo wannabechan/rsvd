@@ -8,6 +8,7 @@ import {
   createSpaceCandidateId,
   isSpaceCandidateChannel,
   normalizeCandidateHandle,
+  withFreshVerifyCode,
   type AdminSpaceCandidate,
   type SpaceCandidateChannel,
 } from "@/domain/admin-space-candidate";
@@ -16,10 +17,14 @@ import { getRedis, isRedisConfigured } from "@/lib/redis";
 const CANDIDATES_KEY = "rsvd:catalog:space-candidates:v1";
 
 function normalizeCandidate(row: AdminSpaceCandidate): AdminSpaceCandidate {
-  return {
+  return withFreshVerifyCode({
     ...row,
+    email: typeof row.email === "string" ? row.email : "",
+    verifyCode: typeof row.verifyCode === "string" ? row.verifyCode : "",
+    verifyCodeExpiresAt:
+      typeof row.verifyCodeExpiresAt === "string" ? row.verifyCodeExpiresAt : "",
     requestCount: candidateRequestCount(row),
-  };
+  });
 }
 
 export async function listSpaceCandidates(): Promise<AdminSpaceCandidate[]> {
@@ -77,6 +82,7 @@ export async function createSpaceCandidate(input: {
     appliedAt: new Date().toISOString(),
     email: "",
     verifyCode: "",
+    verifyCodeExpiresAt: "",
     requestCount: 1,
   };
 
@@ -141,6 +147,53 @@ export async function submitSpaceCandidateRequest(input: {
   }
   const candidate = await createSpaceCandidate(input);
   return { candidate, created: true };
+}
+
+export type SpaceCandidateEditableFields = {
+  email: string;
+  verifyCode: string;
+  verifyCodeExpiresAt: string;
+};
+
+/** Persist email / verify-code edits for existing rows. Does not create rows. */
+export async function updateSpaceCandidates(
+  updates: Array<{ id: string } & SpaceCandidateEditableFields>,
+): Promise<AdminSpaceCandidate[]> {
+  if (!isRedisConfigured()) {
+    throw new Error("Catalog store is not configured.");
+  }
+  if (updates.length === 0) {
+    return listSpaceCandidates();
+  }
+
+  const redis = getRedis();
+  const current = (await redis.get<AdminSpaceCandidate[]>(CANDIDATES_KEY)) ?? [];
+  const byId = new Map(
+    updates.map((item) => [
+      item.id,
+      {
+        email: item.email.trim(),
+        verifyCode: item.verifyCode.trim(),
+        verifyCodeExpiresAt: item.verifyCodeExpiresAt.trim(),
+      },
+    ]),
+  );
+
+  const next = current.map((row) => {
+    const patch = byId.get(row.id);
+    if (!patch) {
+      return normalizeCandidate(row);
+    }
+    return normalizeCandidate({
+      ...row,
+      email: patch.email,
+      verifyCode: patch.verifyCode,
+      verifyCodeExpiresAt: patch.verifyCodeExpiresAt,
+    });
+  });
+
+  await redis.set(CANDIDATES_KEY, next);
+  return sortCandidates(next.map(normalizeCandidate));
 }
 
 function sortCandidates(

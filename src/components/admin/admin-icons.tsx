@@ -60,3 +60,24 @@ export function IconPlus({ className = "h-4 w-4" }: IconProps) {
     </svg>
   );
 }
+
+export function IconSearch({ className = "h-4 w-4" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden>
+      <circle cx="11" cy="11" r="6.5" />
+      <path d="M16.5 16.5 20 20" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export function IconShuffle({ className = "h-4 w-4" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden>
+      <path d="M16 3h5v5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M4 20 19 5" strokeLinecap="round" />
+      <path d="M21 16v5h-5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M15 15l6 6" strokeLinecap="round" />
+      <path d="M4 4l5 5" strokeLinecap="round" />
+    </svg>
+  );
+}

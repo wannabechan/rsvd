@@ -1,6 +1,7 @@
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { AdminSpaceCandidatesTable } from "@/components/admin/admin-space-candidates-table";
+import { listCatalogUsers } from "@/lib/admin-catalog";
 import { listSpaceCandidates } from "@/lib/admin-space-candidates";
 
 export default function AdminSpaceCandidatesPage() {
@@ -13,6 +14,14 @@ export default function AdminSpaceCandidatesPage() {
 
 async function AdminSpaceCandidatesContent() {
   await connection();
-  const candidates = await listSpaceCandidates();
-  return <AdminSpaceCandidatesTable initialCandidates={candidates} />;
+  const [candidates, users] = await Promise.all([
+    listSpaceCandidates(),
+    listCatalogUsers(),
+  ]);
+  return (
+    <AdminSpaceCandidatesTable
+      initialCandidates={candidates}
+      users={users}
+    />
+  );
 }
