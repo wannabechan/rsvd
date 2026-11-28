@@ -55,7 +55,11 @@ export function SiteHeader() {
   return (
     <header className="relative z-50 shrink-0">
       {/* Fixed action row (h-10) + py-4 keeps header height identical across modes. */}
-      <div className="flex h-[4.5rem] w-full items-center justify-between border-b border-rsvd-border bg-rsvd-surface px-4">
+      <div
+        className={`flex h-[4.5rem] w-full items-center justify-between border-b border-rsvd-border px-4 ${
+          onProfile ? "bg-rsvd-bg" : "bg-rsvd-surface"
+        }`}
+      >
         <div className="flex h-10 min-w-0 items-center">
           {onProfile && showProfileModeLinks ? (
             <div className="flex h-10 min-w-0 items-center gap-3">
