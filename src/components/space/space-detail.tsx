@@ -127,7 +127,7 @@ export function SpaceDetail({ space }: SpaceDetailProps) {
         <Link
           href={routes.spaceList}
           aria-label="공간 리스트로 돌아가기"
-          className="inline-flex h-[2.25rem] w-[2.25rem] shrink-0 items-center justify-center text-[1.9125rem] font-thin leading-none text-rsvd-border"
+          className="inline-flex h-[2.25rem] w-[2.25rem] shrink-0 items-center justify-center text-[1.9125rem] font-thin leading-none text-rsvd-disabled-bg"
         >
           ←
         </Link>
