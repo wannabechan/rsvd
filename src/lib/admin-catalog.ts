@@ -9,10 +9,13 @@ import { sampleAvatarForUserId } from "@/data/spaces";
 import {
   adminSpaceReservationCount,
   createEmptyWeekSchedule,
+  inviteHandleFromSpaceName,
   normalizeNoticesText,
+  SPACE_INVITE_CHANNEL_DEFAULT,
   SPACE_MENU_IMAGES_MAX,
   SPACE_OTHER_IMAGES_MAX,
   syncAdminSpaceStats,
+  withInviteFields,
   type AdminSpace,
   type WeekdayKey,
   type WeekdaySchedule,
@@ -49,6 +52,8 @@ const SEEDED_KEY = "rsvd:catalog:seeded:v6";
 const HOURS_CLEARED_KEY = "rsvd:catalog:hours-cleared:v1";
 /** One-time migrate remote gallery URLs into stored WebP assets. */
 const IMAGES_STORED_KEY = "rsvd:catalog:images-stored:v1";
+/** One-time backfill invite channel/handle on existing catalog spaces. */
+const INVITE_FIELDS_KEY = "rsvd:catalog:space-invite-fields:v1";
 const PROFILE_KEY_PREFIX = "rsvd:user:profile:";
 const PASSWORD_KEY_PREFIX = "rsvd:user:password:";
 
@@ -142,6 +147,7 @@ export async function ensureAdminCatalogSeeded(): Promise<void> {
   if (seeded) {
     await ensureWeeklyHoursCleared();
     await ensureSpaceImagesStored();
+    await ensureSpaceInviteFields();
     return;
   }
 
@@ -152,7 +158,37 @@ export async function ensureAdminCatalogSeeded(): Promise<void> {
   await redis.set(SPACES_KEY, spaces);
   await redis.set(SEEDED_KEY, new Date().toISOString());
   await redis.set(HOURS_CLEARED_KEY, new Date().toISOString());
+  await redis.set(INVITE_FIELDS_KEY, new Date().toISOString());
   await ensureSpaceImagesStored();
+}
+
+async function ensureSpaceInviteFields(): Promise<void> {
+  if (!isRedisConfigured()) {
+    return;
+  }
+  const redis = getRedis();
+  const done = await redis.get<string>(INVITE_FIELDS_KEY);
+  if (done) {
+    return;
+  }
+  const spaces = (await redis.get<AdminSpace[]>(SPACES_KEY)) ?? [];
+  const next = spaces.map((space) =>
+    syncAdminSpaceStats(
+      withInviteFields({
+        ...space,
+        inviteChannel:
+          typeof space.inviteChannel === "string" && space.inviteChannel.trim()
+            ? space.inviteChannel
+            : SPACE_INVITE_CHANNEL_DEFAULT,
+        inviteHandle:
+          typeof space.inviteHandle === "string" && space.inviteHandle.trim()
+            ? space.inviteHandle
+            : inviteHandleFromSpaceName(space.name),
+      }),
+    ),
+  );
+  await redis.set(SPACES_KEY, next);
+  await redis.set(INVITE_FIELDS_KEY, new Date().toISOString());
 }
 
 async function ensureWeeklyHoursCleared(): Promise<void> {
@@ -422,9 +458,12 @@ export async function createCatalogSpace(
   const id = `space-${Date.now().toString(36)}-${Math.random()
     .toString(36)
     .slice(2, 7)}`;
+  const normalized = normalizeImageFields(fields);
   const created = syncAdminSpaceStats({
     id,
-    ...normalizeImageFields(fields),
+    ...normalized,
+    inviteChannel: SPACE_INVITE_CHANNEL_DEFAULT,
+    inviteHandle: inviteHandleFromSpaceName(normalized.name),
     currentReservationCount: 0,
     totalReservationCount: 0,
     weeklyHours: createEmptyWeekSchedule(),

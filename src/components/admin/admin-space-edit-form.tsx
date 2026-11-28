@@ -7,8 +7,10 @@ import { AdminSpaceImageField } from "@/components/admin/admin-space-image-field
 import {
   adminSpaceRegularCount,
   adminSpaceReservationCount,
+  inviteHandleFromSpaceName,
   noticesToEditableText,
   SPACE_HERO_IMAGE_MAX,
+  SPACE_INVITE_CHANNEL_DEFAULT,
   SPACE_MENU_IMAGES_MAX,
   SPACE_OTHER_IMAGES_MAX,
   type AdminSpace,
@@ -151,6 +153,29 @@ export function AdminSpaceEditForm({ mode, space }: AdminSpaceEditFormProps) {
               value={adminEmail}
               onChange={(event) => setAdminEmail(event.target.value)}
               className="auth-input w-full rounded-xl border border-rsvd-border bg-rsvd-surface px-3.5 py-2.5 text-sm text-rsvd-text"
+            />
+          </Field>
+        </div>
+
+        <div className="grid gap-5 sm:grid-cols-2">
+          <Field label="초대채널">
+            <input
+              value={space.inviteChannel || SPACE_INVITE_CHANNEL_DEFAULT}
+              readOnly
+              tabIndex={-1}
+              aria-readonly="true"
+              className="auth-input w-full rounded-xl border border-rsvd-border bg-rsvd-bg px-3.5 py-2.5 text-sm text-rsvd-text"
+            />
+          </Field>
+          <Field label="초대아이디">
+            <input
+              value={
+                space.inviteHandle || inviteHandleFromSpaceName(name) || ""
+              }
+              readOnly
+              tabIndex={-1}
+              aria-readonly="true"
+              className="auth-input w-full rounded-xl border border-rsvd-border bg-rsvd-bg px-3.5 py-2.5 text-sm text-rsvd-text"
             />
           </Field>
         </div>

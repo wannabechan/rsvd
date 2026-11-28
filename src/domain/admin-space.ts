@@ -71,6 +71,10 @@ export type AdminSpace = {
   notices: string;
   address: string;
   contact: string;
+  /** Invite channel used when the store was onboarded (read-only in admin UI). */
+  inviteChannel: string;
+  /** Invite handle / id (read-only); typically space name without spaces. */
+  inviteHandle: string;
   heroImage: string;
   menuImages: string[];
   otherImages: string[];
@@ -125,23 +129,26 @@ export function adminSpaceReservationCount(space: AdminSpace): number {
  * currentReservationCount stays the stored live booking count (0 until real reservations).
  */
 export function syncAdminSpaceStats(space: AdminSpace): AdminSpace {
-  const notices = normalizeNoticesText(space.notices);
-  const members = Array.isArray(space.regularMembers) ? space.regularMembers : [];
+  const withInvite = withInviteFields(space);
+  const notices = normalizeNoticesText(withInvite.notices);
+  const members = Array.isArray(withInvite.regularMembers)
+    ? withInvite.regularMembers
+    : [];
   if (members.length === 0) {
     return {
-      ...space,
+      ...withInvite,
       notices,
-      regularUserIds: space.regularUserIds ?? [],
-      regularMembers: space.regularMembers ?? [],
-      currentReservationCount: adminSpaceReservationCount(space),
+      regularUserIds: withInvite.regularUserIds ?? [],
+      regularMembers: withInvite.regularMembers ?? [],
+      currentReservationCount: adminSpaceReservationCount(withInvite),
     };
   }
   return {
-    ...space,
+    ...withInvite,
     notices,
     regularMembers: members,
     regularUserIds: members.map((member) => member.userId),
-    currentReservationCount: adminSpaceReservationCount(space),
+    currentReservationCount: adminSpaceReservationCount(withInvite),
   };
 }
 
@@ -230,6 +237,37 @@ export function noticesToEditableText(notices: string | string[]): string {
   return normalizeNoticesText(notices);
 }
 
+/** Default invite channel for catalog spaces. */
+export const SPACE_INVITE_CHANNEL_DEFAULT = "인스타그램";
+
+/** Invite handle derived from space name (spaces removed). */
+export function inviteHandleFromSpaceName(name: string): string {
+  return name.replace(/\s+/g, "");
+}
+
+/** Fill invite fields when missing (legacy Redis rows / blank create). */
+export function withInviteFields(space: AdminSpace): AdminSpace {
+  const inviteChannel =
+    typeof space.inviteChannel === "string" && space.inviteChannel.trim()
+      ? space.inviteChannel.trim()
+      : SPACE_INVITE_CHANNEL_DEFAULT;
+  const inviteHandle =
+    typeof space.inviteHandle === "string" && space.inviteHandle.trim()
+      ? space.inviteHandle.trim()
+      : inviteHandleFromSpaceName(space.name);
+  if (
+    space.inviteChannel === inviteChannel &&
+    space.inviteHandle === inviteHandle
+  ) {
+    return space;
+  }
+  return {
+    ...space,
+    inviteChannel,
+    inviteHandle,
+  };
+}
+
 export function createBlankAdminSpace(): AdminSpace {
   return {
     id: "",
@@ -238,6 +276,8 @@ export function createBlankAdminSpace(): AdminSpace {
     notices: "",
     address: "",
     contact: "",
+    inviteChannel: SPACE_INVITE_CHANNEL_DEFAULT,
+    inviteHandle: "",
     heroImage: "",
     menuImages: [],
     otherImages: [],

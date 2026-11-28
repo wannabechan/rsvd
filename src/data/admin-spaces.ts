@@ -1,5 +1,7 @@
 import {
   createEmptyWeekSchedule,
+  inviteHandleFromSpaceName,
+  SPACE_INVITE_CHANNEL_DEFAULT,
   type AdminSpace,
 } from "@/domain/admin-space";
 import { SAMPLE_SPACES } from "@/data/spaces";
@@ -16,6 +18,8 @@ export function buildSeedAdminSpaces(): AdminSpace[] {
       notices: space.notice,
       address: space.address,
       contact: space.contact,
+      inviteChannel: SPACE_INVITE_CHANNEL_DEFAULT,
+      inviteHandle: inviteHandleFromSpaceName(space.name),
       heroImage: images[0] ?? "",
       menuImages: images.slice(1, 2),
       otherImages: images.slice(2),
