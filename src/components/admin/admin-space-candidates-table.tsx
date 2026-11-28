@@ -2,9 +2,9 @@
 
 import { useEffect, useMemo, useState } from "react";
 import {
+  IconLock,
   IconPlus,
   IconSearch,
-  IconShuffle,
 } from "@/components/admin/admin-icons";
 import { AdminUserMatchModal } from "@/components/admin/admin-user-match-modal";
 import {
@@ -294,13 +294,14 @@ export function AdminSpaceCandidatesTable({
               <th className="px-4 py-3 font-medium">이메일</th>
               <th className="px-4 py-3 font-medium">인증코드</th>
               <th className="px-4 py-3 font-medium">요청횟수</th>
+              <th className="px-4 py-3 font-medium">등록완료</th>
             </tr>
           </thead>
           <tbody>
             {rows.length === 0 ? (
               <tr>
                 <td
-                  colSpan={6}
+                  colSpan={7}
                   className="px-4 py-10 text-center text-sm text-rsvd-text-muted"
                 >
                   등록된 매장후보가 없습니다.
@@ -337,7 +338,7 @@ export function AdminSpaceCandidatesTable({
                           type="button"
                           aria-label="사용자 검색으로 이메일 매칭"
                           onClick={() => setMatchCandidateId(item.id)}
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-rsvd-border bg-rsvd-surface text-rsvd-text transition hover:bg-rsvd-bg"
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-rsvd-text-muted transition hover:bg-rsvd-bg hover:text-rsvd-text"
                         >
                           <IconSearch />
                         </button>
@@ -359,14 +360,36 @@ export function AdminSpaceCandidatesTable({
                           aria-label="인증코드 생성"
                           disabled={!emailSaved}
                           onClick={() => handleGenerateCode(item.id)}
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-rsvd-border bg-rsvd-surface text-rsvd-text transition hover:bg-rsvd-bg disabled:cursor-not-allowed disabled:bg-rsvd-disabled-bg disabled:text-rsvd-disabled-text"
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-rsvd-text-muted transition hover:bg-rsvd-bg hover:text-rsvd-text disabled:cursor-not-allowed disabled:text-rsvd-disabled-text disabled:hover:bg-transparent disabled:hover:text-rsvd-disabled-text"
                         >
-                          <IconShuffle />
+                          <IconLock />
                         </button>
                       )}
                     </td>
                     <td className="px-4 py-3.5 text-rsvd-text">
                       {candidateRequestCount(item)}
+                    </td>
+                    <td className="px-4 py-3.5">
+                      <button
+                        type="button"
+                        role="switch"
+                        aria-checked={item.registrationComplete}
+                        aria-label={`${item.handle} 등록완료`}
+                        disabled
+                        className={`relative h-6 w-11 cursor-not-allowed rounded-full transition ${
+                          item.registrationComplete
+                            ? "bg-rsvd-brand"
+                            : "bg-rsvd-border"
+                        }`}
+                      >
+                        <span
+                          className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-rsvd-surface transition ${
+                            item.registrationComplete
+                              ? "translate-x-5"
+                              : "translate-x-0"
+                          }`}
+                        />
+                      </button>
                     </td>
                   </tr>
                 );

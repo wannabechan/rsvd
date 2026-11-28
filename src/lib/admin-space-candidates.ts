@@ -24,6 +24,7 @@ function normalizeCandidate(row: AdminSpaceCandidate): AdminSpaceCandidate {
     verifyCodeExpiresAt:
       typeof row.verifyCodeExpiresAt === "string" ? row.verifyCodeExpiresAt : "",
     requestCount: candidateRequestCount(row),
+    registrationComplete: Boolean(row.registrationComplete),
   });
 }
 
@@ -84,6 +85,7 @@ export async function createSpaceCandidate(input: {
     verifyCode: "",
     verifyCodeExpiresAt: "",
     requestCount: 1,
+    registrationComplete: false,
   };
 
   const redis = getRedis();

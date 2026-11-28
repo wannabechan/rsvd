@@ -13,6 +13,8 @@ export type AuthUser = {
   nickname: string;
   /** Verified mobile number digits, or null when not verified. */
   phone: string | null;
+  /** Interest regions labeled to 구 (or 시/군 leaf); max 5. */
+  interestRegions: string[];
   /** Public avatar image URL, or null for letter+tone fallback. */
   avatarUrl: string | null;
   role: UserRole;
@@ -22,6 +24,8 @@ export type UserProfile = {
   nickname: string;
   /** Verified mobile number (digits only), or null. */
   phone: string | null;
+  /** Interest regions labeled to 구 (or 시/군 leaf); max 5. */
+  interestRegions: string[];
   /** When true, avatar bytes exist in the user store. */
   hasAvatar: boolean;
   /** Cache-busting version for avatar URL. */
@@ -130,6 +134,9 @@ export function authUserFromProfile(
     email: normalized,
     nickname: profile.nickname,
     phone: profile.phone ? normalizePhone(profile.phone) : null,
+    interestRegions: Array.isArray(profile.interestRegions)
+      ? profile.interestRegions
+      : [],
     avatarUrl: profile.hasAvatar
       ? avatarPublicPath(normalized, profile.avatarVersion)
       : null,

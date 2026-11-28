@@ -11,6 +11,7 @@ import {
   type AuthUser,
   type UserProfile,
 } from "@/domain/auth";
+import { normalizeInterestRegions } from "@/domain/interest-region";
 import { syncOnboardedCatalogUser } from "@/lib/admin-catalog";
 import { resolveUserRole } from "@/lib/admin";
 import { getRedis, isRedisConfigured } from "@/lib/redis";
@@ -22,6 +23,7 @@ const AVATAR_KEY_PREFIX = "rsvd:user:avatar:";
 type StoredProfile = {
   nickname: string;
   phone: string | null;
+  interestRegions?: string[];
   hasAvatar: boolean;
   avatarVersion: number;
 };
@@ -64,6 +66,7 @@ function toUserProfile(email: string, stored: StoredProfile | null): UserProfile
     return {
       nickname: defaultNickname(email),
       phone: null,
+      interestRegions: [],
       hasAvatar: false,
       avatarVersion: 0,
     };
@@ -75,6 +78,7 @@ function toUserProfile(email: string, stored: StoredProfile | null): UserProfile
   return {
     nickname: stored.nickname || defaultNickname(email),
     phone: phone || null,
+    interestRegions: normalizeInterestRegions(stored.interestRegions),
     hasAvatar: Boolean(stored.hasAvatar),
     avatarVersion: Number(stored.avatarVersion) || 0,
   };
@@ -84,6 +88,7 @@ function toStoredProfile(profile: UserProfile): StoredProfile {
   return {
     nickname: profile.nickname,
     phone: profile.phone,
+    interestRegions: normalizeInterestRegions(profile.interestRegions),
     hasAvatar: profile.hasAvatar,
     avatarVersion: profile.avatarVersion,
   };
@@ -121,6 +126,7 @@ export async function ensureUserProfile(email: string): Promise<UserProfile> {
   const profile: StoredProfile = {
     nickname: defaultNickname(normalized),
     phone: null,
+    interestRegions: [],
     hasAvatar: false,
     avatarVersion: 0,
   };
@@ -173,6 +179,22 @@ export async function clearPhone(email: string): Promise<UserProfile> {
   const next = toStoredProfile({
     ...current,
     phone: null,
+  });
+  await getRedis().set(profileKey(normalized), next);
+  const profile = toUserProfile(normalized, next);
+  await syncCatalogListing(normalized, profile);
+  return profile;
+}
+
+export async function updateInterestRegions(
+  email: string,
+  interestRegions: string[],
+): Promise<UserProfile> {
+  const normalized = normalizeEmail(email);
+  const current = await ensureUserProfile(normalized);
+  const next = toStoredProfile({
+    ...current,
+    interestRegions: normalizeInterestRegions(interestRegions),
   });
   await getRedis().set(profileKey(normalized), next);
   const profile = toUserProfile(normalized, next);

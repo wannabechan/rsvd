@@ -22,6 +22,11 @@ export type AdminSpaceCandidate = {
   verifyCodeExpiresAt: string;
   /** How many invite/request submissions for this channel+handle. */
   requestCount: number;
+  /**
+   * True when the candidate has been fully registered as a store.
+   * Manual toggle is disabled; flipped on by registration flow later.
+   */
+  registrationComplete: boolean;
 };
 
 /** Verify codes stay valid for 3 days. */

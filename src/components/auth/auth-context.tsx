@@ -19,6 +19,7 @@ import {
   removeAvatar as removeAvatarRequest,
   requestLoginCode,
   requestPhoneCode as requestPhoneCodeRequest,
+  saveInterestRegions as saveInterestRegionsRequest,
   saveNickname as saveNicknameRequest,
   setupPasswordLogin,
   uploadAvatar as uploadAvatarRequest,
@@ -35,6 +36,9 @@ type AuthContextValue = {
   refreshProfile: () => Promise<{ ok: true; user: AuthUser } | { ok: false; error: string }>;
   saveNickname: (
     nickname: string,
+  ) => Promise<{ ok: true; user: AuthUser } | { ok: false; error: string }>;
+  saveInterestRegions: (
+    interestRegions: string[],
   ) => Promise<{ ok: true; user: AuthUser } | { ok: false; error: string }>;
   uploadAvatar: (
     webpBlob: Blob,
@@ -109,6 +113,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { ok: false as const, error: "로그인이 필요합니다." };
       }
       const result = await saveNicknameRequest(user.email, nickname);
+      if (result.ok) {
+        setUser(result.user);
+      }
+      return result;
+    },
+    [user],
+  );
+
+  const saveInterestRegions = useCallback(
+    async (interestRegions: string[]) => {
+      if (!user) {
+        return { ok: false as const, error: "로그인이 필요합니다." };
+      }
+      const result = await saveInterestRegionsRequest(
+        user.email,
+        interestRegions,
+      );
       if (result.ok) {
         setUser(result.user);
       }
@@ -219,6 +240,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       logout,
       refreshProfile,
       saveNickname,
+      saveInterestRegions,
       uploadAvatar,
       removeAvatar,
       requestPhoneCode,
@@ -236,6 +258,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       logout,
       refreshProfile,
       saveNickname,
+      saveInterestRegions,
       uploadAvatar,
       removeAvatar,
       requestPhoneCode,

@@ -85,6 +85,8 @@ export type AdminSpace = {
    * Kept in sync with regularMembers (see syncAdminSpaceStats).
    */
   currentReservationCount: number;
+  /** Cumulative reservations for public home-feed ranking. */
+  totalReservationCount: number;
   active: boolean;
   weeklyHours: Record<WeekdayKey, WeekdaySchedule>;
   exceptions: ExceptionDateRange[];
@@ -244,6 +246,7 @@ export function createBlankAdminSpace(): AdminSpace {
     minPartySize: 1,
     maxPartySize: 6,
     currentReservationCount: 0,
+    totalReservationCount: 0,
     active: true,
     weeklyHours: createEmptyWeekSchedule(),
     exceptions: [],

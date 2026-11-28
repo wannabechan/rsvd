@@ -13,6 +13,7 @@ import {
   userIdFromEmail,
   type AuthUser,
 } from "@/domain/auth";
+import { normalizeInterestRegions } from "@/domain/interest-region";
 
 const SESSION_KEY = "rsvd:auth-session";
 
@@ -58,6 +59,7 @@ function normalizeSessionUser(value: unknown): AuthUser | null {
         ? raw.nickname.trim()
         : defaultNickname(email),
     phone: phoneRaw && isValidPhone(phoneRaw) ? phoneRaw : null,
+    interestRegions: normalizeInterestRegions(raw.interestRegions),
     avatarUrl: typeof raw.avatarUrl === "string" ? raw.avatarUrl : null,
     role: raw.role === "admin" ? "admin" : "member",
   };
@@ -217,6 +219,28 @@ export async function saveNickname(
     email: normalizeEmail(email),
     nickname,
   });
+  if (!result.ok) {
+    return result;
+  }
+  const user = normalizeSessionUser(result.user);
+  if (!user) {
+    return { ok: false, error: "프로필 응답이 올바르지 않습니다." };
+  }
+  writeStoredSession(user);
+  return { ok: true, user };
+}
+
+export async function saveInterestRegions(
+  email: string,
+  interestRegions: string[],
+): Promise<{ ok: true; user: AuthUser } | { ok: false; error: string }> {
+  const result = await postJson<{ user: AuthUser }>(
+    "/api/profile/interest-regions",
+    {
+      email: normalizeEmail(email),
+      interestRegions: normalizeInterestRegions(interestRegions),
+    },
+  );
   if (!result.ok) {
     return result;
   }

@@ -5,12 +5,18 @@ import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/components/auth/auth-context";
 import { useLoginBoot } from "@/components/auth/login-boot-context";
 import { UserAvatar } from "@/components/auth/user-avatar";
+import { InterestRegionPickerModal } from "@/components/profile/interest-region-picker-modal";
 import { PhoneVerifyModal } from "@/components/profile/phone-verify-modal";
 import {
   defaultNickname,
   formatPhoneDisplay,
   NICKNAME_MAX_LENGTH,
 } from "@/domain/auth";
+import {
+  INTEREST_REGIONS_MAX,
+  interestRegionsEqual,
+  normalizeInterestRegions,
+} from "@/domain/interest-region";
 import { prepareAvatarWebp } from "@/lib/prepare-avatar-image";
 import { routes } from "@/lib/routes";
 
@@ -32,6 +38,7 @@ export default function ProfilePage() {
     isLoggedIn,
     logout,
     saveNickname,
+    saveInterestRegions,
     uploadAvatar,
     removeAvatar,
     clearPhone,
@@ -40,8 +47,10 @@ export default function ProfilePage() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const [nickname, setNickname] = useState("");
+  const [interestRegions, setInterestRegions] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [savingNickname, setSavingNickname] = useState(false);
+  const [savingInterestRegions, setSavingInterestRegions] = useState(false);
   const [avatarBusy, setAvatarBusy] = useState(false);
   const [pendingAvatar, setPendingAvatar] = useState<Blob | null>(null);
   const [pendingPreviewUrl, setPendingPreviewUrl] = useState<string | null>(null);
@@ -49,6 +58,7 @@ export default function ProfilePage() {
   const [phoneVerifyOpen, setPhoneVerifyOpen] = useState(false);
   const [phonePendingClear, setPhonePendingClear] = useState(false);
   const [savingPhoneClear, setSavingPhoneClear] = useState(false);
+  const [regionPickerOpen, setRegionPickerOpen] = useState(false);
 
   useEffect(() => {
     if (isReady && !isLoggedIn && !loggingOutRef.current) {
@@ -59,6 +69,7 @@ export default function ProfilePage() {
   useEffect(() => {
     if (user) {
       setNickname(user.nickname);
+      setInterestRegions(normalizeInterestRegions(user.interestRegions));
       if (!user.phone) {
         setPhonePendingClear(false);
       }
@@ -89,6 +100,12 @@ export default function ProfilePage() {
   const nicknameDefault = defaultNickname(user.email);
   const isNicknameDefault = nickname.trim() === nicknameDefault;
   const hasRegisteredPhone = Boolean(user.phone);
+  const savedInterestRegions = normalizeInterestRegions(user.interestRegions);
+  const interestRegionsDirty = !interestRegionsEqual(
+    interestRegions,
+    savedInterestRegions,
+  );
+  const canAddInterestRegion = interestRegions.length < INTEREST_REGIONS_MAX;
 
   async function handleSaveNickname() {
     setError(null);
@@ -100,6 +117,18 @@ export default function ProfilePage() {
       return;
     }
     setNickname(result.user.nickname);
+  }
+
+  async function handleSaveInterestRegions() {
+    setError(null);
+    setSavingInterestRegions(true);
+    const result = await saveInterestRegions(interestRegions);
+    setSavingInterestRegions(false);
+    if (!result.ok) {
+      setError(result.error);
+      return;
+    }
+    setInterestRegions(normalizeInterestRegions(result.user.interestRegions));
   }
 
   async function handleSavePhoneClear() {
@@ -309,6 +338,64 @@ export default function ProfilePage() {
         </div>
       </section>
 
+      <section className="mt-8" aria-labelledby="profile-interest-regions-heading">
+        <h2
+          id="profile-interest-regions-heading"
+          className="text-sm font-medium text-rsvd-text"
+        >
+          관심지역
+        </h2>
+        <div className="mt-2 space-y-3">
+          {interestRegions.length > 0 ? (
+            <ul className="flex flex-wrap gap-2">
+              {interestRegions.map((label) => (
+                <li key={label}>
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-rsvd-border bg-rsvd-surface px-3 py-1.5 text-sm text-rsvd-text">
+                    {label}
+                    <button
+                      type="button"
+                      aria-label={`${label} 삭제`}
+                      onClick={() =>
+                        setInterestRegions((current) =>
+                          current.filter((item) => item !== label),
+                        )
+                      }
+                      className="text-rsvd-text-muted transition hover:text-rsvd-danger"
+                    >
+                      ×
+                    </button>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-rsvd-text-muted">
+              관심지역을 추가해 주세요. (최대 {INTEREST_REGIONS_MAX}개)
+            </p>
+          )}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              disabled={!canAddInterestRegion || savingInterestRegions}
+              onClick={() => setRegionPickerOpen(true)}
+              className={PROFILE_ACTION_SECONDARY}
+            >
+              추가
+            </button>
+            <button
+              type="button"
+              disabled={savingInterestRegions || !interestRegionsDirty}
+              onClick={() => {
+                void handleSaveInterestRegions();
+              }}
+              className={PROFILE_ACTION_PRIMARY}
+            >
+              {savingInterestRegions ? "…" : "저장"}
+            </button>
+          </div>
+        </div>
+      </section>
+
       <section className="mt-8" aria-labelledby="profile-email-heading">
         <h2 id="profile-email-heading" className="text-sm font-medium text-rsvd-text">
           이메일
@@ -382,6 +469,19 @@ export default function ProfilePage() {
           onVerified={() => {
             setPhonePendingClear(false);
             setPhoneVerifyOpen(false);
+          }}
+        />
+      ) : null}
+
+      {regionPickerOpen ? (
+        <InterestRegionPickerModal
+          excludeLabels={interestRegions}
+          onCancel={() => setRegionPickerOpen(false)}
+          onSelect={(label) => {
+            setInterestRegions((current) =>
+              normalizeInterestRegions([...current, label]),
+            );
+            setRegionPickerOpen(false);
           }}
         />
       ) : null}

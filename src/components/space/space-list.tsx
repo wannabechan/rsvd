@@ -4,10 +4,11 @@ import { useAuth } from "@/components/auth/auth-context";
 import { FloatingAddButton } from "@/components/layout/floating-add-button";
 import { SpaceCard } from "@/components/space/space-card";
 import { getLikedSpaceIdsForUser } from "@/data/user-likes";
+import { normalizeInterestRegions } from "@/domain/interest-region";
 import {
   filterSpacesByLikedIds,
   MY_LIKED_SPACES_EMPTY_MESSAGE,
-  sortSpacesByRecentReservationDesc,
+  sortSpacesForHomeFeed,
   type SpaceItem,
 } from "@/domain/space";
 
@@ -17,7 +18,8 @@ type SpaceListProps = {
 
 export function SpaceList({ spaces }: SpaceListProps) {
   const { user, isReady, isLoggedIn } = useAuth();
-  const platformSpaces = sortSpacesByRecentReservationDesc(spaces);
+  const interestRegions = normalizeInterestRegions(user?.interestRegions);
+  const platformSpaces = sortSpacesForHomeFeed(spaces, interestRegions);
 
   if (!isReady) {
     return (

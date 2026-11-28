@@ -115,6 +115,7 @@ function attachRandomRegulars(
       lastReservedAt: "",
       lastLikedAt,
       currentReservationCount: 0,
+      totalReservationCount: Number(space.totalReservationCount) || 0,
     };
   });
 }
@@ -425,6 +426,7 @@ export async function createCatalogSpace(
     id,
     ...normalizeImageFields(fields),
     currentReservationCount: 0,
+    totalReservationCount: 0,
     weeklyHours: createEmptyWeekSchedule(),
     exceptions: [],
     regularUserIds: [],
@@ -657,6 +659,7 @@ export function adminSpaceToPublicItem(space: AdminSpace): SpaceItem {
     contact: space.contact,
     onlineLink: "",
     totalLikeCount: regularMembers.length,
+    totalReservationCount: Number(space.totalReservationCount) || 0,
     lastReservedAt: space.lastReservedAt || "",
     lastLikedAt: space.lastLikedAt || "",
     recentReservers,

@@ -24,6 +24,7 @@ export function buildSeedAdminSpaces(): AdminSpace[] {
       minPartySize: 1,
       maxPartySize: 6,
       currentReservationCount: 0,
+      totalReservationCount: space.totalReservationCount ?? 0,
       active: true,
       weeklyHours: createEmptyWeekSchedule(),
       exceptions:

@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import {
   filterAdminUsers,
   formatJoinedAt,
+  sortAdminUsers,
   type AdminUser,
 } from "@/domain/admin-user";
 
@@ -22,7 +23,7 @@ export function AdminUserMatchModal({
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const visibleUsers = useMemo(
-    () => filterAdminUsers(users, query),
+    () => sortAdminUsers(filterAdminUsers(users, query), "joinedAt", "desc"),
     [users, query],
   );
   const selected = visibleUsers.find((user) => user.id === selectedId) ?? null;
