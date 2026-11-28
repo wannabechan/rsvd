@@ -251,3 +251,49 @@ export async function matchesActiveOwnerVerifyCode(
       row.verifyCode.trim() === trimmed,
   );
 }
+
+/**
+ * Invalidate the matched verify code and mark registration complete.
+ * Returns false when no active matching candidate row was found.
+ */
+export async function completeOwnerVerifyOnCandidates(
+  email: string,
+  code: string,
+): Promise<boolean> {
+  if (!isRedisConfigured()) {
+    throw new Error("Catalog store is not configured.");
+  }
+  const normalized = normalizeEmail(email);
+  const trimmed = code.trim();
+  if (!normalized || !/^\d{6}$/.test(trimmed)) {
+    return false;
+  }
+
+  const redis = getRedis();
+  const current = (await redis.get<AdminSpaceCandidate[]>(CANDIDATES_KEY)) ?? [];
+  let matched = false;
+  const next = current.map((row) => {
+    const normalizedRow = normalizeCandidate(row);
+    if (
+      normalizeEmail(normalizedRow.email) === normalized &&
+      isVerifyCodeActive(normalizedRow) &&
+      normalizedRow.verifyCode.trim() === trimmed
+    ) {
+      matched = true;
+      return normalizeCandidate({
+        ...normalizedRow,
+        verifyCode: "",
+        verifyCodeExpiresAt: "",
+        registrationComplete: true,
+      });
+    }
+    return normalizedRow;
+  });
+
+  if (!matched) {
+    return false;
+  }
+
+  await redis.set(CANDIDATES_KEY, next);
+  return true;
+}

@@ -90,8 +90,10 @@ export function compareAdminUsers(
       return (aMs - bMs) * sign;
     }
   } else if (key === "grade") {
+    // Lower rank index = higher privilege (admin → sample).
+    // Desc shows higher privilege first.
     const compared =
-      platformUserGradeRank(a.grade) - platformUserGradeRank(b.grade);
+      platformUserGradeRank(b.grade) - platformUserGradeRank(a.grade);
     if (compared !== 0) {
       return compared * sign;
     }

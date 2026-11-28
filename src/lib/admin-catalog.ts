@@ -637,6 +637,39 @@ export async function syncOnboardedCatalogUser(input: {
   await redis.set(USERS_KEY, users);
 }
 
+/** Promote (or set) an onboarded catalog user to the given grade. */
+export async function setCatalogUserGrade(
+  email: string,
+  grade: PlatformUserGrade,
+): Promise<AdminUser | null> {
+  if (!isRedisConfigured()) {
+    return null;
+  }
+  await ensureUsersCatalogReady();
+
+  const redis = getRedis();
+  const normalized = normalizeEmail(email);
+  const users = (await redis.get<AdminUser[]>(USERS_KEY)) ?? [];
+  const index = users.findIndex(
+    (user) => normalizeEmail(user.email) === normalized,
+  );
+  if (index < 0) {
+    return null;
+  }
+
+  const current = users[index];
+  // Keep admin above manager promotions.
+  const nextGrade =
+    current.grade === "admin" || grade === "admin" ? "admin" : grade;
+  const next: AdminUser = {
+    ...current,
+    grade: nextGrade,
+  };
+  users[index] = next;
+  await redis.set(USERS_KEY, users);
+  return next;
+}
+
 export function adminSpaceToPublicItem(space: AdminSpace): SpaceItem {
   // List thumbnail = hero; detail carousel = hero → menu → other.
   const images = [

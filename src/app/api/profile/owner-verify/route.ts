@@ -1,10 +1,13 @@
+import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 import {
   isValidEmail,
   isValidLoginCode,
   normalizeEmail,
 } from "@/domain/auth";
-import { matchesActiveOwnerVerifyCode } from "@/lib/admin-space-candidates";
+import { setCatalogUserGrade } from "@/lib/admin-catalog";
+import { completeOwnerVerifyOnCandidates } from "@/lib/admin-space-candidates";
+import { routes } from "@/lib/routes";
 import {
   buildAuthUser,
   isUserStoreConfigured,
@@ -40,8 +43,8 @@ export async function POST(request: Request) {
       );
     }
 
-    const matched = await matchesActiveOwnerVerifyCode(email, code);
-    if (!matched) {
+    const completed = await completeOwnerVerifyOnCandidates(email, code);
+    if (!completed) {
       return NextResponse.json(
         { ok: false, error: "유효한 인증코드가 아닙니다." },
         { status: 400 },
@@ -49,6 +52,10 @@ export async function POST(request: Request) {
     }
 
     await markOwnerVerified(email);
+    await setCatalogUserGrade(email, "manager");
+    revalidatePath(routes.adminSpaceCandidates);
+    revalidatePath(routes.adminUsers);
+
     const user = await buildAuthUser(email);
     return NextResponse.json({ ok: true, user });
   } catch (error) {

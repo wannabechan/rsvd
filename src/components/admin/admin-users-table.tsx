@@ -24,7 +24,7 @@ const COLUMNS: { key: AdminUserSortKey; label: string }[] = [
 
 export function AdminUsersTable({ users }: AdminUsersTableProps) {
   const [query, setQuery] = useState("");
-  const [sortKey, setSortKey] = useState<AdminUserSortKey>("joinedAt");
+  const [sortKey, setSortKey] = useState<AdminUserSortKey>("grade");
   const [sortDir, setSortDir] = useState<AdminUserSortDir>("desc");
 
   const visibleUsers = sortAdminUsers(

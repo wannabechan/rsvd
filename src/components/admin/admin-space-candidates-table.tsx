@@ -245,11 +245,18 @@ export function AdminSpaceCandidatesTable({
 
   async function handleGenerateCode(candidateId: string) {
     const saved = savedCandidates.find((row) => row.id === candidateId);
-    if (!saved || !candidateHasSavedEmail(saved)) {
+    if (
+      !saved ||
+      !candidateHasSavedEmail(saved) ||
+      saved.registrationComplete
+    ) {
       return;
     }
     const current = mergeCandidate(saved, drafts[candidateId]);
-    if (isVerifyCodeActive(current, Date.now())) {
+    if (
+      current.registrationComplete ||
+      isVerifyCodeActive(current, Date.now())
+    ) {
       return;
     }
 
@@ -370,10 +377,16 @@ export function AdminSpaceCandidatesTable({
                 const emailSaved = saved
                   ? candidateHasSavedEmail(saved)
                   : false;
-                const codeActive = isVerifyCodeActive(item, nowMs);
+                const registrationComplete = Boolean(item.registrationComplete);
+                const codeActive =
+                  !registrationComplete && isVerifyCodeActive(item, nowMs);
                 const remaining = codeActive
                   ? verifyCodeRemainingMs(item.verifyCodeExpiresAt, nowMs)
                   : 0;
+                const codeLocked =
+                  !emailSaved ||
+                  registrationComplete ||
+                  generatingCodeId === item.id;
 
                 return (
                   <tr
@@ -415,9 +428,7 @@ export function AdminSpaceCandidatesTable({
                         <button
                           type="button"
                           aria-label="인증코드 생성"
-                          disabled={
-                            !emailSaved || generatingCodeId === item.id
-                          }
+                          disabled={codeLocked}
                           onClick={() => {
                             void handleGenerateCode(item.id);
                           }}
