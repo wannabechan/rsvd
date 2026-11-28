@@ -2,6 +2,10 @@
 
 import { brandLogos } from "@/lib/brand-assets";
 import {
+  HEADER_SYMBOL_HEIGHT,
+  HEADER_SYMBOL_NUDGE_Y,
+} from "@/lib/header-logo-layout";
+import {
   DEFAULT_PROFILE_HEADER_MODE,
   PROFILE_HEADER_MODE_LABEL,
   type ProfileHeaderMode,
@@ -14,8 +18,6 @@ const MODE_ICON: Record<ProfileHeaderMode, string> = {
   manager: brandLogos.symbolManager,
   admin: brandLogos.symbolAdmin,
 };
-
-const ICON_CLASS = "h-[2.075rem] w-[2.075rem]";
 
 type ProfileHeaderModesProps = {
   modes: readonly ProfileHeaderMode[];
@@ -50,7 +52,8 @@ export function ProfileHeaderModes({
             onClick={() => {
               onSelect(mode);
             }}
-            className="inline-flex h-10 w-10 shrink-0 items-center justify-center transition"
+            className="relative inline-flex h-10 shrink-0 items-center justify-start"
+            style={{ width: HEADER_SYMBOL_HEIGHT }}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
@@ -58,9 +61,13 @@ export function ProfileHeaderModes({
               alt=""
               width={800}
               height={800}
-              className={`${ICON_CLASS} transition-opacity ${
+              className={`absolute top-1/2 left-0 w-auto transition-opacity ${
                 isSelected ? "opacity-100" : "opacity-50"
               }`}
+              style={{
+                height: HEADER_SYMBOL_HEIGHT,
+                transform: `translateY(calc(-50% + ${HEADER_SYMBOL_NUDGE_Y}))`,
+              }}
               aria-hidden="true"
             />
           </button>

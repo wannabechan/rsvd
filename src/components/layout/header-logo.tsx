@@ -6,13 +6,16 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/components/auth/auth-context";
 import { useReservationChat } from "@/components/reservation-chat/reservation-chat-context";
 import { brandLogos } from "@/lib/brand-assets";
+import {
+  HEADER_LOGO_HEIGHT,
+  HEADER_LOGO_SLOT_WIDTH,
+  HEADER_SYMBOL_HEIGHT,
+  HEADER_SYMBOL_NUDGE_Y,
+} from "@/lib/header-logo-layout";
 import { isSpaceDetailPathname, routes } from "@/lib/routes";
 
 const SWAP_INTERVAL_MS = 5000;
 const DISSOLVE_MS = 700;
-const LOGO_HEIGHT = "1.68rem";
-const SYMBOL_HEIGHT = `calc(${LOGO_HEIGHT} * 1.235)`;
-const LOGO_SLOT_WIDTH = `calc(${LOGO_HEIGHT} * 1800 / 800)`;
 const START_CHAT_LABEL = "을 눌러 예약챗을 시작하세요.";
 
 export function HeaderLogo() {
@@ -51,7 +54,7 @@ export function HeaderLogo() {
     <Link
       href={routes.spaceList}
       className="relative inline-flex shrink-0 items-center"
-      style={{ height: SYMBOL_HEIGHT, width: LOGO_SLOT_WIDTH }}
+      style={{ height: HEADER_SYMBOL_HEIGHT, width: HEADER_LOGO_SLOT_WIDTH }}
       aria-label={
         isChatActive
           ? statusLabel
@@ -70,7 +73,7 @@ export function HeaderLogo() {
           displaySymbol ? "opacity-0" : "opacity-100"
         }`}
         style={{
-          height: LOGO_HEIGHT,
+          height: HEADER_LOGO_HEIGHT,
           transitionDuration: instantSwap ? "0ms" : `${DISSOLVE_MS}ms`,
         }}
       />
@@ -80,21 +83,22 @@ export function HeaderLogo() {
         alt=""
         width={800}
         height={800}
-        className={`absolute top-1/2 left-0 w-auto -translate-y-[calc(50%-2px)] transition-opacity ease-in-out ${
+        className={`absolute top-1/2 left-0 w-auto transition-opacity ease-in-out ${
           displaySymbol ? "opacity-100" : "opacity-0"
         }`}
         style={{
-          height: SYMBOL_HEIGHT,
+          height: HEADER_SYMBOL_HEIGHT,
+          transform: `translateY(calc(-50% + ${HEADER_SYMBOL_NUDGE_Y}))`,
           transitionDuration: instantSwap ? "0ms" : `${DISSOLVE_MS}ms`,
         }}
         aria-hidden="true"
       />
       <span
-        className={`pointer-events-none absolute top-1/2 max-w-[min(16.5rem,calc(100vw-7.5rem))] -translate-y-[calc(50%-2px)] truncate text-sm font-normal leading-none text-rsvd-text-muted transition-opacity ease-in-out ${
-          showStatusLabel ? "opacity-100" : "opacity-0"
-        }`}
+        className="pointer-events-none absolute top-1/2 max-w-[min(16.5rem,calc(100vw-7.5rem))] truncate text-sm font-normal leading-none text-rsvd-text-muted transition-opacity ease-in-out"
         style={{
-          left: `calc(${SYMBOL_HEIGHT} + 0.4rem)`,
+          left: `calc(${HEADER_SYMBOL_HEIGHT} + 0.4rem)`,
+          transform: `translateY(calc(-50% + ${HEADER_SYMBOL_NUDGE_Y}))`,
+          opacity: showStatusLabel ? 1 : 0,
           transitionDuration: instantSwap ? "0ms" : `${DISSOLVE_MS}ms`,
         }}
         aria-hidden={!showStatusLabel}
