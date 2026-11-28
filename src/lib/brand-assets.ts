@@ -6,6 +6,7 @@
 export const brandLogos = {
   main: "/img/rsvd_logo_main.png",
   symbol: "/img/rsvd_logo_symbol.png",
+  symbolSetting: "/img/rsvd_logo_symbol_setting.png",
   symbolAdmin: "/img/rsvd_logo_symbol_admin.png",
   symbolManager: "/img/rsvd_logo_symbol_manager.png",
   symbolLock: "/img/rsvd_logo_symbol_lock.png",

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { IconNotice } from "@/components/admin/admin-icons";
 import { useAuth } from "@/components/auth/auth-context";
 import { useLoginBoot } from "@/components/auth/login-boot-context";
@@ -11,9 +11,14 @@ import {
   UserAvatar,
 } from "@/components/auth/user-avatar";
 import { HeaderLogo } from "@/components/layout/header-logo";
+import { ProfileHeaderModes } from "@/components/layout/profile-header-modes";
 import { OwnerVerifyModal } from "@/components/profile/owner-verify-modal";
 import { useReservationChat } from "@/components/reservation-chat/reservation-chat-context";
-import { brandLogos } from "@/lib/brand-assets";
+import {
+  DEFAULT_PROFILE_HEADER_MODE,
+  profileHeaderModesForUser,
+  type ProfileHeaderMode,
+} from "@/domain/profile-header-modes";
 import { isSpaceDetailPathname, routes } from "@/lib/routes";
 
 const HEADER_ICON_CLASS = "h-[1.65rem] w-[1.65rem]";
@@ -29,14 +34,17 @@ export function SiteHeader() {
   const needsOwnerVerify = Boolean(
     isLoggedIn && user?.canOwnerVerify && !user?.ownerVerified,
   );
-  const showAdminPageLink = user?.role === "admin";
-  const showOwnerPageLink = Boolean(user?.ownerVerified);
-  const showOwnerVerifyLink = Boolean(
-    user?.canOwnerVerify && !user?.ownerVerified,
+  const profileModes = user ? profileHeaderModesForUser(user) : [];
+  const [profileMode, setProfileMode] = useState<ProfileHeaderMode>(
+    DEFAULT_PROFILE_HEADER_MODE,
   );
-  const showProfileModeLinks =
-    showAdminPageLink || showOwnerPageLink || showOwnerVerifyLink;
   const [ownerVerifyOpen, setOwnerVerifyOpen] = useState(false);
+
+  useEffect(() => {
+    if (onProfile) {
+      setProfileMode(DEFAULT_PROFILE_HEADER_MODE);
+    }
+  }, [onProfile]);
 
   function openInitialLogin() {
     // Bump remounts LoginForm to the email step even if /login was cached.
@@ -54,6 +62,29 @@ export function SiteHeader() {
     router.replace(routes.spaceList);
   }
 
+  function handleProfileModeSelect(mode: ProfileHeaderMode) {
+    setProfileMode(mode);
+    if (mode === "symbol") {
+      router.push(routes.spaceList);
+      return;
+    }
+    if (mode === "setting") {
+      if (pathname !== routes.profile) {
+        router.push(routes.profile);
+      }
+      return;
+    }
+    if (mode === "lock") {
+      setOwnerVerifyOpen(true);
+      return;
+    }
+    if (mode === "admin") {
+      router.push(routes.admin);
+      return;
+    }
+    // manager — host dashboard wired later.
+  }
+
   return (
     <header className="relative z-50 shrink-0">
       {/* Fixed action row (h-10) + py-4 keeps header height identical across modes. */}
@@ -63,63 +94,12 @@ export function SiteHeader() {
         }`}
       >
         <div className="flex h-10 min-w-0 items-center">
-          {onProfile && showProfileModeLinks ? (
-            <div className="flex h-10 min-w-0 items-center gap-3">
-              {showAdminPageLink ? (
-                <button
-                  type="button"
-                  onClick={() => {
-                    router.push(routes.admin);
-                  }}
-                  aria-label="관리자페이지"
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-full transition hover:bg-rsvd-tint"
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={brandLogos.symbolAdmin}
-                    alt=""
-                    width={800}
-                    height={800}
-                    className="h-[2.075rem] w-[2.075rem]"
-                  />
-                </button>
-              ) : null}
-              {showOwnerPageLink ? (
-                <button
-                  type="button"
-                  onClick={() => {
-                    // 사장님페이지 — host dashboard wired later.
-                  }}
-                  aria-label="사장님페이지"
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-full transition hover:bg-rsvd-tint"
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={brandLogos.symbolManager}
-                    alt=""
-                    width={800}
-                    height={800}
-                    className="h-[2.075rem] w-[2.075rem]"
-                  />
-                </button>
-              ) : showOwnerVerifyLink ? (
-                <button
-                  type="button"
-                  onClick={() => setOwnerVerifyOpen(true)}
-                  aria-label="사장님인증"
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-full transition hover:bg-rsvd-tint"
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={brandLogos.symbolLock}
-                    alt=""
-                    width={800}
-                    height={800}
-                    className="h-[2.075rem] w-[2.075rem]"
-                  />
-                </button>
-              ) : null}
-            </div>
+          {onProfile && isLoggedIn && user ? (
+            <ProfileHeaderModes
+              modes={profileModes}
+              selected={profileMode}
+              onSelect={handleProfileModeSelect}
+            />
           ) : needsOwnerVerify ? (
             <button
               type="button"
@@ -185,8 +165,18 @@ export function SiteHeader() {
 
       {ownerVerifyOpen ? (
         <OwnerVerifyModal
-          onClose={() => setOwnerVerifyOpen(false)}
-          onVerified={() => setOwnerVerifyOpen(false)}
+          onClose={() => {
+            setOwnerVerifyOpen(false);
+            if (onProfile) {
+              setProfileMode(DEFAULT_PROFILE_HEADER_MODE);
+            }
+          }}
+          onVerified={() => {
+            setOwnerVerifyOpen(false);
+            if (onProfile) {
+              setProfileMode(DEFAULT_PROFILE_HEADER_MODE);
+            }
+          }}
         />
       ) : null}
     </header>
