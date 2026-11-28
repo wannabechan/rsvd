@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { IconNotice } from "@/components/admin/admin-icons";
 import { useAuth } from "@/components/auth/auth-context";
@@ -22,10 +22,12 @@ import {
 import { isSpaceDetailPathname, routes } from "@/lib/routes";
 
 const HEADER_ICON_CLASS = "h-[1.65rem] w-[1.65rem]";
+const OWNER_VERIFY_QUERY = "ownerVerify";
 
 export function SiteHeader() {
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { bumpLoginBoot } = useLoginBoot();
   const { user, isLoggedIn } = useAuth();
   const { activeChat, endChat } = useReservationChat();
@@ -41,10 +43,20 @@ export function SiteHeader() {
   const [ownerVerifyOpen, setOwnerVerifyOpen] = useState(false);
 
   useEffect(() => {
-    if (onProfile) {
+    if (!onProfile) {
+      return;
+    }
+    // Home notice → profile + lock modal (same as tapping the lock symbol).
+    if (searchParams.get(OWNER_VERIFY_QUERY) === "1") {
+      setProfileMode("lock");
+      setOwnerVerifyOpen(true);
+      router.replace(routes.profile);
+      return;
+    }
+    if (!ownerVerifyOpen) {
       setProfileMode(DEFAULT_PROFILE_HEADER_MODE);
     }
-  }, [onProfile]);
+  }, [onProfile, searchParams, router, ownerVerifyOpen]);
 
   function openInitialLogin() {
     // Bump remounts LoginForm to the email step even if /login was cached.
@@ -99,7 +111,9 @@ export function SiteHeader() {
           ) : needsOwnerVerify ? (
             <button
               type="button"
-              onClick={() => setOwnerVerifyOpen(true)}
+              onClick={() => {
+                router.push(routes.profileOwnerVerify);
+              }}
               className="owner-verify-notice inline-flex h-10 min-w-0 max-w-full items-center gap-1.5 text-left text-sm font-normal text-rsvd-text"
               aria-label="사장님 인증을 진행하세요."
             >

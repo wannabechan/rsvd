@@ -8,6 +8,8 @@ export const routes = {
   spaceDetail: (spaceId: string) => `/space/${spaceId}`,
   login: "/login",
   profile: "/profile",
+  /** Profile entry that opens 사장님인증 (lock) the same as tapping the lock mode. */
+  profileOwnerVerify: "/profile?ownerVerify=1",
   admin: "/admin",
   adminSettings: "/admin",
   adminSpaces: "/admin/spaces",
