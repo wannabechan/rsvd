@@ -27,6 +27,13 @@ export function SiteHeader() {
   const needsOwnerVerify = Boolean(
     isLoggedIn && user?.canOwnerVerify && !user?.ownerVerified,
   );
+  const showAdminPageLink = user?.role === "admin";
+  const showOwnerPageLink = Boolean(user?.ownerVerified);
+  const showOwnerVerifyLink = Boolean(
+    user?.canOwnerVerify && !user?.ownerVerified,
+  );
+  const showProfileModeLinks =
+    showAdminPageLink || showOwnerPageLink || showOwnerVerifyLink;
   const [ownerVerifyOpen, setOwnerVerifyOpen] = useState(false);
 
   function openInitialLogin() {
@@ -50,9 +57,9 @@ export function SiteHeader() {
       {/* Fixed action row (h-10) + py-4 keeps header height identical across modes. */}
       <div className="flex h-[4.5rem] w-full items-center justify-between border-b border-rsvd-border bg-rsvd-surface px-4">
         <div className="flex h-10 min-w-0 items-center">
-          {onProfile ? (
+          {onProfile && showProfileModeLinks ? (
             <div className="flex h-10 min-w-0 items-center gap-3">
-              {user?.role === "admin" ? (
+              {showAdminPageLink ? (
                 <button
                   type="button"
                   onClick={() => {
@@ -63,17 +70,17 @@ export function SiteHeader() {
                   {">>"} 관리자페이지
                 </button>
               ) : null}
-              {user?.ownerVerified ? (
+              {showOwnerPageLink ? (
                 <button
                   type="button"
                   onClick={() => {
-                    // 사장님모드 — host dashboard wired later.
+                    // 사장님페이지 — host dashboard wired later.
                   }}
                   className={PROFILE_MODE_LINK_CLASS}
                 >
                   {">>"} 사장님페이지
                 </button>
-              ) : user?.canOwnerVerify ? (
+              ) : showOwnerVerifyLink ? (
                 <button
                   type="button"
                   onClick={() => setOwnerVerifyOpen(true)}

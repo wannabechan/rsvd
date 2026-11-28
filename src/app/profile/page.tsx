@@ -204,9 +204,12 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="profile-page-enter flex min-h-0 flex-1 flex-col px-4 pt-10 pb-6">
+    <div className="profile-page-enter flex min-h-0 flex-1 flex-col px-4 pt-4 pb-6">
       <section aria-labelledby="profile-avatar-heading">
-        <h2 id="profile-avatar-heading" className="text-sm font-medium text-rsvd-text">
+        <h2
+          id="profile-avatar-heading"
+          className="mt-[3px] text-sm font-medium text-rsvd-text"
+        >
           프로필 이미지
         </h2>
         <div className="mt-3 flex items-center gap-3">

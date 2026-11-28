@@ -3,7 +3,7 @@ type SpaceNoticeTextProps = {
   className?: string;
 };
 
-/** Renders notice text; blank lines use 85% of one line-height. */
+/** Renders notice text; blank lines use 75% of one line-height. */
 export function SpaceNoticeText({ text, className }: SpaceNoticeTextProps) {
   const lines = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n").split("\n");
 
@@ -13,7 +13,7 @@ export function SpaceNoticeText({ text, className }: SpaceNoticeTextProps) {
         line === "" ? (
           <span
             key={`blank-${index}`}
-            className="block h-[0.85lh]"
+            className="block h-[0.75lh]"
             aria-hidden
           />
         ) : (
