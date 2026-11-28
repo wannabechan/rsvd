@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   IconCalendar,
   IconClock,
@@ -12,10 +12,14 @@ import { ButtonSpinner } from "@/components/ui/button-spinner";
 import {
   adminSpaceRegularCount,
   adminSpaceReservationCount,
+  formatSpaceCreatedAt,
   openWeekdays,
+  sortAdminSpaces,
   WEEKDAY_KEYS,
   WEEKDAY_SHORT,
   type AdminSpace,
+  type AdminSpaceSortDir,
+  type AdminSpaceSortKey,
 } from "@/domain/admin-space";
 import { routes } from "@/lib/routes";
 
@@ -28,15 +32,41 @@ type ActiveDialog =
   | { kind: "blocked"; space: AdminSpace }
   | null;
 
+const COLUMNS: { key: AdminSpaceSortKey; label: string }[] = [
+  { key: "name", label: "공간명칭" },
+  { key: "createdAt", label: "생성일" },
+  { key: "address", label: "주소" },
+  { key: "openDays", label: "영업요일" },
+  { key: "reservationCount", label: "현재예약수" },
+  { key: "regularCount", label: "단골수" },
+  { key: "active", label: "활성/비활성" },
+];
+
 export function AdminSpaceTable({ initialSpaces }: AdminSpaceTableProps) {
   const [spaces, setSpaces] = useState(initialSpaces);
   const [dialog, setDialog] = useState<ActiveDialog>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [sortKey, setSortKey] = useState<AdminSpaceSortKey>("createdAt");
+  const [sortDir, setSortDir] = useState<AdminSpaceSortDir>("desc");
 
   useEffect(() => {
     setSpaces(initialSpaces);
   }, [initialSpaces]);
+
+  const visibleSpaces = useMemo(
+    () => sortAdminSpaces(spaces, sortKey, sortDir),
+    [spaces, sortKey, sortDir],
+  );
+
+  function toggleSort(key: AdminSpaceSortKey) {
+    if (sortKey === key) {
+      setSortDir((current) => (current === "asc" ? "desc" : "asc"));
+      return;
+    }
+    setSortKey(key);
+    setSortDir("asc");
+  }
 
   function requestToggle(space: AdminSpace) {
     setError(null);
@@ -116,17 +146,40 @@ export function AdminSpaceTable({ initialSpaces }: AdminSpaceTableProps) {
         <table className="min-w-full text-left text-sm">
           <thead className="border-b border-rsvd-border text-xs text-rsvd-text-muted">
             <tr>
-              <th className="px-4 py-3 font-medium">공간명칭</th>
-              <th className="px-4 py-3 font-medium">주소</th>
-              <th className="px-4 py-3 font-medium">영업요일</th>
-              <th className="px-4 py-3 font-medium">현재예약수</th>
-              <th className="px-4 py-3 font-medium">단골수</th>
-              <th className="px-4 py-3 font-medium">활성/비활성</th>
+              {COLUMNS.map((column) => {
+                const active = sortKey === column.key;
+                return (
+                  <th key={column.key} className="px-4 py-3 font-medium">
+                    <button
+                      type="button"
+                      onClick={() => toggleSort(column.key)}
+                      className="inline-flex items-center gap-1 text-left transition hover:text-rsvd-text"
+                      aria-label={`${column.label} ${
+                        active
+                          ? sortDir === "asc"
+                            ? "오름차순"
+                            : "내림차순"
+                          : "정렬"
+                      }`}
+                    >
+                      <span>{column.label}</span>
+                      {active ? (
+                        <span
+                          aria-hidden="true"
+                          className="text-[0.65rem] leading-none"
+                        >
+                          {sortDir === "asc" ? "▲" : "▼"}
+                        </span>
+                      ) : null}
+                    </button>
+                  </th>
+                );
+              })}
               <th className="px-4 py-3 font-medium">설정</th>
             </tr>
           </thead>
           <tbody>
-            {spaces.map((space) => {
+            {visibleSpaces.map((space) => {
               const open = new Set(openWeekdays(space));
               return (
                 <tr
@@ -134,10 +187,13 @@ export function AdminSpaceTable({ initialSpaces }: AdminSpaceTableProps) {
                   className="border-b border-rsvd-border last:border-b-0"
                 >
                   <td className="px-4 py-3.5 font-medium text-rsvd-text">
-                    {space.name}
+                    {space.name || "—"}
                   </td>
-                  <td className="max-w-[18rem] px-4 py-3.5 text-rsvd-text-muted">
-                    <span className="line-clamp-2">{space.address}</span>
+                  <td className="px-4 py-3.5 whitespace-nowrap text-rsvd-text-muted">
+                    {formatSpaceCreatedAt(space.createdAt)}
+                  </td>
+                  <td className="max-w-[9rem] px-4 py-3.5 text-rsvd-text-muted">
+                    <span className="line-clamp-2">{space.address || "—"}</span>
                   </td>
                   <td className="px-4 py-3.5">
                     <div className="flex gap-1.5 font-medium tracking-wide">
@@ -166,7 +222,7 @@ export function AdminSpaceTable({ initialSpaces }: AdminSpaceTableProps) {
                       type="button"
                       role="switch"
                       aria-checked={space.active}
-                      aria-label={`${space.name} 활성 여부`}
+                      aria-label={`${space.name || "매장"} 활성 여부`}
                       disabled={saving}
                       onClick={() => requestToggle(space)}
                       className={`relative h-6 w-11 rounded-full transition ${
@@ -184,21 +240,21 @@ export function AdminSpaceTable({ initialSpaces }: AdminSpaceTableProps) {
                     <div className="flex items-center gap-1.5 text-rsvd-text-muted">
                       <Link
                         href={routes.adminSpaceEdit(space.id)}
-                        aria-label={`${space.name} 매장 수정`}
+                        aria-label={`${space.name || "매장"} 매장 수정`}
                         className="inline-flex h-8 w-8 items-center justify-center rounded-lg hover:bg-rsvd-bg hover:text-rsvd-text"
                       >
                         <IconEdit />
                       </Link>
                       <Link
                         href={routes.adminSpaceHours(space.id)}
-                        aria-label={`${space.name} 영업 시간`}
+                        aria-label={`${space.name || "매장"} 영업 시간`}
                         className="inline-flex h-8 w-8 items-center justify-center rounded-lg hover:bg-rsvd-bg hover:text-rsvd-text"
                       >
                         <IconClock />
                       </Link>
                       <Link
                         href={routes.adminSpaceExceptions(space.id)}
-                        aria-label={`${space.name} 예외 날짜`}
+                        aria-label={`${space.name || "매장"} 예외 날짜`}
                         className="inline-flex h-8 w-8 items-center justify-center rounded-lg hover:bg-rsvd-bg hover:text-rsvd-text"
                       >
                         <IconCalendar />

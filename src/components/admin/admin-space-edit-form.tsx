@@ -7,8 +7,9 @@ import { AdminAddressSearchField } from "@/components/admin/admin-address-search
 import { AdminSpaceImageField } from "@/components/admin/admin-space-image-field";
 import { ButtonSpinner } from "@/components/ui/button-spinner";
 import {
+  ADMIN_SPACE_REQUIRED_FIELD_MESSAGE,
+  adminSpaceMissingRequiredFields,
   adminSpaceRegularCount,
-  adminSpaceRequiredFieldsError,
   adminSpaceReservationCount,
   inviteHandleFromSpaceName,
   isCandidateOnboardingDraft,
@@ -20,6 +21,7 @@ import {
   SPACE_NOTICE_PLACEHOLDER,
   SPACE_OTHER_IMAGES_MAX,
   type AdminSpace,
+  type AdminSpaceRequiredFieldKey,
 } from "@/domain/admin-space";
 import { routes } from "@/lib/routes";
 
@@ -27,6 +29,12 @@ type AdminSpaceEditFormProps = {
   mode: "create" | "edit";
   space: AdminSpace;
 };
+
+type FieldErrors = Partial<Record<AdminSpaceRequiredFieldKey, string>>;
+
+function fieldDomId(key: AdminSpaceRequiredFieldKey): string {
+  return `space-field-${key}`;
+}
 
 export function AdminSpaceEditForm({ mode, space }: AdminSpaceEditFormProps) {
   const router = useRouter();
@@ -52,6 +60,7 @@ export function AdminSpaceEditForm({ mode, space }: AdminSpaceEditFormProps) {
   const [maxPartySize, setMaxPartySize] = useState(String(space.maxPartySize));
   const [active, setActive] = useState(space.active);
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [saving, setSaving] = useState(false);
 
   const lockAdminEmail = Boolean(space.createdFromCandidate);
@@ -60,21 +69,55 @@ export function AdminSpaceEditForm({ mode, space }: AdminSpaceEditFormProps) {
     createdFromCandidate: space.createdFromCandidate,
   });
 
+  function clearFieldError(key: AdminSpaceRequiredFieldKey) {
+    setFieldErrors((current) => {
+      if (!current[key]) {
+        return current;
+      }
+      const next = { ...current };
+      delete next[key];
+      return next;
+    });
+  }
+
+  function requiredFieldValues() {
+    return {
+      name,
+      address,
+      contact,
+      adminEmail,
+      notices: noticesText,
+      heroImage: heroImages[0] ?? "",
+    };
+  }
+
+  function showRequiredFieldErrors(): boolean {
+    if (onboardingDraft) {
+      setFieldErrors({});
+      return false;
+    }
+    const missing = adminSpaceMissingRequiredFields(requiredFieldValues());
+    if (missing.length === 0) {
+      setFieldErrors({});
+      return false;
+    }
+    const next: FieldErrors = {};
+    for (const key of missing) {
+      next[key] = ADMIN_SPACE_REQUIRED_FIELD_MESSAGE;
+    }
+    setFieldErrors(next);
+    window.requestAnimationFrame(() => {
+      document
+        .getElementById(fieldDomId(missing[0]))
+        ?.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+    return true;
+  }
+
   async function handleSave() {
     setError(null);
-    if (!onboardingDraft) {
-      const requiredError = adminSpaceRequiredFieldsError({
-        name,
-        address,
-        contact,
-        adminEmail,
-        notices: noticesText,
-        heroImage: heroImages[0] ?? "",
-      });
-      if (requiredError) {
-        setError(requiredError);
-        return;
-      }
+    if (showRequiredFieldErrors()) {
+      return;
     }
     setSaving(true);
     try {
@@ -144,38 +187,70 @@ export function AdminSpaceEditForm({ mode, space }: AdminSpaceEditFormProps) {
       </div>
 
       <div className="max-w-2xl space-y-5 rounded-2xl border border-rsvd-border bg-rsvd-surface p-5 md:p-6">
-        <Field label="공간명칭">
+        <Field
+          id={fieldDomId("name")}
+          label="공간명칭"
+          error={fieldErrors.name}
+        >
           <input
             value={name}
-            onChange={(event) => setName(event.target.value)}
+            onChange={(event) => {
+              clearFieldError("name");
+              setName(event.target.value);
+            }}
             placeholder={SPACE_NAME_PLACEHOLDER}
             className="auth-input w-full rounded-xl border border-rsvd-border bg-rsvd-surface px-3.5 py-2.5 text-sm text-rsvd-text placeholder:text-rsvd-text-muted"
           />
         </Field>
 
-        <div>
+        <div id={fieldDomId("address")}>
           <span className="mb-1.5 block text-sm font-medium text-rsvd-text">
             주소
           </span>
-          <AdminAddressSearchField value={address} onChange={setAddress} />
+          <AdminAddressSearchField
+            value={address}
+            onChange={(next) => {
+              clearFieldError("address");
+              setAddress(next);
+            }}
+          />
+          {fieldErrors.address ? (
+            <p className="mt-1.5 text-sm text-rsvd-danger" role="alert">
+              {fieldErrors.address}
+            </p>
+          ) : null}
         </div>
 
         <div className="grid gap-5 sm:grid-cols-2">
-          <Field label="연락처">
+          <Field
+            id={fieldDomId("contact")}
+            label="연락처"
+            error={fieldErrors.contact}
+          >
             <input
               value={contact}
-              onChange={(event) => setContact(event.target.value)}
+              onChange={(event) => {
+                clearFieldError("contact");
+                setContact(event.target.value);
+              }}
               className="auth-input w-full rounded-xl border border-rsvd-border bg-rsvd-surface px-3.5 py-2.5 text-sm text-rsvd-text"
             />
           </Field>
-          <Field label="관리자 이메일">
+          <Field
+            id={fieldDomId("adminEmail")}
+            label="관리자 이메일"
+            error={fieldErrors.adminEmail}
+          >
             <input
               type="email"
               value={adminEmail}
               readOnly={lockAdminEmail}
               tabIndex={lockAdminEmail ? -1 : undefined}
               aria-readonly={lockAdminEmail || undefined}
-              onChange={(event) => setAdminEmail(event.target.value)}
+              onChange={(event) => {
+                clearFieldError("adminEmail");
+                setAdminEmail(event.target.value);
+              }}
               className={`auth-input w-full rounded-xl border border-rsvd-border px-3.5 py-2.5 text-sm text-rsvd-text ${
                 lockAdminEmail ? "bg-rsvd-bg" : "bg-rsvd-surface"
               }`}
@@ -208,22 +283,39 @@ export function AdminSpaceEditForm({ mode, space }: AdminSpaceEditFormProps) {
           </Field>
         </div>
 
-        <Field label="공지사항">
+        <Field
+          id={fieldDomId("notices")}
+          label="공지사항"
+          error={fieldErrors.notices}
+        >
           <textarea
             value={noticesText}
-            onChange={(event) => setNoticesText(event.target.value)}
+            onChange={(event) => {
+              clearFieldError("notices");
+              setNoticesText(event.target.value);
+            }}
             rows={6}
             placeholder={SPACE_NOTICE_PLACEHOLDER}
             className="auth-input w-full whitespace-pre-wrap rounded-xl border border-rsvd-border bg-rsvd-surface px-3.5 py-2.5 text-sm text-rsvd-text placeholder:text-rsvd-text-muted"
           />
         </Field>
 
-        <AdminSpaceImageField
-          label={onboardingDraft ? "대표 이미지" : "대표 이미지 (필수)"}
-          urls={heroImages}
-          maxCount={SPACE_HERO_IMAGE_MAX}
-          onChange={setHeroImages}
-        />
+        <div id={fieldDomId("heroImage")}>
+          <AdminSpaceImageField
+            label={onboardingDraft ? "대표 이미지" : "대표 이미지 (필수)"}
+            urls={heroImages}
+            maxCount={SPACE_HERO_IMAGE_MAX}
+            onChange={(urls) => {
+              clearFieldError("heroImage");
+              setHeroImages(urls);
+            }}
+          />
+          {fieldErrors.heroImage ? (
+            <p className="mt-1.5 text-sm text-rsvd-danger" role="alert">
+              {fieldErrors.heroImage}
+            </p>
+          ) : null}
+        </div>
         <AdminSpaceImageField
           label="메뉴 이미지"
           urls={menuImages}
@@ -323,20 +415,7 @@ export function AdminSpaceEditForm({ mode, space }: AdminSpaceEditFormProps) {
           </Link>
           <button
             type="button"
-            disabled={
-              saving ||
-              (!onboardingDraft &&
-                Boolean(
-                  adminSpaceRequiredFieldsError({
-                    name,
-                    address,
-                    contact,
-                    adminEmail,
-                    notices: noticesText,
-                    heroImage: heroImages[0] ?? "",
-                  }),
-                ))
-            }
+            disabled={saving}
             aria-busy={saving}
             onClick={() => {
               void handleSave();
@@ -356,18 +435,29 @@ export function AdminSpaceEditForm({ mode, space }: AdminSpaceEditFormProps) {
 }
 
 function Field({
+  id,
   label,
+  error,
   children,
 }: {
+  id?: string;
   label: string;
+  error?: string;
   children: ReactNode;
 }) {
   return (
-    <label className="block">
-      <span className="mb-1.5 block text-sm font-medium text-rsvd-text">
-        {label}
-      </span>
-      {children}
-    </label>
+    <div id={id} className="block">
+      <label className="block">
+        <span className="mb-1.5 block text-sm font-medium text-rsvd-text">
+          {label}
+        </span>
+        {children}
+      </label>
+      {error ? (
+        <p className="mt-1.5 text-sm text-rsvd-danger" role="alert">
+          {error}
+        </p>
+      ) : null}
+    </div>
   );
 }

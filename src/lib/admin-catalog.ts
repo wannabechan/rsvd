@@ -13,6 +13,7 @@ import {
   inviteHandleFromSpaceName,
   isCandidateOnboardingDraft,
   normalizeNoticesText,
+  normalizeSpaceCreatedAt,
   SPACE_INVITE_CHANNEL_DEFAULT,
   SPACE_MENU_IMAGES_MAX,
   SPACE_OTHER_IMAGES_MAX,
@@ -436,6 +437,7 @@ export async function updateCatalogSpace(
     inviteChannel: current.inviteChannel,
     inviteHandle: current.inviteHandle,
     createdFromCandidate: current.createdFromCandidate,
+    createdAt: current.createdAt || normalizeSpaceCreatedAt(current),
   });
   const updated = [...spaces];
   updated[index] = next;
@@ -522,6 +524,7 @@ export async function createCatalogSpace(
     inviteChannel,
     inviteHandle,
     createdFromCandidate: Boolean(options?.createdFromCandidate),
+    createdAt: new Date().toISOString(),
     currentReservationCount: 0,
     totalReservationCount: 0,
     weeklyHours: createEmptyWeekSchedule(),

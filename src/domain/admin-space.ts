@@ -113,6 +113,8 @@ export type AdminSpace = {
    * Inactive drafts may omit otherwise-required fields until activated.
    */
   createdFromCandidate: boolean;
+  /** ISO timestamp when the catalog space was created. */
+  createdAt: string;
 };
 
 export const SPACE_NAME_PLACEHOLDER = "매장 이름을 적어주세요.";
@@ -125,34 +127,57 @@ export function isCandidateOnboardingDraft(
   return Boolean(space.createdFromCandidate) && space.active === false;
 }
 
-/** Required fields except menu/other images. Returns Korean error or null. */
-export function adminSpaceRequiredFieldsError(fields: {
+export const ADMIN_SPACE_REQUIRED_FIELD_KEYS = [
+  "name",
+  "address",
+  "contact",
+  "adminEmail",
+  "notices",
+  "heroImage",
+] as const;
+
+export type AdminSpaceRequiredFieldKey =
+  (typeof ADMIN_SPACE_REQUIRED_FIELD_KEYS)[number];
+
+export const ADMIN_SPACE_REQUIRED_FIELD_MESSAGE = "필수 입력 사항입니다.";
+
+type AdminSpaceRequiredFieldValues = {
   name: string;
   address: string;
   contact: string;
   adminEmail: string;
   notices: string;
   heroImage: string;
-}): string | null {
-  if (!fields.name.trim()) {
-    return "공간명칭을 입력해 주세요.";
+};
+
+function isAdminSpaceRequiredFieldFilled(
+  key: AdminSpaceRequiredFieldKey,
+  fields: AdminSpaceRequiredFieldValues,
+): boolean {
+  if (key === "notices") {
+    return Boolean(normalizeNoticesText(fields.notices).trim());
   }
-  if (!fields.address.trim()) {
-    return "주소를 입력해 주세요.";
+  return Boolean(fields[key].trim());
+}
+
+/** Missing required keys in form order (menu/other images excluded). */
+export function adminSpaceMissingRequiredFields(
+  fields: AdminSpaceRequiredFieldValues,
+): AdminSpaceRequiredFieldKey[] {
+  return ADMIN_SPACE_REQUIRED_FIELD_KEYS.filter(
+    (key) => !isAdminSpaceRequiredFieldFilled(key, fields),
+  );
+}
+
+/** Required fields except menu/other images. Returns Korean error or null. */
+export function adminSpaceRequiredFieldsError(
+  fields: AdminSpaceRequiredFieldValues,
+): string | null {
+  const missing = adminSpaceMissingRequiredFields(fields);
+  if (missing.length === 0) {
+    return null;
   }
-  if (!fields.contact.trim()) {
-    return "연락처를 입력해 주세요.";
-  }
-  if (!fields.adminEmail.trim()) {
-    return "관리자 이메일을 입력해 주세요.";
-  }
-  if (!normalizeNoticesText(fields.notices).trim()) {
-    return "공지사항을 입력해 주세요.";
-  }
-  if (!fields.heroImage.trim()) {
-    return "대표 이미지를 업로드해 주세요.";
-  }
-  return null;
+  return ADMIN_SPACE_REQUIRED_FIELD_MESSAGE;
 }
 
 /** 단골수 from stored regularMembers (fallback: regularUserIds). */
@@ -173,10 +198,109 @@ export function adminSpaceReservationCount(space: AdminSpace): number {
  * Align id list with regularMembers when that array is present.
  * currentReservationCount stays the stored live booking count (0 until real reservations).
  */
+/** Infer createdAt from `space-{base36ms}-…` ids when missing on legacy rows. */
+export function inferCreatedAtFromSpaceId(id: string): string {
+  const match = /^space-([a-z0-9]+)-/i.exec(id.trim());
+  if (!match) {
+    return "";
+  }
+  const ms = Number.parseInt(match[1], 36);
+  if (!Number.isFinite(ms) || ms < 1_000_000_000_000 || ms > 9_999_999_999_999) {
+    return "";
+  }
+  return new Date(ms).toISOString();
+}
+
+export function normalizeSpaceCreatedAt(space: AdminSpace): string {
+  if (typeof space.createdAt === "string" && space.createdAt.trim()) {
+    return space.createdAt.trim();
+  }
+  return inferCreatedAtFromSpaceId(space.id);
+}
+
+/** Display YYYY-MM-DD for admin tables. */
+export function formatSpaceCreatedAt(createdAt: string): string {
+  if (/^\d{4}-\d{2}-\d{2}/.test(createdAt)) {
+    return createdAt.slice(0, 10);
+  }
+  const parsed = Date.parse(createdAt);
+  if (!Number.isFinite(parsed)) {
+    return createdAt || "—";
+  }
+  return new Date(parsed).toISOString().slice(0, 10);
+}
+
+export const ADMIN_SPACE_SORT_KEYS = [
+  "name",
+  "createdAt",
+  "address",
+  "openDays",
+  "reservationCount",
+  "regularCount",
+  "active",
+] as const;
+
+export type AdminSpaceSortKey = (typeof ADMIN_SPACE_SORT_KEYS)[number];
+export type AdminSpaceSortDir = "asc" | "desc";
+
+export function compareAdminSpaces(
+  a: AdminSpace,
+  b: AdminSpace,
+  key: AdminSpaceSortKey,
+  dir: AdminSpaceSortDir,
+): number {
+  const sign = dir === "asc" ? 1 : -1;
+  if (key === "createdAt") {
+    const aMs = Date.parse(normalizeSpaceCreatedAt(a)) || 0;
+    const bMs = Date.parse(normalizeSpaceCreatedAt(b)) || 0;
+    if (aMs !== bMs) {
+      return (aMs - bMs) * sign;
+    }
+  } else if (key === "openDays") {
+    const compared = openWeekdays(a).length - openWeekdays(b).length;
+    if (compared !== 0) {
+      return compared * sign;
+    }
+  } else if (key === "reservationCount") {
+    const compared =
+      adminSpaceReservationCount(a) - adminSpaceReservationCount(b);
+    if (compared !== 0) {
+      return compared * sign;
+    }
+  } else if (key === "regularCount") {
+    const compared = adminSpaceRegularCount(a) - adminSpaceRegularCount(b);
+    if (compared !== 0) {
+      return compared * sign;
+    }
+  } else if (key === "active") {
+    const compared = Number(a.active) - Number(b.active);
+    if (compared !== 0) {
+      return compared * sign;
+    }
+  } else {
+    const left = String(a[key] ?? "").toLowerCase();
+    const right = String(b[key] ?? "").toLowerCase();
+    const compared = left.localeCompare(right, "ko");
+    if (compared !== 0) {
+      return compared * sign;
+    }
+  }
+  return a.id.localeCompare(b.id);
+}
+
+export function sortAdminSpaces(
+  spaces: readonly AdminSpace[],
+  key: AdminSpaceSortKey,
+  dir: AdminSpaceSortDir,
+): AdminSpace[] {
+  return [...spaces].sort((a, b) => compareAdminSpaces(a, b, key, dir));
+}
+
 export function syncAdminSpaceStats(space: AdminSpace): AdminSpace {
   const withInvite = withInviteFields(space);
   const notices = normalizeNoticesText(withInvite.notices);
   const createdFromCandidate = Boolean(withInvite.createdFromCandidate);
+  const createdAt = normalizeSpaceCreatedAt(withInvite);
   const members = Array.isArray(withInvite.regularMembers)
     ? withInvite.regularMembers
     : [];
@@ -185,6 +309,7 @@ export function syncAdminSpaceStats(space: AdminSpace): AdminSpace {
       ...withInvite,
       notices,
       createdFromCandidate,
+      createdAt,
       regularUserIds: withInvite.regularUserIds ?? [],
       regularMembers: withInvite.regularMembers ?? [],
       currentReservationCount: adminSpaceReservationCount(withInvite),
@@ -194,6 +319,7 @@ export function syncAdminSpaceStats(space: AdminSpace): AdminSpace {
     ...withInvite,
     notices,
     createdFromCandidate,
+    createdAt,
     regularMembers: members,
     regularUserIds: members.map((member) => member.userId),
     currentReservationCount: adminSpaceReservationCount(withInvite),
@@ -334,6 +460,7 @@ export function createBlankAdminSpace(): AdminSpace {
     minPartySize: 1,
     maxPartySize: 6,
     createdFromCandidate: false,
+    createdAt: "",
     currentReservationCount: 0,
     totalReservationCount: 0,
     active: true,
