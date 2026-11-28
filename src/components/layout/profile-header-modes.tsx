@@ -50,11 +50,7 @@ export function ProfileHeaderModes({
             onClick={() => {
               onSelect(mode);
             }}
-            className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition ${
-              isSelected
-                ? "bg-rsvd-tint ring-2 ring-rsvd-brand"
-                : "hover:bg-rsvd-tint"
-            }`}
+            className="inline-flex h-10 w-10 shrink-0 items-center justify-center transition"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
@@ -62,7 +58,9 @@ export function ProfileHeaderModes({
               alt=""
               width={800}
               height={800}
-              className={ICON_CLASS}
+              className={`${ICON_CLASS} transition-opacity ${
+                isSelected ? "opacity-100" : "opacity-50"
+              }`}
               aria-hidden="true"
             />
           </button>
