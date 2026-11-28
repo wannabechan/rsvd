@@ -17,6 +17,8 @@ import {
 import { getRedis, isRedisConfigured } from "@/lib/redis";
 
 const CANDIDATES_KEY = "rsvd:catalog:space-candidates:v1";
+/** Same prefix as user-store — read-only check to avoid circular imports. */
+const PROFILE_KEY_PREFIX = "rsvd:user:profile:";
 
 function normalizeCandidate(row: AdminSpaceCandidate): AdminSpaceCandidate {
   return withFreshVerifyCode({
@@ -30,12 +32,83 @@ function normalizeCandidate(row: AdminSpaceCandidate): AdminSpaceCandidate {
   });
 }
 
+function asCompletedCandidate(row: AdminSpaceCandidate): AdminSpaceCandidate {
+  return normalizeCandidate({
+    ...row,
+    verifyCode: "",
+    verifyCodeExpiresAt: "",
+    registrationComplete: true,
+  });
+}
+
+async function isOwnerVerifiedEmail(email: string): Promise<boolean> {
+  const normalized = normalizeEmail(email);
+  if (!normalized) {
+    return false;
+  }
+  const stored = await getRedis().get<{ ownerVerified?: boolean }>(
+    `${PROFILE_KEY_PREFIX}${normalized}`,
+  );
+  return Boolean(stored?.ownerVerified);
+}
+
+/**
+ * If the matched account already finished 사장님 인증, force complete state
+ * (repairs lost updates from concurrent admin code saves).
+ */
+async function reconcileOwnerVerifiedRows(
+  rows: AdminSpaceCandidate[],
+): Promise<{ rows: AdminSpaceCandidate[]; changed: boolean }> {
+  const emails = [
+    ...new Set(
+      rows
+        .map((row) => normalizeEmail(row.email))
+        .filter(Boolean),
+    ),
+  ];
+  const verified = new Set<string>();
+  await Promise.all(
+    emails.map(async (email) => {
+      if (await isOwnerVerifiedEmail(email)) {
+        verified.add(email);
+      }
+    }),
+  );
+  if (verified.size === 0) {
+    return { rows: rows.map(normalizeCandidate), changed: false };
+  }
+
+  let changed = false;
+  const next = rows.map((row) => {
+    const normalized = normalizeCandidate(row);
+    const email = normalizeEmail(normalized.email);
+    if (!email || !verified.has(email)) {
+      return normalized;
+    }
+    if (
+      normalized.registrationComplete &&
+      !normalized.verifyCode &&
+      !normalized.verifyCodeExpiresAt
+    ) {
+      return normalized;
+    }
+    changed = true;
+    return asCompletedCandidate(normalized);
+  });
+  return { rows: next, changed };
+}
+
 export async function listSpaceCandidates(): Promise<AdminSpaceCandidate[]> {
   if (!isRedisConfigured()) {
     return [];
   }
-  const rows = await getRedis().get<AdminSpaceCandidate[]>(CANDIDATES_KEY);
-  return sortCandidates((rows ?? []).map(normalizeCandidate));
+  const redis = getRedis();
+  const rows = (await redis.get<AdminSpaceCandidate[]>(CANDIDATES_KEY)) ?? [];
+  const reconciled = await reconcileOwnerVerifiedRows(rows);
+  if (reconciled.changed) {
+    await redis.set(CANDIDATES_KEY, reconciled.rows);
+  }
+  return sortCandidates(reconciled.rows.map(normalizeCandidate));
 }
 
 export async function findSpaceCandidate(
@@ -183,20 +256,40 @@ export async function updateSpaceCandidates(
     ]),
   );
 
-  const next = current.map((row) => {
-    const patch = byId.get(row.id);
-    if (!patch) {
-      return normalizeCandidate(row);
-    }
-    return normalizeCandidate({
-      ...row,
-      email: patch.email,
-      verifyCode: patch.verifyCode,
-      verifyCodeExpiresAt: patch.verifyCodeExpiresAt,
-    });
-  });
+  const next = await Promise.all(
+    current.map(async (row) => {
+      const normalized = normalizeCandidate(row);
+      const patch = byId.get(row.id);
+      if (!patch) {
+        return normalized;
+      }
+
+      const email = patch.email || normalized.email;
+      const ownerVerified = email ? await isOwnerVerifiedEmail(email) : false;
+      // Once registration is complete (or profile already owner-verified),
+      // never reopen verify codes / flip registrationComplete back off.
+      if (normalized.registrationComplete || ownerVerified) {
+        return asCompletedCandidate({
+          ...normalized,
+          email,
+        });
+      }
+
+      return normalizeCandidate({
+        ...normalized,
+        email,
+        verifyCode: patch.verifyCode,
+        verifyCodeExpiresAt: patch.verifyCodeExpiresAt,
+      });
+    }),
+  );
 
   await redis.set(CANDIDATES_KEY, next);
+  const reconciled = await reconcileOwnerVerifiedRows(next);
+  if (reconciled.changed) {
+    await redis.set(CANDIDATES_KEY, reconciled.rows);
+    return sortCandidates(reconciled.rows.map(normalizeCandidate));
+  }
   return sortCandidates(next.map(normalizeCandidate));
 }
 
@@ -280,12 +373,7 @@ export async function completeOwnerVerifyOnCandidates(
       normalizedRow.verifyCode.trim() === trimmed
     ) {
       matched = true;
-      return normalizeCandidate({
-        ...normalizedRow,
-        verifyCode: "",
-        verifyCodeExpiresAt: "",
-        registrationComplete: true,
-      });
+      return asCompletedCandidate(normalizedRow);
     }
     return normalizedRow;
   });
