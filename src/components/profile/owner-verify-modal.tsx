@@ -28,6 +28,14 @@ export function OwnerVerifyModal({ onClose, onVerified }: OwnerVerifyModalProps)
     return () => window.clearTimeout(timer);
   }, [success, onClose, onVerified]);
 
+  useEffect(() => {
+    if (!error) {
+      return;
+    }
+    const timer = window.setTimeout(() => setError(null), 3_000);
+    return () => window.clearTimeout(timer);
+  }, [error]);
+
   async function handleVerify() {
     setError(null);
     if (!isValidLoginCode(code)) {
@@ -80,7 +88,7 @@ export function OwnerVerifyModal({ onClose, onVerified }: OwnerVerifyModalProps)
               사장님 인증
             </p>
             <p className="mt-2 text-center text-xs text-rsvd-text-muted">
-              매장후보에서 발급된 6자리 인증코드를 입력해 주세요.
+              rsvd.에서 전달받은 인증코드를 입력하세요.
             </p>
             <label className="mt-4 block">
               <span className="sr-only">인증 코드</span>
@@ -93,6 +101,7 @@ export function OwnerVerifyModal({ onClose, onVerified }: OwnerVerifyModalProps)
                 onChange={(event) =>
                   setCode(event.target.value.replace(/\D/g, "").slice(0, 6))
                 }
+                onFocus={() => setError(null)}
                 placeholder="000000"
                 className="auth-input w-full rounded-xl border border-rsvd-border bg-rsvd-surface px-3.5 py-2.5 text-center text-lg tracking-[0.3em] text-rsvd-text placeholder:tracking-normal placeholder:text-rsvd-text-muted"
                 autoFocus

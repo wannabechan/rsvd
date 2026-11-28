@@ -25,7 +25,7 @@ export function InterestRegionPickerModal({
   const title =
     path.length === 0
       ? "시·도 선택"
-      : `${formatInterestRegionLabel(path)} · 하위 지역`;
+      : `${formatInterestRegionLabel(path)} · 가나다 순`;
 
   function handlePick(node: RegionNode) {
     const nextPath = [...path, node.name];

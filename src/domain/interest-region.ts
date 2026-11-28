@@ -3,7 +3,7 @@
  * Keep free of React/Next/DOM.
  */
 
-export const INTEREST_REGIONS_MAX = 5;
+export const INTEREST_REGIONS_MAX = 10;
 
 export type RegionNode = {
   name: string;
@@ -348,7 +348,8 @@ export function listRegionChildren(
   if (path.length === 0) {
     return INTEREST_REGION_TREE;
   }
-  return findRegionNode(path)?.children ?? [];
+  const children = findRegionNode(path)?.children ?? [];
+  return [...children].sort((a, b) => a.name.localeCompare(b.name, "ko"));
 }
 
 export function isRegionLeaf(path: readonly string[]): boolean {
