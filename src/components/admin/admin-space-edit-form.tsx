@@ -403,9 +403,6 @@ export function AdminSpaceEditForm({ mode, space }: AdminSpaceEditFormProps) {
         <div className="flex items-center justify-between gap-3 rounded-xl border border-rsvd-border bg-rsvd-bg px-4 py-3">
           <div>
             <p className="text-sm font-medium text-rsvd-text">활성 상태</p>
-            <p className="mt-0.5 text-xs text-rsvd-text-muted">
-              목록·상세에 노출할지 설정합니다.
-            </p>
           </div>
           <button
             type="button"
