@@ -8,6 +8,7 @@ import {
   IconEdit,
   IconPlus,
 } from "@/components/admin/admin-icons";
+import { ButtonSpinner } from "@/components/ui/button-spinner";
 import {
   adminSpaceRegularCount,
   adminSpaceReservationCount,
@@ -238,12 +239,17 @@ export function AdminSpaceTable({ initialSpaces }: AdminSpaceTableProps) {
               <button
                 type="button"
                 disabled={saving}
+                aria-busy={saving}
                 onClick={() => {
                   void confirmToggle();
                 }}
-                className="inline-flex h-11 items-center justify-center rounded-full bg-rsvd-brand text-sm font-medium text-rsvd-on-brand transition hover:bg-rsvd-brand-strong disabled:bg-rsvd-disabled-bg disabled:text-rsvd-disabled-text"
+                className={`inline-flex h-11 items-center justify-center rounded-full bg-rsvd-brand text-sm font-medium text-rsvd-on-brand transition hover:bg-rsvd-brand-strong ${
+                  saving
+                    ? "disabled:bg-rsvd-brand disabled:text-rsvd-on-brand disabled:hover:bg-rsvd-brand"
+                    : "disabled:bg-rsvd-disabled-bg disabled:text-rsvd-disabled-text"
+                }`}
               >
-                {saving ? "…" : "확인"}
+                {saving ? <ButtonSpinner /> : "확인"}
               </button>
             </div>
           </div>

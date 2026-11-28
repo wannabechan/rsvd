@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import { AdminSpaceImageField } from "@/components/admin/admin-space-image-field";
+import { ButtonSpinner } from "@/components/ui/button-spinner";
 import {
   adminSpaceRegularCount,
   adminSpaceReservationCount,
@@ -297,12 +298,17 @@ export function AdminSpaceEditForm({ mode, space }: AdminSpaceEditFormProps) {
             disabled={
               saving || !name.trim() || !address.trim() || heroImages.length === 0
             }
+            aria-busy={saving}
             onClick={() => {
               void handleSave();
             }}
-            className="inline-flex h-11 items-center justify-center rounded-full bg-rsvd-brand px-4 text-sm font-medium text-rsvd-on-brand transition hover:bg-rsvd-brand-strong disabled:bg-rsvd-disabled-bg disabled:text-rsvd-disabled-text"
+            className={`inline-flex h-11 items-center justify-center rounded-full bg-rsvd-brand px-4 text-sm font-medium text-rsvd-on-brand transition hover:bg-rsvd-brand-strong ${
+              saving
+                ? "disabled:bg-rsvd-brand disabled:text-rsvd-on-brand disabled:hover:bg-rsvd-brand"
+                : "disabled:bg-rsvd-disabled-bg disabled:text-rsvd-disabled-text"
+            }`}
           >
-            {saving ? "…" : "저장"}
+            {saving ? <ButtonSpinner /> : "저장"}
           </button>
         </div>
       </div>

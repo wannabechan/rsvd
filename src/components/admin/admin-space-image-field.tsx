@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { IconPlus } from "@/components/admin/admin-icons";
+import { ButtonSpinner } from "@/components/ui/button-spinner";
 import { prepareSpaceImageWebp } from "@/lib/prepare-space-image";
 
 type AdminSpaceImageFieldProps = {
@@ -107,11 +108,18 @@ export function AdminSpaceImageField({
           <button
             type="button"
             disabled={busy}
+            aria-busy={busy}
             onClick={() => inputRef.current?.click()}
             className="inline-flex aspect-[3/4] w-[5.25rem] flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-rsvd-border bg-rsvd-bg text-rsvd-text-muted transition hover:border-rsvd-brand hover:text-rsvd-brand disabled:opacity-60"
           >
-            <IconPlus className="h-4 w-4" />
-            <span className="text-[11px]">{busy ? "…" : "업로드"}</span>
+            {busy ? (
+              <ButtonSpinner tone="brand" />
+            ) : (
+              <>
+                <IconPlus className="h-4 w-4" />
+                <span className="text-[11px]">업로드</span>
+              </>
+            )}
           </button>
         ) : null}
       </div>

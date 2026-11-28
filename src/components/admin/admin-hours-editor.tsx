@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { IconCopy, IconPlus } from "@/components/admin/admin-icons";
+import { ButtonSpinner } from "@/components/ui/button-spinner";
 import {
   cloneDaySlots,
   createEmptySlot,
@@ -301,10 +302,15 @@ function DayCard({
         <button
           type="button"
           disabled={!dirty || saving || adding}
+          aria-busy={saving}
           onClick={onSave}
-          className="inline-flex h-9 items-center justify-center rounded-full bg-rsvd-brand px-4 text-sm font-medium text-rsvd-on-brand transition hover:bg-rsvd-brand-strong disabled:bg-rsvd-disabled-bg disabled:text-rsvd-disabled-text"
+          className={`inline-flex h-9 items-center justify-center rounded-full bg-rsvd-brand px-4 text-sm font-medium text-rsvd-on-brand transition hover:bg-rsvd-brand-strong ${
+            saving
+              ? "disabled:bg-rsvd-brand disabled:text-rsvd-on-brand disabled:hover:bg-rsvd-brand"
+              : "disabled:bg-rsvd-disabled-bg disabled:text-rsvd-disabled-text"
+          }`}
         >
-          {saving ? "…" : "저장"}
+          {saving ? <ButtonSpinner /> : "저장"}
         </button>
       </div>
     </section>

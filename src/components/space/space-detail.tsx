@@ -1,13 +1,13 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { useAuth } from "@/components/auth/auth-context";
 import { useReservationChat } from "@/components/reservation-chat/reservation-chat-context";
 import { ReservationChatPanel } from "@/components/reservation-chat/reservation-chat-panel";
 import { SpaceImageCarousel } from "@/components/space/space-image-carousel";
 import { SpaceNoticeText } from "@/components/space/space-notice-text";
 import { displayLikeCount, toTelHref, type SpaceItem } from "@/domain/space";
-import { saveAuthIntent } from "@/lib/auth-intent";
 import { routes } from "@/lib/routes";
 
 const DETAIL_LIKE_ICON_CLASS = "h-[1.875rem] w-[1.875rem]";
@@ -24,6 +24,23 @@ export function SpaceDetail({ space }: SpaceDetailProps) {
   const phoneHref = toTelHref(space.contact);
   const recentReservers = space.recentReservers.slice(0, MAX_DETAIL_RESERVER_AVATARS);
   const isChatOpen = activeChat?.spaceId === space.id;
+
+  useEffect(() => {
+    if (!isReady) {
+      return;
+    }
+    if (!isLoggedIn) {
+      router.replace(routes.spaceList);
+    }
+  }, [isReady, isLoggedIn, router]);
+
+  if (!isReady || !isLoggedIn) {
+    return (
+      <div className="px-4 py-10">
+        <p className="text-sm text-rsvd-text-muted">불러오는 중…</p>
+      </div>
+    );
+  }
 
   if (isChatOpen) {
     return <ReservationChatPanel space={space} />;
@@ -57,18 +74,6 @@ export function SpaceDetail({ space }: SpaceDetailProps) {
             aria-label={`${space.name} 메신저 예약`}
             className="inline-flex h-[2.8875rem] w-[2.8875rem] shrink-0 translate-x-[3px] items-center justify-center rounded-full transition hover:bg-rsvd-tint"
             onClick={() => {
-              if (!isReady) {
-                return;
-              }
-              if (!isLoggedIn) {
-                saveAuthIntent({
-                  type: "open-chat",
-                  spaceId: space.id,
-                  spaceName: space.name,
-                });
-                router.push(routes.login);
-                return;
-              }
               startChat({ spaceId: space.id, spaceName: space.name });
             }}
           >

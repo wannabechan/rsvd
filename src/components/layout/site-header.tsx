@@ -60,7 +60,7 @@ export function SiteHeader() {
                   }}
                   className={PROFILE_MODE_LINK_CLASS}
                 >
-                  *관리자모드
+                  {">>"} 관리자페이지
                 </button>
               ) : null}
               {user?.ownerVerified ? (
@@ -71,7 +71,7 @@ export function SiteHeader() {
                   }}
                   className={PROFILE_MODE_LINK_CLASS}
                 >
-                  *사장님모드
+                  {">>"} 사장님페이지
                 </button>
               ) : user?.canOwnerVerify ? (
                 <button
@@ -79,7 +79,7 @@ export function SiteHeader() {
                   onClick={() => setOwnerVerifyOpen(true)}
                   className={PROFILE_MODE_LINK_CLASS}
                 >
-                  *사장님인증
+                  {">>"} 사장님인증
                 </button>
               ) : null}
             </div>

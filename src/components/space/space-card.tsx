@@ -42,22 +42,32 @@ export function SpaceCard({ space }: SpaceCardProps) {
     router.push(detailHref);
   }
 
+  const thumbnailMedia = thumbnail ? (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={thumbnail}
+      alt={space.name}
+      loading="lazy"
+      decoding="async"
+      className="aspect-[3/4] w-full rounded-2xl object-cover"
+    />
+  ) : (
+    <div aria-hidden="true" className="aspect-[3/4] w-full rounded-2xl bg-rsvd-tint" />
+  );
+
   return (
     <article className="min-w-0 space-y-2">
-      <Link href={detailHref} className="block pb-1" aria-label={`${space.name} 상세 보기`}>
-        {thumbnail ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={thumbnail}
-            alt={space.name}
-            loading="lazy"
-            decoding="async"
-            className="aspect-[3/4] w-full rounded-2xl object-cover"
-          />
-        ) : (
-          <div aria-hidden="true" className="aspect-[3/4] w-full rounded-2xl bg-rsvd-tint" />
-        )}
-      </Link>
+      {isReady && isLoggedIn ? (
+        <Link
+          href={detailHref}
+          className="block pb-1"
+          aria-label={`${space.name} 상세 보기`}
+        >
+          {thumbnailMedia}
+        </Link>
+      ) : (
+        <div className="block pb-1">{thumbnailMedia}</div>
+      )}
 
       <div className="flex min-w-0 items-center gap-2">
         <h2

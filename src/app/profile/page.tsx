@@ -7,6 +7,7 @@ import { useLoginBoot } from "@/components/auth/login-boot-context";
 import { UserAvatar } from "@/components/auth/user-avatar";
 import { InterestRegionPickerModal } from "@/components/profile/interest-region-picker-modal";
 import { PhoneVerifyModal } from "@/components/profile/phone-verify-modal";
+import { ButtonSpinner } from "@/components/ui/button-spinner";
 import {
   defaultNickname,
   formatPhoneDisplay,
@@ -27,6 +28,7 @@ const PROFILE_ACTION_BTN =
 const PROFILE_ACTION_DISABLED =
   "disabled:border-rsvd-disabled-bg disabled:bg-rsvd-disabled-bg disabled:text-rsvd-disabled-text disabled:hover:bg-rsvd-disabled-bg";
 const PROFILE_ACTION_PRIMARY = `${PROFILE_ACTION_BTN} bg-rsvd-brand text-rsvd-on-brand hover:bg-rsvd-brand-strong ${PROFILE_ACTION_DISABLED}`;
+const PROFILE_ACTION_PRIMARY_BUSY = `${PROFILE_ACTION_BTN} bg-rsvd-brand text-rsvd-on-brand disabled:bg-rsvd-brand disabled:text-rsvd-on-brand disabled:hover:bg-rsvd-brand`;
 const PROFILE_ACTION_SECONDARY = `${PROFILE_ACTION_BTN} border border-rsvd-border bg-rsvd-surface text-rsvd-text hover:bg-rsvd-bg ${PROFILE_ACTION_DISABLED}`;
 
 export default function ProfilePage() {
@@ -272,12 +274,15 @@ export default function ProfilePage() {
           <button
             type="button"
             disabled={savingNickname || !nickname.trim()}
+            aria-busy={savingNickname}
             onClick={() => {
               void handleSaveNickname();
             }}
-            className={PROFILE_ACTION_PRIMARY}
+            className={
+              savingNickname ? PROFILE_ACTION_PRIMARY_BUSY : PROFILE_ACTION_PRIMARY
+            }
           >
-            {savingNickname ? "…" : "저장"}
+            {savingNickname ? <ButtonSpinner /> : "저장"}
           </button>
         </div>
       </section>
@@ -319,10 +324,21 @@ export default function ProfilePage() {
               setPhonePendingClear(true);
             }}
             className={
-              phonePendingClear ? PROFILE_ACTION_PRIMARY : PROFILE_ACTION_SECONDARY
+              savingPhoneClear
+                ? PROFILE_ACTION_PRIMARY_BUSY
+                : phonePendingClear
+                  ? PROFILE_ACTION_PRIMARY
+                  : PROFILE_ACTION_SECONDARY
             }
+            aria-busy={savingPhoneClear}
           >
-            {savingPhoneClear ? "…" : phonePendingClear ? "저장" : "삭제"}
+            {savingPhoneClear ? (
+              <ButtonSpinner />
+            ) : phonePendingClear ? (
+              "저장"
+            ) : (
+              "삭제"
+            )}
           </button>
           <button
             type="button"
@@ -385,12 +401,17 @@ export default function ProfilePage() {
             <button
               type="button"
               disabled={savingInterestRegions || !interestRegionsDirty}
+              aria-busy={savingInterestRegions}
               onClick={() => {
                 void handleSaveInterestRegions();
               }}
-              className={PROFILE_ACTION_PRIMARY}
+              className={
+                savingInterestRegions
+                  ? PROFILE_ACTION_PRIMARY_BUSY
+                  : PROFILE_ACTION_PRIMARY
+              }
             >
-              {savingInterestRegions ? "…" : "저장"}
+              {savingInterestRegions ? <ButtonSpinner /> : "저장"}
             </button>
           </div>
         </div>
@@ -517,10 +538,15 @@ function ConfirmModal({
           <button
             type="button"
             disabled={busy}
+            aria-busy={busy}
             onClick={onConfirm}
-            className={`inline-flex h-11 items-center justify-center rounded-full bg-rsvd-brand text-sm font-medium text-rsvd-on-brand transition hover:bg-rsvd-brand-strong ${PROFILE_ACTION_DISABLED}`}
+            className={
+              busy
+                ? "inline-flex h-11 items-center justify-center rounded-full bg-rsvd-brand text-sm font-medium text-rsvd-on-brand disabled:bg-rsvd-brand disabled:text-rsvd-on-brand disabled:hover:bg-rsvd-brand"
+                : `inline-flex h-11 items-center justify-center rounded-full bg-rsvd-brand text-sm font-medium text-rsvd-on-brand transition hover:bg-rsvd-brand-strong ${PROFILE_ACTION_DISABLED}`
+            }
           >
-            {busy ? "…" : confirmLabel}
+            {busy ? <ButtonSpinner /> : confirmLabel}
           </button>
         </div>
       </div>

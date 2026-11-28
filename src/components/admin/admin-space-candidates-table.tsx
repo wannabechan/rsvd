@@ -7,6 +7,7 @@ import {
   IconSearch,
 } from "@/components/admin/admin-icons";
 import { AdminUserMatchModal } from "@/components/admin/admin-user-match-modal";
+import { ButtonSpinner } from "@/components/ui/button-spinner";
 import {
   candidateHasSavedEmail,
   candidateRequestCount,
@@ -324,12 +325,17 @@ export function AdminSpaceCandidatesTable({
           <button
             type="button"
             disabled={savingTable}
+            aria-busy={savingTable}
             onClick={() => {
               void handleTableSave();
             }}
-            className="inline-flex h-9 items-center justify-center rounded-lg border border-rsvd-border bg-rsvd-brand px-3 text-sm font-medium text-rsvd-on-brand transition hover:bg-rsvd-brand-strong disabled:bg-rsvd-disabled-bg disabled:text-rsvd-disabled-text"
+            className={`inline-flex h-9 items-center justify-center rounded-lg border border-rsvd-border bg-rsvd-brand px-3 text-sm font-medium text-rsvd-on-brand transition hover:bg-rsvd-brand-strong ${
+              savingTable
+                ? "disabled:bg-rsvd-brand disabled:text-rsvd-on-brand disabled:hover:bg-rsvd-brand"
+                : "disabled:bg-rsvd-disabled-bg disabled:text-rsvd-disabled-text"
+            }`}
           >
-            {savingTable ? "…" : "저장"}
+            {savingTable ? <ButtonSpinner /> : "저장"}
           </button>
         ) : null}
         <button
@@ -432,7 +438,7 @@ export function AdminSpaceCandidatesTable({
                           onClick={() => {
                             void handleGenerateCode(item.id);
                           }}
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-rsvd-text-muted transition hover:bg-rsvd-bg hover:text-rsvd-text disabled:cursor-not-allowed disabled:text-rsvd-disabled-text disabled:hover:bg-transparent disabled:hover:text-rsvd-disabled-text"
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-rsvd-text-muted transition hover:bg-rsvd-bg hover:text-rsvd-text disabled:cursor-not-allowed disabled:text-rsvd-border disabled:hover:bg-transparent disabled:hover:text-rsvd-border"
                         >
                           <IconLock />
                         </button>
@@ -536,12 +542,17 @@ export function AdminSpaceCandidatesTable({
               <button
                 type="button"
                 disabled={savingAdd || !handle.trim()}
+                aria-busy={savingAdd}
                 onClick={() => {
                   void handleAddSave();
                 }}
-                className="inline-flex h-11 items-center justify-center rounded-full bg-rsvd-brand text-sm font-medium text-rsvd-on-brand transition hover:bg-rsvd-brand-strong disabled:bg-rsvd-disabled-bg disabled:text-rsvd-disabled-text"
+                className={`inline-flex h-11 items-center justify-center rounded-full bg-rsvd-brand text-sm font-medium text-rsvd-on-brand transition hover:bg-rsvd-brand-strong ${
+                  savingAdd
+                    ? "disabled:bg-rsvd-brand disabled:text-rsvd-on-brand disabled:hover:bg-rsvd-brand"
+                    : "disabled:bg-rsvd-disabled-bg disabled:text-rsvd-disabled-text"
+                }`}
               >
-                {savingAdd ? "…" : "저장"}
+                {savingAdd ? <ButtonSpinner /> : "저장"}
               </button>
             </div>
           </div>
